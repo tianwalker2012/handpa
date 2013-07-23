@@ -1,6 +1,5 @@
 import web
-import xml.dom.minidom
-from xml.dom.minidom import parse, parseString
+from xml.dom.minidom import parseString
 
 render = web.template.render('templates/')
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
@@ -101,8 +100,8 @@ class index:
    
 class todo:
  def GET(self):
-  todos = db.select('todo')
-  return render.index(todos)
+  #todos = db.select('todo')
+  return render.index('todo list')
 
 class uploader:
  def GET(self):
