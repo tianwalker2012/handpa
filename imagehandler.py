@@ -1,5 +1,12 @@
 import subprocess
 import tempfile
+import urllib2
+import hashlib
+import os
+
+imageURLPrefix = "http://127.0.0.1:8080/static/%s"
+
+imageDirectory = "/Users/apple/work_foot/python_field/handpa/static"
 
 def executeCmd(cmd):
  print 'will execute:', cmd
@@ -17,6 +24,28 @@ def getTmpFileName():
  tf1.close()
  return res
 
+#TODO in this method, the path may coincide with the existing one. 
+#how to avoid this this?
+#Use a tempoary file name to achieve this.
+def downloadImage(url):
+ """Will download files to the specified directory"""
+ #I made an assumption that the url will have a file name.
+ dirs = "./downloaded"
+ #the the post fix
+ file_pix = url.split('.')[-1];
+ hashstr = hashlib.md5(url).hexdigest()
+ fullpath = dirs + "/" + hashstr + "." + file_pix;
+ print "full path:", fullpath
+ imageFile = urllib2.urlopen(url)
+ if os.path.exists(fullpath):
+  return fullpath
+ imageFile = urllib2.urlopen(url)
+ output = open(fullpath, 'wb')
+ output.write(imageFile.read())
+ output.close()
+ return fullpath
+
+
 def resizeImage(src, dest):
  cmd = 'convert %s -resize 2000x480 %s' % (src, dest)
  executeCmd(cmd)
@@ -29,6 +58,16 @@ def combineImage(src1,src2,dest):
  cmd = 'convert %s -bordercolor white -border 6x6 %s' % (dest, dest)
  executeCmd(cmd)
   
+def handleImageURL(src1, src2):
+ """All the input are URL, this is right """
+ dsrc1 = downloadImage(src1)
+ dsrc2 = downloadImage(src2) 
+ dest = handleImage(dsrc1, dsrc2)
+ fileName = dest.split('/')[-1]
+ cpCmd = 'mv %s %s/%s' % (dest, imageDirectory, fileName)
+ executeCmd(cpCmd)
+ finalURL = imageURLPrefix % (fileName)
+ return finalURL
 
 def handleImage(src1, src2):
  """This method will combine the 2 image into one"""
@@ -40,7 +79,10 @@ def handleImage(src1, src2):
  combineImage(tmp1, tmp2, dest)
  return dest
 
-print 'processed filename:', handleImage('~/Downloads/IMG_0735.JPG','~/Downloads/IMG_0734.JPG')
-#executeCmd('ls -ltr')
-#combineStr = '%s %i' % ('haha',1)
-#print 'combined str:', combineStr
+if __name__ == "__main__":
+ import sys
+ print "downloaded:", handleImageURL("http://127.0.0.1:8080/static/IMG_0012.JPG", "http://127.0.0.1:8080/static/IMG_0493.JPG")
+ #print 'processed filename:', handleImage('~/Downloads/IMG_0735.JPG','~/Downloads/IMG_0734.JPG')
+ #executeCmd('ls -ltr')
+ #combineStr = '%s %i' % ('haha',1)
+ #print 'combined str:', combineStr

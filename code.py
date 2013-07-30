@@ -1,12 +1,17 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*- 
 import web
 from xml.dom.minidom import parseString
+from user import user, fetchUser
+from msghandler import handle
 
 render = web.template.render('templates/')
-#db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
+db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
 urls = (
  '/', 'index',
  '/uploader', 'uploader',
- '/todo', 'todo'
+ '/todo', 'todo',
+ '/haha', 'hahaclass'
 )
 
 def getText(nodelist):
@@ -87,6 +92,7 @@ class index:
  def GET(self):
   #what's the meaning of this?
   echoVal = web.input(echostr=None)
+  print "recieved weixin access:", echoVal
   return echoVal.echostr
 
  def POST(self):
@@ -94,8 +100,9 @@ class index:
   webData = web.data()
   print "body is:", webData
   dom1 = parseString(webData);
-  msgs = parseMessage(dom1)
-  return handleMessage(msgs)
+  msg = parseMessage(dom1)
+  storedUser = fetchUser(msg['FromUserName'])
+  return handle(msg, storedUser)
    
    
 class todo:
