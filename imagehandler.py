@@ -4,9 +4,9 @@ import urllib2
 import hashlib
 import os
 
-imageURLPrefix = "http://127.0.0.1:8080/static/%s"
+imageURLPrefix = "http://www.enjoyxue.com/static/%s"
 
-imageDirectory = "/Users/apple/work_foot/python_field/handpa/static"
+imageDirectory = "/home/ec2-user/handpa/static"
 
 def executeCmd(cmd):
  print 'will execute:', cmd
@@ -34,9 +34,9 @@ def downloadImage(url):
  #the the post fix
  file_pix = url.split('.')[-1];
  hashstr = hashlib.md5(url).hexdigest()
- fullpath = dirs + "/" + hashstr + "." + file_pix;
+ fullpath = dirs + "/" + hashstr + ".jpg"
  print "full path:", fullpath
- imageFile = urllib2.urlopen(url)
+ #imageFile = urllib2.urlopen(url)
  if os.path.exists(fullpath):
   return fullpath
  imageFile = urllib2.urlopen(url)

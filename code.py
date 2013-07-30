@@ -6,7 +6,7 @@ from user import user, fetchUser
 from msghandler import handle
 
 render = web.template.render('templates/')
-db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
+#db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
 urls = (
  '/', 'index',
  '/uploader', 'uploader',
@@ -127,7 +127,11 @@ class uploader:
   web.debug(x['myfile'].file.read()) # Or use a file(-like) object
   raise web.seeother('/upload')
 
+#web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
 if __name__ == "__main__":
+ import sys
+ reload(sys)
+ sys.setdefaultencoding('utf-8')
  app = web.application(urls, globals())
  app.run()
 

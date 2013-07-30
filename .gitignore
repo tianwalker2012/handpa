@@ -1,0 +1,6 @@
+*.JPG
+static/
+*.pyc
+logs/
+images/
+downloaded/
