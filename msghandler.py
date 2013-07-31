@@ -124,6 +124,7 @@ def handle(msg, user):
     elif user.status == 2:
         if msg['MsgType'] == 'text':
             user.status == 3
+            print 'I will change status to 3, actual status:', user.status
             return textResponse % (user.openid, appOpenID,getCurrentMillis(), """注册成功。请试拍你的第一张羽毛照片。""")
         else:
             return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
