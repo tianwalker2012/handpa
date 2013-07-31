@@ -103,41 +103,41 @@ def storeUploadImage(url, user, msg):
     return img
  
 def handle(msg, user):
- """All the msg will be handled by me. all the logic will changed here"""
- appOpenID = msg.get('ToUserName', None)
- user.updated_at = datetime.now()
- if user.status == 1:
-  if msg['MsgType'] == 'event':
-    #I assume only subscribtion will have event.    
-    user.status = 1
-    print 'new user subscribe us, id:', user.openid
-    return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""感谢使用羽毛相机。发送照片到羽毛相机，瞬间抓到一起拍照的小伙伴，体验照片空中合体。请先输入微信号码（不是中文昵称）完成注册：""")
-  elif msg['MsgType'] == 'text':
-    user.status = 2
-    print 'recived user name:',user.openid,", name:",msg.get('Content', None)
-    user.name = msg.get('Content', None)
-    return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
-  else:
-    print 'revieved none text message'
-    return textResponse % (user.openid, appOpenID,getCurrentMillis(), """请先输入微信号码（不是中文昵称）完成注册：""")
- elif user.status == 2:
-    if msg['MsgType'] == 'text':
-        user.status == 3
-        return textResponse % (user.openid, appOpenID,getCurrentMillis(), """注册成功。请试拍你的第一张羽毛照片。""")
-    else:
-        return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
- elif user.status == 3:
-   if msg['MsgType'] == 'image':
-       img = storeUploadImage(msg['PicUrl'],user,msg)
-       if user.pendingImage == None:
-           user.pendingImage = img
-           return textResponse % (user.openid, appOpenID,getCurrentMillis(), """拍摄成功！请发送你的地点，或发送任何文字忽略地点。""")
-   if user.pendingImage:
-      pendingImage = user.pendingImage
-      user.pendingImage = None
-      return generateCombineImage(pendingImage, msg, appOpenID)
-   else:
-      return textResponse % (user.openid, appOpenID,getCurrentMillis(), """试拍一张羽毛照片。""")
+    """All the msg will be handled by me. all the logic will changed here"""
+    appOpenID = msg.get('ToUserName', None)
+    user.updated_at = datetime.now()
+    if user.status == 1:
+        if msg['MsgType'] == 'event':
+            #I assume only subscribtion will have event.    
+            user.status = 1
+            print 'new user subscribe us, id:', user.openid
+            return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""感谢使用羽毛相机。发送照片到羽毛相机，瞬间抓到一起拍照的小伙伴，体验照片空中合体。请先输入微信号码（不是中文昵称）完成注册：""")
+        elif msg['MsgType'] == 'text':
+            user.status = 2
+            print 'recived user name:',user.openid,", name:",msg.get('Content', None)
+            user.name = msg.get('Content', None)
+            return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
+        else:
+            print 'revieved none text message'
+            return textResponse % (user.openid, appOpenID,getCurrentMillis(), """请先输入微信号码（不是中文昵称）完成注册：""")
+    elif user.status == 2:
+        if msg['MsgType'] == 'text':
+            user.status == 3
+            return textResponse % (user.openid, appOpenID,getCurrentMillis(), """注册成功。请试拍你的第一张羽毛照片。""")
+        else:
+            return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
+    elif user.status == 3:
+        if msg['MsgType'] == 'image':
+            img = storeUploadImage(msg['PicUrl'],user,msg)
+            if user.pendingImage == None:
+                user.pendingImage = img
+                return textResponse % (user.openid, appOpenID,getCurrentMillis(), """拍摄成功！请发送你的地点，或发送任何文字忽略地点。""")
+        if user.pendingImage:
+            pendingImage = user.pendingImage
+            user.pendingImage = None
+            return generateCombineImage(pendingImage, msg, appOpenID)
+        else:
+            return textResponse % (user.openid, appOpenID,getCurrentMillis(), """试拍一张羽毛照片。""")
       
 if __name__ == "__main__":
  userGirl = user("coolid");
