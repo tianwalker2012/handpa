@@ -8,6 +8,7 @@ imageURLPrefix = "http://www.enjoyxue.com/static/%s"
 
 imageDirectory = "/home/ec2-user/handpa/static"
 
+#Is this true
 def executeCmd(cmd):
  print 'will execute:', cmd
  p = subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -46,50 +47,60 @@ def downloadImage(url):
  return fullpath
 
 
-def resizeImage(src, dest, isIcon):
+def resizeImage(src, dest):
     cmd = 'convert %s -resize 2000x480 %s' % (src, dest)
-    if isIcon:
-        cmd = 'convert %s -resize 2000x150 %s' % (src, dest)
+    #if isIcon:
+    #    cmd = 'convert %s -resize 2000x150 %s' % (src, dest)
     executeCmd(cmd)
     
     cmd2 = 'convert %s -gravity center -crop 320x480+0+0 %s' %(dest, dest)
-    if isIcon:
-        cmd2 = 'convert %s -gravity center -crop 270x150+0+0 %s' %(dest, dest)
+    #if isIcon:
+    #    cmd2 = 'convert %s -gravity center -crop 270x150+0+0 %s' %(dest, dest)
     return executeCmd(cmd2)
 
-def combineImage(src1,src2,dest):
+def combineImage(src1,src2,dest,iconFile):
  cmd = 'convert %s %s +append %s' % (src1, src2, dest)
  executeCmd(cmd)
- cmd = 'convert %s -bordercolor white -border 12x12 %s' % (dest, dest)
- executeCmd(cmd)
 
+ cmd1 = 'convert %s -gravity center -crop 540x300+0+0 %s' % (dest, iconFile)
+ executeCmd(cmd1)
 
-def handleImageURL(src1, src2, isIcon):
+ cmd2 = 'convert %s -bordercolor white -border 12x12 %s' % (iconFile, iconFile)
+ executeCmd(cmd2)
+ 
+ cmd3 = 'convert %s -bordercolor white -border 12x12 %s' % (dest, dest)
+ executeCmd(cmd3)     
+
+def handleImageURL(src1, src2):
  """All the input are URL, this is right """
  dsrc1 = downloadImage(src1)
  dsrc2 = downloadImage(src2) 
- dest = handleImage(dsrc1, dsrc2, isIcon)
+ (dest,iconFile) = handleImage(dsrc1, dsrc2)
  fileName = dest.split('/')[-1]
+ iconFileName = iconFile.split('/')[-1]
  cpCmd = 'mv %s %s/%s' % (dest, imageDirectory, fileName)
  executeCmd(cpCmd)
+ cpCmd = 'mv %s %s/%s' % (iconFile, imageDirectory, iconFileName)
+ executeCmd(cpCmd)
  finalURL = imageURLPrefix % (fileName)
- return finalURL
+ iconURL = imageURLPrefix % (iconFileName)
+ return (finalURL, iconURL)
 
-def handleImage(src1, src2, isIcon):
+def handleImage(src1, src2):
  """This method will combine the 2 image into one"""
  tmp1 = getTmpFileName()
  tmp2 = getTmpFileName()
  dest = getTmpFileName()
- resizeImage(src1, tmp1, isIcon)
- resizeImage(src2, tmp2, isIcon)
- combineImage(tmp1, tmp2, dest)
- return dest
+ iconFile = getTmpFileName()
+ resizeImage(src1, tmp1)
+ resizeImage(src2, tmp2)
+ combineImage(tmp1, tmp2, dest, iconFile)
+ return (dest, iconFile)
 
 if __name__ == "__main__":
     print "I am alright"
- #import sys
- #print "downloaded:", handleImageURL("http://127.0.0.1:8080/static/IMG_0012.JPG", "http://127.0.0.1:8080/static/IMG_0493.JPG", true)
- #print 'processed filename:', handleImage('~/Downloads/IMG_0735.JPG','~/Downloads/IMG_0734.JPG')
+    print "downloaded image:%s, icon:%s" % handleImageURL("http://127.0.0.1:8080/static/IMG_0012.JPG", "http://127.0.0.1:8080/static/IMG_0493.JPG")
+    #print 'processed filename:', handleImage('~/Downloads/IMG_0735.JPG','~/Downloads/IMG_0734.JPG')
  #executeCmd('ls -ltr')
  #combineStr = '%s %i' % ('haha',1)
  #print 'combined str:', combineStr

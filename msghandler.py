@@ -9,6 +9,8 @@ from datetime import datetime
 from image import Image
 from image import CombinedImage
 from datetime import datetime
+from threading import Thread
+from time import sleep
 
 textResponse = """<xml>
 <ToUserName><![CDATA[%s]]></ToUserName>
@@ -69,6 +71,28 @@ def combineImageText(img1, img2):
     result = "%s&%s\n%s&%s\n%s&%s" % (img1.author.name,img2.author.name,formatDate(img1.created_at),formatDate(img2.created_at),img1.locLabel,img2.locLabel)
     return result
 
+def executeAsync(md):
+    thread = Thread(target = md)
+    thread.start()
+
+#This method will be executed in the background thread. 
+#And will generate a combinedImage object and assign it to user. 
+def createCombinedImage(img, msg, inUser):
+    matchedResult = getMatchedImage(inUser)
+    (combinedURL,iconURL) = handleImageURL(img.url, matchedResult.url)
+    combo = CombinedImage(img, matchedResult,combinedURL, iconURL)
+    inUser.combinedImage = combo
+
+#The message is the message passed by user.
+#may contain the location message. 
+def createResponseByCombinedImage(inUser,combo, msg, appOpenID):
+    combinedName = "%s和%s的合影" % (combo.imageOne.author.name, combo.imageTwo.author.name)
+    #combineImageText(img, matchedResult)
+    combinedDescription = ""
+    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combinedDescription,combo.iconURL, combo.imageURL)
+
+#Now this method only used as a reference.
+#I will use the async functionality to achieve this.
 def generateCombineImage(img, msg, appOpenID):
     inUser = img.author    
     print 'Recieved image from user:', inUser.name,",url:",msg['PicUrl']
@@ -113,6 +137,7 @@ def handle(msg, inUser):
     appOpenID = msg.get('ToUserName', None)
     print "current status:",inUser.status,",msg type:",msg['MsgType']
     inUser.updated_at = datetime.now()
+    #inUser.status = 3
     if inUser.status == 1:
         if msg['MsgType'] == 'event':
             #I assume only subscribtion will have event.    
@@ -138,13 +163,19 @@ def handle(msg, inUser):
         print 'I am in status:', inUser.status,",my type:",msg['MsgType']
         if msg['MsgType'] == 'image':
             img = storeUploadImage(msg['PicUrl'],inUser,msg)
-            if inUser.pendingImage == None:
-                inUser.pendingImage = img
+            def processImage():
+                createCombinedImage(img, msg, inUser)
+            #execute the image generation in background thread
+            executeAsync(processImage)
+            
+            if inUser.combinedImage == None:
+                #inUser.pendingImage = img
                 return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """拍摄成功！请发送你的地点，或发送任何文字忽略地点。""")
-        if inUser.pendingImage:
-            pendingImage = inUser.pendingImage
-            inUser.pendingImage = None
-            resText = generateCombineImage(pendingImage, msg, appOpenID)
+        if inUser.combinedImage:
+            #pendingImage = inUser.pendingImage
+            combinedImage = inUser.combinedImage
+            inUser.combinedImage = None
+            resText = createResponseByCombinedImage(inUser,combinedImage, msg, appOpenID)
             print 'Response:', resText
             return resText
         else:
