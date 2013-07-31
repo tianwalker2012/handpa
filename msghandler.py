@@ -105,6 +105,7 @@ def storeUploadImage(url, user, msg):
 def handle(msg, user):
     """All the msg will be handled by me. all the logic will changed here"""
     appOpenID = msg.get('ToUserName', None)
+    print "current status:",user.status,",msg type:",msg['MsgType']
     user.updated_at = datetime.now()
     if user.status == 1:
         if msg['MsgType'] == 'event':
@@ -127,6 +128,7 @@ def handle(msg, user):
         else:
             return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
     elif user.status == 3:
+        print 'I am in status:', user.status,",my type:",msg['MsgType']
         if msg['MsgType'] == 'image':
             img = storeUploadImage(msg['PicUrl'],user,msg)
             if user.pendingImage == None:
