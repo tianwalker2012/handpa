@@ -26,6 +26,8 @@ class user:
   #what's the purpose of the combined?
   #make sure the 
   self.pendingImage = None
+  #the previously combined Image
+  self.combinedImage = None
 
 if __name__ == "__main__":
  user1 = fetchUser("cool")

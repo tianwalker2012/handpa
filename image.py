@@ -16,6 +16,8 @@ class Image:
         self.locLabel = None
 
 class CombinedImage:
-    def __init__(self, imageOne, imageTwo):
+    def __init__(self, imageOne, imageTwo, url, iconURL):
         self.imageOne = imageOne
         self.imageTwo = imageTwo
+        self.imageURL = url
+        self.iconURL = iconURL
