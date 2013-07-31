@@ -123,7 +123,8 @@ def handle(msg, user):
             return textResponse % (user.openid, appOpenID,getCurrentMillis(), """请先输入微信号码（不是中文昵称）完成注册：""")
     elif user.status == 2:
         if msg['MsgType'] == 'text':
-            user.status == 3
+            user.status = 3
+            user.status = 3
             print 'I will change status to 3, actual status:', user.status
             return textResponse % (user.openid, appOpenID,getCurrentMillis(), """注册成功。请试拍你的第一张羽毛照片。""")
         else:
