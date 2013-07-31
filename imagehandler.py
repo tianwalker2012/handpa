@@ -17,6 +17,17 @@ def executeCmd(cmd):
  retval = p.wait()
  print 'final result:', retval
  return retval
+ 
+def executeWithResult(cmd):
+    print 'will execute:', cmd
+    p = subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE, stderr=subprocess.STDOUT)
+    results = []    
+    for line in p.stdout.readlines():
+        results.append(line)
+    retval = p.wait()
+    resStr = ''.join(results)
+    print 'final result:', retval, ",", resStr
+    return (retval, resStr)
 
 def getTmpFileName():
  pf = 'handpa_tmp'
@@ -46,6 +57,37 @@ def downloadImage(url):
  output.close()
  return fullpath
 
+def parseSize(src):
+    cmd = 'identify %s' % src
+    (retval, res) = executeWithResult(cmd)
+    if(retval == 0):
+        items = res.split(' ')
+        if(len(items) > 3):
+            sizeStrs = items[2].split('x')
+            #print 'size string:',items[2],",length:",len(sizeStrs),"x/y",int(sizeStrs[0]),int(sizeStrs[1])
+            if(len(sizeStrs) == 2):
+                return (1, int(sizeStrs[0]), int(sizeStrs[1]))
+    return (0, 0, 0)
+
+    
+#I am actually a best crop.
+#I want to resize the image just enough to crop the stem out. 
+def resizeToSize(src, dest, destX, destY):
+    (res, x, y) = parseSize(src)
+    if res:
+        ratioX = float(destX)/float(x)
+        ratioY = float(destY)/float(y)
+        finalRatio = max(ratioX, ratioY)
+        finalX = max(finalRatio * x, destX)
+        finalY = max(finalRatio * y, destY)
+        print "ratioX:%f,y:%f, finalRatio:%f, x:%i, y:%i" % (ratioX, ratioY, finalRatio, x, y)
+        cmd = 'convert %s -resize %ix%i %s' % (src, finalX, finalY, dest)
+        executeCmd(cmd)
+        cmd2 = 'convert %s -gravity center -crop %ix%i+0+0 %s' % (dest, destX, destY, dest)
+        return executeCmd(cmd2)
+    else:
+        print 'Failed to collect image info from:', src
+        return 0
 
 def resizeImage(src, dest):
     cmd = 'convert %s -resize 2000x480 %s' % (src, dest)
@@ -92,14 +134,15 @@ def handleImage(src1, src2):
  tmp2 = getTmpFileName()
  dest = getTmpFileName()
  iconFile = getTmpFileName()
- resizeImage(src1, tmp1)
- resizeImage(src2, tmp2)
+ resizeToSize(src1, tmp1, 320, 480)
+ resizeToSize(src2, tmp2, 320, 480)
  combineImage(tmp1, tmp2, dest, iconFile)
  return (dest, iconFile)
 
 if __name__ == "__main__":
     print "I am alright"
     print "downloaded image:%s, icon:%s" % handleImageURL("http://127.0.0.1:8080/static/IMG_0012.JPG", "http://127.0.0.1:8080/static/IMG_0493.JPG")
+    #resizeToSize('static/IMG_0012.JPG', 'static/img800x200.jpg', 800, 200)     
     #print 'processed filename:', handleImage('~/Downloads/IMG_0735.JPG','~/Downloads/IMG_0734.JPG')
  #executeCmd('ls -ltr')
  #combineStr = '%s %i' % ('haha',1)
