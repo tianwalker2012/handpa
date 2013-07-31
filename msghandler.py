@@ -144,7 +144,9 @@ def handle(msg, inUser):
         if inUser.pendingImage:
             pendingImage = inUser.pendingImage
             inUser.pendingImage = None
-            return generateCombineImage(pendingImage, msg, appOpenID)
+            resText = generateCombineImage(pendingImage, msg, appOpenID)
+            print 'Response:', resText
+            return resText
         else:
             return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """试拍一张羽毛照片。""")
       
