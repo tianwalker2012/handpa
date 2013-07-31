@@ -133,7 +133,7 @@ def handle(msg, inUser):
         else:
             return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
     elif inUser.status == 3:
-        print 'I am in status:', user.status,",my type:",msg['MsgType']
+        print 'I am in status:', inUser.status,",my type:",msg['MsgType']
         if msg['MsgType'] == 'image':
             img = storeUploadImage(msg['PicUrl'],inUser,msg)
             if inUser.pendingImage == None:
