@@ -100,6 +100,7 @@ def storeUploadImage(url, user, msg):
     img.url = url
     setupImageLocation(img, msg)        
     uploadedImages.append(img)
+    return img
  
 def handle(msg, user):
  """All the msg will be handled by me. all the logic will changed here"""
@@ -127,8 +128,9 @@ def handle(msg, user):
         return textResponse % (user.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
  elif user.status == 3:
    if msg['MsgType'] == 'image':
-       storeUploadImage(msg['PicUrl'],user,msg)
+       img = storeUploadImage(msg['PicUrl'],user,msg)
        if user.pendingImage == None:
+           user.pendingImage = img
            return textResponse % (user.openid, appOpenID,getCurrentMillis(), """拍摄成功！请发送你的地点，或发送任何文字忽略地点。""")
    if user.pendingImage:
       pendingImage = user.pendingImage
