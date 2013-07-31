@@ -4,7 +4,7 @@ Created on Tue Jul 30 22:52:53 2013
 
 @author: apple
 """
-from datatime import datetime 
+from datetime import datetime 
 
 class Image:
     def __init__(self):
