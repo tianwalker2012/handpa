@@ -79,9 +79,10 @@ def generateCombineImage(img, msg, appOpenID):
     matchedURL = matchedResult.url
     combinedURL = handleImageURL(img.url, matchedURL, 0)
     iconURL = handleImageURL(img.url, matchedURL, 1)
+    combinedName = "%s和%s的合影" % (inUser.name,matchedUser.name)
     #
     #1. toID, 2.fromID, createTime,title,content,smallImage,imageURl
-    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),inUser.name+"和"+matchedUser.name+"的合影",combineImageText(img, matchedResult),iconURL, combinedURL)
+    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combineImageText(img, matchedResult),iconURL, combinedURL)
 
 def getMatchedImage(inUser):
     """Get an image can match this user, keep it simple and stupid"""
