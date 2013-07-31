@@ -21,6 +21,11 @@ class user:
   self.name = ""
   self.longitude = 0.0
   self.latitude = 0.0
+  #will store the latest local label. 
+  self.locLabel = None
+  #what's the purpose of the combined?
+  #make sure the 
+  self.pendingImage = None
 
 if __name__ == "__main__":
  user1 = fetchUser("cool")

@@ -69,6 +69,9 @@ def parseMessage(dom1):
   res['ToUserName'] = getTagData(dom1, 'ToUserName')
   res['MsgId'] = getTagValue(dom1, 'MsgId') 
   
+  #event 
+  res['Event'] = getTagValue(dom1, None)
+  
   #text message only
   res['Content'] = getTagData(dom1, 'Content');
   
@@ -102,7 +105,12 @@ class index:
   dom1 = parseString(webData);
   msg = parseMessage(dom1)
   storedUser = fetchUser(msg['FromUserName'])
-  return handle(msg, storedUser)
+  result = handle(msg, storedUser)
+  #The purpose is to make sure the whole thing get flush out, so that 
+  #I could check the result immediately.
+  import sys
+  sys.stdout.flush()
+  return result
    
    
 class todo:
