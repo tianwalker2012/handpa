@@ -44,7 +44,7 @@ uploadedImages = []
 defaultUser = user('openid')
 defaultUser.name = '羽毛粉丝'
 
-defaultImage = {'url':'http://www.enjoyxue.com/static/IMG_0493.JPG','user':defaultUser}
+#defaultImage = {'url':'http://www.enjoyxue.com/static/IMG_0493.JPG','user':defaultUser}
 
 def getCurrentMillis():
  return int(round(time.time() * 1000))
@@ -89,7 +89,11 @@ def getMatchedImage(user):
         for img in reversed(uploadedImages):
             if user.openid != img.author.openid:
                 return img
-    return defaultImage
+    dfImage = Image()
+    dfImage.author = user('openid')
+    dfImage.author.name = '羽毛粉丝'
+    dfImage.url = 'http://www.enjoyxue.com/static/IMG_0493.JPG'
+    return dfImage
 
 def storeUploadImage(url, user, msg):
     """Will store a image into memory"""
