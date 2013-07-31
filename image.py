@@ -10,7 +10,7 @@ class Image:
     def __init__(self):
         self.author = None
         self.created_at = datetime.now()
-        self.url
+        self.url = ''
         self.longitude = 0.0
         self.latitude = 0.0
         self.locLabel = None
