@@ -66,7 +66,8 @@ def formatDate(dt):
     return dt.strftime("%d/%m/%y")
 
 def combineImageText(img1, img2):
-    return img1.author.name+"&"+img2+"\n"+formatDate(img1.created_at)+"&"+formatDate(img2.created_at)+"\n"+img1.locLabel+"&"+img2.locLabel
+    result = "%s&%s\n%s&%s\n%s&%s" % (img1.author.name,img2.author.name,formatDate(img1.created_at),formatDate(img2.created_at),img1.locLabel,img2.locLabel)
+    return result
 
 def generateCombineImage(img, msg, appOpenID):
     inUser = img.author    
