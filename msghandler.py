@@ -184,7 +184,7 @@ def handle(msg, inUser):
         else:
             if(inUser.pendingCombine):
                 #Mean we are working on the image.
-                textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """亲，羽毛在很努力得帮你合照片，稍候几秒发任意信息取回。""")
+                return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """亲，羽毛在很努力得帮你合照片，稍候几秒发任意信息取回。""")
             return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """试拍一张羽毛照片。""")
       
 if __name__ == "__main__":
