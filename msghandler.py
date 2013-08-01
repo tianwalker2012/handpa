@@ -161,8 +161,10 @@ def handle(msg, inUser):
             return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
     elif inUser.status == 3:
         print 'I am in status:', inUser.status,",my type:",msg['MsgType']
+        #indicate current request is 
         if msg['MsgType'] == 'image':
             img = storeUploadImage(msg['PicUrl'],inUser,msg)
+            inUser.pendingCombine = 1
             def processImage():
                 createCombinedImage(img, msg, inUser)
             #execute the image generation in background thread
@@ -175,10 +177,14 @@ def handle(msg, inUser):
             #pendingImage = inUser.pendingImage
             combinedImage = inUser.combinedImage
             inUser.combinedImage = None
+            inUser.pendingCombine = 0
             resText = createResponseByCombinedImage(inUser,combinedImage, msg, appOpenID)
             print 'Response:', resText
             return resText
         else:
+            if(inUser.pendingCombine):
+                #Mean we are working on the image.
+                textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """亲，羽毛在很努力得帮你合照片，稍候几秒发任意信息取回。""")
             return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """试拍一张羽毛照片。""")
       
 if __name__ == "__main__":

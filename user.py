@@ -27,6 +27,10 @@ class user:
   #make sure the 
   self.pendingImage = None
   #the previously combined Image
+  #I could use a array to handle multiple images. 
+  #or we could hold on to it.
+  #mean we are busy doing this.
+  self.pendingCombine
   self.combinedImage = None
 
 if __name__ == "__main__":
