@@ -30,7 +30,7 @@ class user:
   #I could use a array to handle multiple images. 
   #or we could hold on to it.
   #mean we are busy doing this.
-  self.pendingCombine
+  self.pendingCombine = 0
   self.combinedImage = None
 
 if __name__ == "__main__":
