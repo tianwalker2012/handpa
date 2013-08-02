@@ -17,7 +17,6 @@ class Image:
         self.longitude = 0.0
         self.latitude = 0.0
         self.locLabel = None
-        self.combinedHistory = {}
 class CombinedImage:
     def __init__(self, imageOne, imageTwo, url, iconURL):
         self.imageOne = imageOne
