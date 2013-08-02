@@ -138,7 +138,7 @@ def handle(msg, inUser):
     appOpenID = msg.get('ToUserName', None)
     print "current status:",inUser.status,",msg type:",msg['MsgType']
     inUser.updated_at = datetime.now()
-    inUser.status = 3
+    #inUser.status = 3
     if inUser.status == 1:
         if msg['MsgType'] == 'event':
             #I assume only subscribtion will have event.    
