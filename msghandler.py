@@ -113,7 +113,8 @@ def getMatchedImage(inUser):
     """Get an image can match this user, keep it simple and stupid"""
     if len(uploadedImages) > 0:
         for img in reversed(uploadedImages):
-            if inUser.openid != img.author.openid:
+            if (inUser.openid != img.author.openid) and not(inUser.combinedHistory.get(img.id, None)):
+                inUser.combinedHistory[img.id] = img
                 return img
     dfImage = Image()
     dfImage.author = user('openid')
@@ -137,7 +138,7 @@ def handle(msg, inUser):
     appOpenID = msg.get('ToUserName', None)
     print "current status:",inUser.status,",msg type:",msg['MsgType']
     inUser.updated_at = datetime.now()
-    #inUser.status = 3
+    inUser.status = 3
     if inUser.status == 1:
         if msg['MsgType'] == 'event':
             #I assume only subscribtion will have event.    

@@ -32,6 +32,7 @@ class user:
   #mean we are busy doing this.
   self.pendingCombine = 0
   self.combinedImage = None
+  self.combinedHistory = None
 
 if __name__ == "__main__":
  user1 = fetchUser("cool")
