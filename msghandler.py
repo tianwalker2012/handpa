@@ -32,7 +32,7 @@ combineImageResponse = """<xml>
 <FromUserName><![CDATA[%s]]></FromUserName>
 <CreateTime>%i</CreateTime>
 <MsgType><![CDATA[news]]></MsgType>
-<ArticleCount>1</ArticleCount>
+<ArticleCount>2</ArticleCount>
 <Articles>
 <item>
 <Title><![CDATA[%s]]></Title> <Description><![CDATA[%s]]></Description>
@@ -44,7 +44,6 @@ combineImageResponse = """<xml>
 <PicUrl><![CDATA[%s]]></PicUrl>
 <Url><![CDATA[http://www.enjoyxue.com/homepage/%s]]></Url>
 </item>
-
 </Articles>
 <FuncFlag>1</FuncFlag>
 </xml>"""
