@@ -10,7 +10,12 @@ from image import Image
 from image import CombinedImage
 from datetime import datetime
 from threading import Thread
+from image import LoadedImage
+from user import fetchUserByID
+from user import storeUser
 from time import sleep
+from config import Config
+
 
 textResponse = """<xml>
 <ToUserName><![CDATA[%s]]></ToUserName>
@@ -34,6 +39,12 @@ combineImageResponse = """<xml>
 <PicUrl><![CDATA[%s]]></PicUrl>
 <Url><![CDATA[%s]]></Url>
 </item>
+<item>
+<Title><![CDATA[你的羽毛主页]]></Title> <Description><![CDATA[修改你的羽毛信息]]></Description>
+<PicUrl><![CDATA[%s]]></PicUrl>
+<Url><![CDATA[http://www.enjoyxue.com/homepage/%s]]></Url>
+</item>
+
 </Articles>
 <FuncFlag>1</FuncFlag>
 </xml>"""
@@ -41,12 +52,13 @@ combineImageResponse = """<xml>
 
 #All the uploaded image will be stored here
 #It will have 2 messages, image URL and the user information. 
-uploadedImages = []
+#uploadedImages = []
 
 defaultUser = user('openid')
 defaultUser.name = '羽毛粉丝'
 
 #defaultImage = {'url':'http://www.enjoyxue.com/static/IMG_0493.JPG','user':defaultUser}
+comboImages = {}
 
 def getCurrentMillis():
  return int(round(time.time() * 1000))
@@ -81,56 +93,58 @@ def createCombinedImage(img, msg, inUser):
     matchedResult = getMatchedImage(inUser)
     (combinedURL,iconURL) = handleImageURL(img.url, matchedResult.url)
     combo = CombinedImage(img, matchedResult,combinedURL, iconURL)
-    inUser.combinedImage = combo
+    #inUser.combinedImage = combo
+    #Make sure our change can be saw by other thread
+    storeUser(inUser)
+    comboImages[inUser.openid] = combo
+    
 
+def getComboImage(inUser):
+    return comboImages.get(inUser.openid, None)
+    
+def removeComboImage(inUser):
+    comboImages.pop(inUser.openid, None)
+
+def space4None(content):
+    return content if content else ''
 #The message is the message passed by user.
-#may contain the location message. 
+#may contain the location message.
+#Todo I need to store the image description update 
 def createResponseByCombinedImage(inUser,combo, msg, appOpenID):
-    combinedName = "%s和%s的合影" % (combo.imageOne.author.name, combo.imageTwo.author.name)
+    author = fetchUserByID(combo.imageTwo.authorID)
+    combinedName = "我和%s的合影" % (author.nickName)
     #combineImageText(img, matchedResult)
-    combinedDescription = ""
-    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combinedDescription,combo.iconURL, combo.imageURL)
-
-#Now this method only used as a reference.
-#I will use the async functionality to achieve this.
-def generateCombineImage(img, msg, appOpenID):
-    inUser = img.author    
-    print 'Recieved image from user:', inUser.name,",url:",msg['PicUrl']
-    #myimage = downloadImage(msg['PicUrl'])
-    #matchedImage = getMatchedImage(user)
-    setupImageLocation(img, msg)
-    matchedResult = getMatchedImage(inUser)
-    matchedUser = matchedResult.author
-    matchedURL = matchedResult.url
-    combinedURL = handleImageURL(img.url, matchedURL, 0)
-    iconURL = handleImageURL(img.url, matchedURL, 1)
-    combinedName = "%s和%s的合影" % (inUser.name,matchedUser.name)
-    #
-    #1. toID, 2.fromID, createTime,title,content,smallImage,imageURl
-    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combineImageText(img, matchedResult),iconURL, combinedURL)
+    if msg['MsgType'] == 'text':
+        combo.imageOne.description = msg['Content']
+        combo.imageOne.save()
+    combinedDescription = "我说:%s\n%s说:%s" % (space4None(combo.imageOne.description), author.nickName,space4None(combo.imageTwo.description)) 
+    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combinedDescription,combo.iconURL, combo.imageURL, Config.iconImage, inUser.openid)
 
 def getMatchedImage(inUser):
     """Get an image can match this user, keep it simple and stupid"""
-    if len(uploadedImages) > 0:
-        for img in reversed(uploadedImages):
-            if (inUser.openid != img.author.openid) and not(inUser.combinedHistory.get(img.id, None)):
-                inUser.combinedHistory[img.id] = img
+    if len(LoadedImage.loadedImages) > 0:
+        for img in reversed(LoadedImage.loadedImages):
+            imgUser = fetchUserByID(img.authorID)
+            if (inUser.openid != imgUser.openid) and not(inUser.combinedHistory.get(str(img._id), None)):
+                inUser.combinedHistory[str(img._id)] = 'used'
                 return img
     dfImage = Image()
     dfImage.author = user('openid')
-    dfImage.author.name = '羽毛粉丝'
+    dfImage.author.nickName = '羽毛粉丝'
     dfImage.url = 'http://www.enjoyxue.com/static/IMG_0493.JPG'
     return dfImage
 
 def storeUploadImage(url, inUser, msg):
     """Will store a image into memory"""
     img = Image()
-    img.author = inUser
+    #img.author = inUser
+    img.authorID = inUser._id
     #img.created_at = datetime.now()
     #img.locLabel = user.locLabel
     img.url = url
     setupImageLocation(img, msg)        
-    uploadedImages.append(img)
+    LoadedImage.loadedImages.append(img)
+    img.save()
     return img
  
 def handle(msg, inUser):
@@ -138,11 +152,17 @@ def handle(msg, inUser):
     appOpenID = msg.get('ToUserName', None)
     print "current status:",inUser.status,",msg type:",msg['MsgType']
     inUser.updated_at = datetime.now()
-    #inUser.status = 3
+    inUser.status = 3
+    if msg['MsgType'] == 'event':
+        #I assume only subscribtion will have event.    
+        #inUser.status = 3
+        print 'new user subscribe us, id:', inUser.openid
+        return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""感谢使用羽毛相机。发送照片到羽毛相机，瞬间抓到一起拍照的小伙伴，体验照片空中合体。""")    
     if inUser.status == 1:
+        #inUser.status = 3
         if msg['MsgType'] == 'event':
             #I assume only subscribtion will have event.    
-            inUser.status = 1
+            inUser.status = 3
             print 'new user subscribe us, id:', inUser.openid
             return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""感谢使用羽毛相机。发送照片到羽毛相机，瞬间抓到一起拍照的小伙伴，体验照片空中合体。请先输入微信号码（不是中文昵称）完成注册：""")
         elif msg['MsgType'] == 'text':
@@ -171,21 +191,23 @@ def handle(msg, inUser):
             #execute the image generation in background thread
             executeAsync(processImage)
             
-            if inUser.combinedImage == None:
+            if getComboImage(inUser) == None:
                 #inUser.pendingImage = img
-                return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """拍摄成功！请发送你的地点，或发送任何文字忽略地点。""")
-        if inUser.combinedImage:
+                return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """拍摄成功！为图片配点心情文字。""")
+        comboImage = getComboImage(inUser)
+        if comboImage:
             #pendingImage = inUser.pendingImage
-            combinedImage = inUser.combinedImage
-            inUser.combinedImage = None
+            #combinedImage = inUser.combinedImage
+            #inUser.combinedImage = None
+            removeComboImage(inUser)
             inUser.pendingCombine = 0
-            resText = createResponseByCombinedImage(inUser,combinedImage, msg, appOpenID)
+            resText = createResponseByCombinedImage(inUser,comboImage, msg, appOpenID)
             print 'Response:', resText
             return resText
         else:
             if(inUser.pendingCombine):
                 #Mean we are working on the image.
-                return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """亲，羽毛在很努力得帮你合照片，稍候几秒发任意信息取回。""")
+                return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """亲，羽毛在很努力很努力得帮你合照片，稍候几秒发任意信息取回。""")
             return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """试拍一张羽毛照片。""")
       
 if __name__ == "__main__":

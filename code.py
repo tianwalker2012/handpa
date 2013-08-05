@@ -2,13 +2,17 @@
 # -*- coding: utf-8 -*- 
 import web
 from xml.dom.minidom import parseString
-from user import user, fetchUser
+from user import user, fetchUser,storeUser
 from msghandler import handle
+from image import getAllImages
+from image import LoadedImage
+from homepage import homepage
 
 render = web.template.render('templates/')
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
 urls = (
  '/', 'index',
+ '/homepage/(.+)', 'homepage',
  '/uploader', 'uploader',
  '/todo', 'todo',
  '/haha', 'hahaclass'
@@ -106,6 +110,8 @@ class index:
   msg = parseMessage(dom1)
   storedUser = fetchUser(msg['FromUserName'])
   result = handle(msg, storedUser)
+  #Make sure the user will 
+  storeUser(storedUser)
   #The purpose is to make sure the whole thing get flush out, so that 
   #I could check the result immediately.
   import sys
@@ -141,5 +147,9 @@ if __name__ == "__main__":
  reload(sys)
  sys.setdefaultencoding('utf-8')
  app = web.application(urls, globals())
+ #Will load all previous images
+ #Since only some string,I guess I can load them all to memory
+ getAllImages()
+ print "Previous stored image is:", len(LoadedImage.loadedImages)
  app.run()
 

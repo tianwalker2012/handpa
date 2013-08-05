@@ -3,10 +3,11 @@ import tempfile
 import urllib2
 import hashlib
 import os
+from config import Config
 
-imageURLPrefix = "http://www.enjoyxue.com/static/%s"
+#imageURLPrefix = "http://www.enjoyxue.com/static/%s"
 
-imageDirectory = "/home/ec2-user/handpa/static"
+#imageDirectory = "/home/ec2-user/handpa/static"
 
 #Is this true
 def executeCmd(cmd):
@@ -120,12 +121,12 @@ def handleImageURL(src1, src2):
  (dest,iconFile) = handleImage(dsrc1, dsrc2)
  fileName = dest.split('/')[-1]
  iconFileName = iconFile.split('/')[-1]
- cpCmd = 'mv %s %s/%s' % (dest, imageDirectory, fileName)
+ cpCmd = 'mv %s %s/%s' % (dest, Config.imagePath, fileName)
  executeCmd(cpCmd)
- cpCmd = 'mv %s %s/%s' % (iconFile, imageDirectory, iconFileName)
+ cpCmd = 'mv %s %s/%s' % (iconFile, Config.imagePath, iconFileName)
  executeCmd(cpCmd)
- finalURL = imageURLPrefix % (fileName)
- iconURL = imageURLPrefix % (iconFileName)
+ finalURL = Config.imageURLPrefix % (fileName)
+ iconURL = Config.imageURLPrefix % (iconFileName)
  return (finalURL, iconURL)
 
 def handleImage(src1, src2):
