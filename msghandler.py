@@ -120,7 +120,8 @@ def createResponseByCombinedImage(inUser,combo, msg, appOpenID):
         combo.imageOne.description = msg['Content']
         combo.imageOne.save()
     combinedDescription = "我说:%s\n%s说:%s" % (space4None(combo.imageOne.description), author.nickName,space4None(combo.imageTwo.description)) 
-    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combinedDescription,combo.iconURL, combo.imageURL, Config.iconImage, inUser.openid)
+    detailURL = Config.comboDetailURL % (combo.position)
+    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combinedDescription,combo.iconURL, detailURL, Config.iconImage, inUser.openid)
 
 def getMatchedImage(inUser):
     """Get an image can match this user, keep it simple and stupid"""

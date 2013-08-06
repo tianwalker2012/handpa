@@ -11,11 +11,12 @@ from context import WebContext
 from image import Image
 class showdetail:
     def GET(self, pos):
-        print "Passed combo position:", pos
+        print "Passed combo position:", pos, ",comboSize:", len(WebContext.combinedImages)
+        intPos = int(pos)        
         comboArr = WebContext.combinedImages
-        if(pos > len(comboArr)):
+        if(intPos > len(comboArr)):
             return "Not exist combo"
-        comboImage = comboArr[pos]
+        comboImage = comboArr[intPos]
         #params = web.input()
         #isUpdate = params.get('update', None)
         #updateInfo = "更新个人信息成功！" if isUpdate else ""

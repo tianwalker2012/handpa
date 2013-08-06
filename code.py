@@ -17,7 +17,7 @@ urls = (
  '/', 'index',
  '/homepage/(.+)', 'homepage',
  '/uploader', 'uploader',
- '/detail/(.+)', 'showdetail'
+ '/showdetail/(.+)', 'showdetail',
  '/todo', 'todo',
  '/haha', 'hahaclass'
 )
