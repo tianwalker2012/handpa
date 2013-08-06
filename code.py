@@ -7,13 +7,17 @@ from msghandler import handle
 from image import getAllImages
 from image import LoadedImage
 from homepage import homepage
+from showdetail import showdetail
+from context import WebContext
 
 render = web.template.render('templates/')
+WebContext.render = render
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
 urls = (
  '/', 'index',
  '/homepage/(.+)', 'homepage',
  '/uploader', 'uploader',
+ '/detail/(.+)', 'showdetail'
  '/todo', 'todo',
  '/haha', 'hahaclass'
 )

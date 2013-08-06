@@ -15,6 +15,7 @@ from user import fetchUserByID
 from user import storeUser
 from time import sleep
 from config import Config
+from context import WebContext
 
 
 textResponse = """<xml>
@@ -40,7 +41,7 @@ combineImageResponse = """<xml>
 <Url><![CDATA[%s]]></Url>
 </item>
 <item>
-<Title><![CDATA[你的羽毛主页]]></Title> <Description><![CDATA[修改你的羽毛信息]]></Description>
+<Title><![CDATA[我的羽毛（0条信息）]]></Title> <Description><![CDATA[修改你的羽毛信息]]></Description>
 <PicUrl><![CDATA[%s]]></PicUrl>
 <Url><![CDATA[http://www.enjoyxue.com/homepage/%s]]></Url>
 </item>
@@ -96,6 +97,8 @@ def createCombinedImage(img, msg, inUser):
     #Make sure our change can be saw by other thread
     storeUser(inUser)
     comboImages[inUser.openid] = combo
+    WebContext.combinedImages.append(combo)
+    combo.position = len(WebContext.combinedImages) - 1
     
 
 def getComboImage(inUser):
@@ -192,7 +195,7 @@ def handle(msg, inUser):
             
             if getComboImage(inUser) == None:
                 #inUser.pendingImage = img
-                return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """拍摄成功！为图片配点心情文字。""")
+                return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """拍摄成功！记下你的真实想法或者发送地理位置""")
         comboImage = getComboImage(inUser)
         if comboImage:
             #pendingImage = inUser.pendingImage

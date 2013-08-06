@@ -61,6 +61,9 @@ class CombinedImage(BaseObject):
         self.imageTwo = imageTwo
         self.imageURL = url
         self.iconURL = iconURL
+        #used to find out in which position this image at.
+        #so we could check the image out
+        self.position = 0
 
 if __name__ == "__main__":
     img = Image()

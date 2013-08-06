@@ -108,11 +108,11 @@ def combineImage(src1,src2,dest,iconFile):
  cmd1 = 'convert %s -gravity center -crop 540x300+0+0 %s' % (dest, iconFile)
  executeCmd(cmd1)
 
- cmd2 = 'convert %s -bordercolor white -border 12x12 %s' % (iconFile, iconFile)
- executeCmd(cmd2)
+ #cmd2 = 'convert %s -bordercolor white -border 12x12 %s' % (iconFile, iconFile)
+ #executeCmd(cmd2)
  
- cmd3 = 'convert %s -bordercolor white -border 12x12 %s' % (dest, dest)
- executeCmd(cmd3)     
+ #cmd3 = 'convert %s -bordercolor white -border 12x12 %s' % (dest, dest)
+ #executeCmd(cmd3)     
 
 def handleImageURL(src1, src2):
  """All the input are URL, this is right """

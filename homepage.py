@@ -6,6 +6,7 @@ Created on Mon Aug  5 08:34:59 2013
 """
 import web
 from user import user, fetchUser,storeUser
+from context import WebContext
 class homepage:
     def GET(self, openid):
         print "Passed openid:", openid
@@ -13,19 +14,7 @@ class homepage:
         isUpdate = params.get('update', None)
         updateInfo = "更新个人信息成功！" if isUpdate else ""
         inUser = fetchUser(openid)
-        return """<html>
-         <head>
-          <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
-        </head><body>
-        <p>%s</p>
-         <form method="POST" action="">
-         <p>微信号:<input type="text" name="name" value="%s" /></p>
-         <p>昵称:<input type='text' name="nickname" value="%s" /></p>
-         <input type='hidden' name="openid" value="%s"/>
-         <br/>
-         <input type="submit" />
-         </form>
-         </body></html>""" % (updateInfo, inUser.name, inUser.nickName, openid)
+        return WebContext.render.homepage(updateInfo, inUser.name, inUser.nickName, openid)
 
     def POST(self, openid):
          params = web.input()
