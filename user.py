@@ -8,6 +8,7 @@ from mongoUtil import create
 from mongoUtil import update
 from mongoUtil import save
 from mongoUtil import fetchByID
+from baseobject import isMap
 
 import types
 datastore = {}
@@ -72,10 +73,15 @@ class user(BaseObject):
   self.combinedHistory = {}
   #What's the purpose of this member?
   #Make sure only the first message is the right one
-  self.lastMessage = None
+  self.lastMessage = {}
   self.mongoObjID = None
 
 
+class TestObjSerialize(BaseObject):
+    def __init__(self):
+        self.name = "cool guy"
+        self.property1 = {"Cool":"Guy"}
+        self.property2 = {"Hot":"Girl"}
 
 if __name__ == "__main__":
  user1 = fetchUser("Coolguy")
@@ -84,11 +90,45 @@ if __name__ == "__main__":
  storeUser(user1)
  userfetched = fetchUser("Coolguy")
  print "current name:", userfetched.name
- user2 = user('random');
+ user2 = user('random2013');
+ user2.nickName = "tiange2013"
  storeUser(user2);
- userfetched = fetchUser('random')
- print "verify save new object,",userfetched.serialize()
  
+ orgObj = user('origin')
+ for key in orgObj.__dict__:
+     print  key,":",orgObj.__dict__[key]
+ 
+ userfetched = fetchUser('random2013')
+ for key in userfetched.__dict__:
+     print  "suspects:",key,":",userfetched.__dict__[key]
+
+ userfetched.lastMessage['cool'] = 'Message'
+ 
+ print 'serialized:',userfetched.serialize()
+ 
+ userfetched.lastMessage = {"hot ":"hot message"}
+ print "hot message:",userfetched.serialize()
+ userfetched.nickName = "Brand new"
+ storeUser(userfetched)
+ userNew = fetchUser("random2013")
+ for key in userNew.__dict__:
+     print  "brandnew,",key,":",userNew.__dict__[key]
+ print 'serialize:',userNew.serialize()
+ 
+ """
+ user2.lastMessage = {"Message":"RealMessage"}
+ user2.lastMessage['Coolmessage'] = "Cool message"
+ if isMap(user2.lastMessage):
+     print "last message is map"
+ else:
+     print "last message is not map"
+ print "verify save new object,",userfetched.serialize()
+ userNative = user('hahaha')
+ userNative.lastMessage = {"nativeproperty":"really really native"}
+ print "Native user serialized:", userNative.serialize()
+ ts = TestObjSerialize()
+ print "serialize obj:", ts.serialize()
+ """
  #userfetched.populate({"nickName":"Tiange2013","status":3})
  #stored = userfetched.serialize()
  #print "stored value:", stored

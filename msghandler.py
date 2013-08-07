@@ -91,11 +91,13 @@ def executeAsync(md):
 #And will generate a combinedImage object and assign it to user. 
 def createCombinedImage(img, msg, inUser):
     matchedResult = getMatchedImage(inUser)
+    storeUser(inUser)
+    #sleep(30)
     (combinedURL,iconURL) = handleImageURL(img.url, matchedResult.url)
     combo = CombinedImage(img, matchedResult,combinedURL, iconURL)
     #inUser.combinedImage = combo
     #Make sure our change can be saw by other thread
-    storeUser(inUser)
+    
     comboImages[inUser.openid] = combo
     WebContext.combinedImages.append(combo)
     combo.position = len(WebContext.combinedImages) - 1

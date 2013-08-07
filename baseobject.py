@@ -31,6 +31,7 @@ def serializeMap(maps, proc):
     for key in maps:
       val = maps[key]
       res[key] = proc(val, proc)
+    #print "serialize map get called src:",maps,", dest:",res
     return res
 
 class BaseObject:
