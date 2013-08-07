@@ -70,6 +70,9 @@ class user(BaseObject):
   self.pendingCombine = 0
   self.combinedImage = None
   self.combinedHistory = {}
+  #What's the purpose of this member?
+  #Make sure only the first message is the right one
+  self.lastMessage = None
   self.mongoObjID = None
 
 

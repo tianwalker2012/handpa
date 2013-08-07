@@ -118,7 +118,10 @@ def createResponseByCombinedImage(inUser,combo, msg, appOpenID):
     #combineImageText(img, matchedResult)
     if msg['MsgType'] == 'text':
         combo.imageOne.description = msg['Content']
-        combo.imageOne.save()
+    elif msg['MsgType'] == 'location':
+        combo.imageOne.description = msg['Label']
+    combo.imageOne.save()
+    
     combinedDescription = "我说:%s\n%s说:%s" % (space4None(combo.imageOne.description), author.nickName,space4None(combo.imageTwo.description)) 
     detailURL = Config.comboDetailURL % (combo.position)
     return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combinedDescription,combo.iconURL, detailURL, Config.iconImage, inUser.openid)
@@ -204,12 +207,16 @@ def handle(msg, inUser):
             #inUser.combinedImage = None
             removeComboImage(inUser)
             inUser.pendingCombine = 0
-            resText = createResponseByCombinedImage(inUser,comboImage, msg, appOpenID)
+            displayMsg = inUser.lastMessage if inUser.lastMessage else msg
+            resText = createResponseByCombinedImage(inUser,comboImage, displayMsg, appOpenID)
+            inUser.lastMessage = None            
             print 'Response:', resText
             return resText
         else:
             if(inUser.pendingCombine):
                 #Mean we are working on the image.
+                if not inUser.lastMessage:
+                    inUser.lastMessage = msg
                 return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """亲，羽毛在很努力很努力得帮你合照片，稍候几秒发任意信息取回。""")
             return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """试拍一张羽毛照片。""")
       
