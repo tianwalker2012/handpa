@@ -126,7 +126,7 @@ def createResponseByCombinedImage(inUser,combo, msg, appOpenID):
     
     combinedDescription = "我说:%s\n%s说:%s" % (space4None(combo.imageOne.description), author.nickName,space4None(combo.imageTwo.description)) 
     detailURL = Config.comboDetailURL % (combo.position)
-    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combinedDescription,combo.iconURL, detailURL, Config.iconImage, inUser.openid)
+    return combineImageResponse % (inUser.openid,appOpenID,getCurrentMillis(),combinedName,combinedDescription,combo.iconURL, detailURL,inUser.avatar if inUser.avatar else Config.iconImage, inUser.openid)
 
 def getMatchedImage(inUser):
     """Get an image can match this user, keep it simple and stupid"""
@@ -154,13 +154,20 @@ def storeUploadImage(url, inUser, msg):
     LoadedImage.loadedImages.append(img)
     img.save()
     return img
- 
+
+#Following is status transation logic, 1 mean first time get our service
+#Then jump to 3, mean first trial, after the trial is done, 
+#the status is 4, we will need you to give use the nick name. 
+#Then status is 5, mean pending avarter. 
+#Then status is 6, pending weixin number
+#then status is 7, mean register success. 
+#cool. 
 def handle(msg, inUser):
     """All the msg will be handled by me. all the logic will changed here"""
     appOpenID = msg.get('ToUserName', None)
     print "current status:",inUser.status,",msg type:",msg['MsgType']
     inUser.updated_at = datetime.now()
-    inUser.status = 3
+    #inUser.status = 3
     if msg['MsgType'] == 'event':
         #I assume only subscribtion will have event.    
         #inUser.status = 3
@@ -188,7 +195,37 @@ def handle(msg, inUser):
             return textResponse % (inUser.openid, appOpenID,getCurrentMillis(), """注册成功。请试拍你的第一张羽毛照片。""")
         else:
             return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""为保证微信号码准确，请再输入一次：""")
-    elif inUser.status == 3:
+    
+    elif inUser.status == 4:
+        if msg['MsgType'] == 'image':
+            img = storeUploadImage(msg['PicUrl'], inUser, msg)
+        inUser.status = 5
+        return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""给自己取个昵称让羽毛里的小伙伴们多一个喜欢你理由。""")
+    elif inUser.status == 5:
+        if msg['MsgType'] == 'image':
+            img = storeUploadImage(msg['PicUrl'], inUser, msg)
+        elif msg['MsgType'] == 'text':
+            inUser.nickName = msg['Content']
+            inUser.status = 6
+            return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""请上传你的头像。酷一点的是必须的""")
+        return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""给自己取个昵称让羽毛里的小伙伴们多一个喜欢你理由。""")
+    elif inUser.status == 6:
+        if msg['MsgType'] == 'image':
+            #img = storeUploadImage(msg['PicUrl'], inUser, msg)
+            inUser.avatar = msg['PicUrl']
+            inUser.status = 7
+            return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""最后一步了，输入微信号码（不是中文昵称），让羽毛上的小伙伴们能跟你分享更多好照片：""")
+        return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""请上传你的头像。酷一点是的必须的""")
+    elif inUser.status == 7:
+        if msg['MsgType'] == 'image':
+            img = storeUploadImage(msg['PicUrl'], inUser, msg)
+        elif msg['MsgType'] == 'text':
+            inUser.name = msg['Content']
+            inUser.status = 8
+            return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""谢谢你注册羽毛，尽情体验照片空中合体乐趣吧！""")
+        return textResponse % (inUser.openid,appOpenID,getCurrentMillis(),"""最后一步了，输入微信号码（不是中文昵称），让羽毛上的小伙伴们能跟你分享更多好照片：""")
+
+    elif inUser.status == 3 or inUser.status == 8:
         print 'I am in status:', inUser.status,",my type:",msg['MsgType']
         #indicate current request is 
         if msg['MsgType'] == 'image':
@@ -213,6 +250,9 @@ def handle(msg, inUser):
             resText = createResponseByCombinedImage(inUser,comboImage, displayMsg, appOpenID)
             inUser.lastMessage = None            
             print 'Response:', resText
+            if inUser.status == 3:
+                print "change status:", 4
+                inUser.status = 4
             return resText
         else:
             if(inUser.pendingCombine):

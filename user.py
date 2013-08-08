@@ -75,6 +75,7 @@ class user(BaseObject):
   #Make sure only the first message is the right one
   self.lastMessage = {}
   self.mongoObjID = None
+  self.avatar = None
 
 
 class TestObjSerialize(BaseObject):
