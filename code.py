@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*- 
 import web
 from xml.dom.minidom import parseString
+import hashlib
 from user import user, fetchUser,storeUser
 from msghandler import handle
 from image import getAllImages
@@ -140,10 +141,17 @@ class uploader:
 
  def POST(self):
   x = web.input(myfile={})
+  storedDir = '/Users/apple/Documents/handpa/static/'
+  filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
+  postFix = filePath.split('.')[-1]
+  hashedName = hashlib.md5(filePath).hexdigest() + '.' + postFix
+  fout = open(storedDir+hashedName, 'w')
+  fout.write(x.myfile.file.read())
+  fout.close()
   web.debug(x['myfile'].filename) # This is the filename
-  web.debug(x['myfile'].value) # This is the file contents
-  web.debug(x['myfile'].file.read()) # Or use a file(-like) object
-  raise web.seeother('/upload')
+  #web.debug(x['myfile'].value) # This is the file contents
+  #web.debug(x['myfile'].file.read())  Or use a file(-like) object
+  raise web.seeother('/static/'+hashedName)
 
 #web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
 if __name__ == "__main__":
