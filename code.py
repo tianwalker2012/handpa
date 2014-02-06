@@ -14,6 +14,8 @@ from baseobject import BaseObject
 from baseobject import isSerializable
 #import gluon.contrib.simplejson
 import simplejson
+from featherhandler import FeatherHandler
+from featherhandler import UploadHandler
 
 render = web.template.render('templates/')
 WebContext.render = render
@@ -25,7 +27,9 @@ urls = (
  '/showdetail/(.+)', 'showdetail',
  '/todo', 'todo',
  '/haha', 'hahaclass',
- '/outputtest','outputtest'
+ '/outputtest','outputtest',
+ '/feather', 'FeatherHandler',
+ '/upload', 'UploadHandler'
 )
 
 class JsonObject(BaseObject):
@@ -153,7 +157,7 @@ class todo:
 class uploader:
  def GET(self):
   return """<html><head></head><body>
-         <form method="POST" enctype="multipart/form-data" action="">
+         <form method="POST" enctype="multipart/form-data" action="/upload">
          <input type="file" name="myfile" />
          <br/>
          <input type="submit" />
