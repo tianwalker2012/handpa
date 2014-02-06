@@ -10,6 +10,10 @@ from image import LoadedImage
 from homepage import homepage
 from showdetail import showdetail
 from context import WebContext
+from baseobject import BaseObject
+from baseobject import isSerializable
+#import gluon.contrib.simplejson
+import simplejson
 
 render = web.template.render('templates/')
 WebContext.render = render
@@ -20,8 +24,15 @@ urls = (
  '/uploader', 'uploader',
  '/showdetail/(.+)', 'showdetail',
  '/todo', 'todo',
- '/haha', 'hahaclass'
+ '/haha', 'hahaclass',
+ '/outputtest','outputtest'
 )
+
+class JsonObject(BaseObject):
+ def __init__(self, name, gender):
+  self.name = name
+  self.gender = gender 
+
 
 def getText(nodelist):
  rc = []
@@ -99,7 +110,17 @@ def parseMessage(dom1):
   res['Url'] = getTagData(dom1, 'Url')
   return res
 
-
+class outputtest:
+ def GET(self):
+     out1 = "coolguy"
+     out2 = "hotgirl"
+     jobj = JsonObject("tian", 37)
+     return jobj.serialize()
+ def POST(self):
+     webData = web.data()
+     print "body is:", webData
+     parsedJson = simplejson.loads(webData)
+     return parsedJson["name"]
 class index:
  def GET(self):
   #what's the meaning of this?
