@@ -16,6 +16,9 @@ from baseobject import isSerializable
 import simplejson
 from featherhandler import FeatherHandler
 from featherhandler import UploadHandler
+from featherhandler import FeatherLogin
+from featherhandler import FeatherRegister
+from featherhandler import FeatherContacts
 
 render = web.template.render('templates/')
 WebContext.render = render
@@ -29,7 +32,11 @@ urls = (
  '/haha', 'hahaclass',
  '/outputtest','outputtest',
  '/feather', 'FeatherHandler',
- '/upload', 'UploadHandler'
+ '/upload', 'UploadHandler',
+ '/login', 'FeatherLogin',
+ '/register', 'FeatherRegister',
+ '/query/contacts','FeatherContacts'
+ 
 )
 
 class JsonObject(BaseObject):

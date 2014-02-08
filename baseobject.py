@@ -5,6 +5,10 @@ Created on Sun Aug  4 16:41:50 2013
 @author: apple
 """
 import types
+from datetime import datetime
+#from pymongo import ObjectId
+from bson.objectid import ObjectId
+
 def isSerializable(obj):
     invert_op = getattr(obj, "serialize", None)
     if callable(invert_op):
@@ -47,6 +51,28 @@ class BaseObject:
                 self.__dict__[key] = values[key]
 
      #I will serialize the value to things I could store
+
+    def serializeJson(self):
+        res = {}
+        def proc(inVal, prc):
+             if isMap(inVal):
+                 return serializeMap(inVal, prc)
+             elif isList(inVal):
+                 return serializeList(inVal, prc)
+             elif isSerializable(inVal):
+                 return inVal.serializeJson()
+             elif isinstance(inVal, datetime):
+                 return inVal.isoformat()
+             elif isinstance(inVal, ObjectId):
+                 return str(inVal)
+             else:
+                 return inVal
+        for key in self.__dict__:
+             val = self.__dict__.get(key, None)
+             if val:
+                 res[key] = proc(val, proc)
+        return res
+
     def serialize(self):
          res = {}
          def proc(inVal, prc):
@@ -56,6 +82,8 @@ class BaseObject:
                  return serializeList(inVal, prc)
              elif isSerializable(inVal):
                  return inVal.serialize()
+             #elif isinstance(inVal, datetime):
+             #    return inVal.isoformat()
              else:
                  return inVal
 
