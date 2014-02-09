@@ -7,20 +7,16 @@ Created on Tue Jul 30 22:52:53 2013
 from datetime import datetime 
 from baseobject import BaseObject
 from user import fetchUser
-from mongoUtil import save
-from mongoUtil import fetchAll
-from mongoUtil import removeAll
+from mongoUtil import MongoUtil
 from time import sleep
 
-
 imgColName = 'images'
-
 class LoadedImage:
     loadedImages = []
 
 #Will assign value to the loadedImages. Yes. 
 def getAllImages():
-    listImages = fetchAll(imgColName,'created_at')
+    listImages = MongoUtil.fetchAll(imgColName,'created_at')
     del LoadedImage.loadedImages[:]  
     for imgMap in listImages:
         img = Image()
@@ -29,14 +25,14 @@ def getAllImages():
 
 #Clean all test data
 def removeAllImages():
-    removeAll(imgColName)
+    MongoUtil.removeAll(imgColName)
     
 class Image(BaseObject):
     counter = 1
 
     def save(self):
         values = self.serialize()        
-        rd = save(imgColName, values)
+        rd = MongoUtil.save(imgColName, values)
         self._id = rd       
         
     def __init__(self):
@@ -66,6 +62,9 @@ class CombinedImage(BaseObject):
         self.position = 0
 
 if __name__ == "__main__":
+    #print 'before save'
+    MongoUtil.save('TestCol', {'name':'Tian'})
+    #print 'completed save'
     img = Image()
     img.description = 'hello1'
     img.save()  

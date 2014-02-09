@@ -75,13 +75,17 @@ class UploadedImage(FeatherBase):
         self.thumbnail = None
         self.screenURL = None
         self.originalURL = None
+        self.assetURL = None 
+        #used to map the server image with the image in the album
         self.uploaded = 0
         self.personID = None
         self.latitude = 0.0
         self.longitude = 0.0
         self.uploadTime = None
+        self.createdTime = None
         self.shotTime = None
         self.combined = []
+
 
 if __name__ == "__main__":
     tian = Person()

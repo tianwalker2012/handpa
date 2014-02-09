@@ -3,21 +3,16 @@
 from datetime import datetime
 from baseobject import BaseObject
 from baseobject import isSerializable
-from mongoUtil import fetch
-from mongoUtil import create
-from mongoUtil import update
-from mongoUtil import save
-from mongoUtil import fetchByID
-from baseobject import isMap
-
+from mongoUtil import MongoUtil
 import types
+
 datastore = {}
 
 userColName = "users"
 
 
 def fetchUserByID(uid):
-    res = fetchByID(userColName, uid)
+    res = MongoUtil.fetchByID(userColName, uid)
     if res:
         outUser = user('dummy')
         outUser.populate(res)
@@ -27,11 +22,11 @@ def fetchUserByID(uid):
     return outUser
 
 def fetchUser(openid):
-    res = fetch(userColName,{"openid": openid})
+    res = MongoUtil.fetch(userColName,{"openid": openid})
     print "fetched back:",res
     outUser = user(openid)
     if not res:
-        objid = create(userColName,{"openid": openid})
+        objid = MongoUtil.create(userColName,{"openid": openid})
         outUser._id = objid
         return outUser
     else:
@@ -44,7 +39,7 @@ def storeUser(inUser):
     """
     serialized = inUser.serialize()
     print "try to store user:",serialized
-    save(userColName, serialized)
+    MongoUtil.save(userColName, serialized)
 
 
 
@@ -85,21 +80,21 @@ class TestObjSerialize(BaseObject):
         self.property2 = {"Hot":"Girl"}
 
 if __name__ == "__main__":
- user1 = fetchUser("Coolguy")
+ user1 = MongoUtil.fetchUser("Coolguy")
  user1.name = "tiange2016"
  print "assigned name:", user1.name
- storeUser(user1)
- userfetched = fetchUser("Coolguy")
+ MongoUtil.storeUser(user1)
+ userfetched = MongoUtil.fetchUser("Coolguy")
  print "current name:", userfetched.name
  user2 = user('random2013');
  user2.nickName = "tiange2013"
- storeUser(user2);
+ MongoUtil.storeUser(user2);
  
  orgObj = user('origin')
  for key in orgObj.__dict__:
      print  key,":",orgObj.__dict__[key]
  
- userfetched = fetchUser('random2013')
+ userfetched = MongoUtil.fetchUser('random2013')
  for key in userfetched.__dict__:
      print  "suspects:",key,":",userfetched.__dict__[key]
 
@@ -110,12 +105,11 @@ if __name__ == "__main__":
  userfetched.lastMessage = {"hot ":"hot message"}
  print "hot message:",userfetched.serialize()
  userfetched.nickName = "Brand new"
- storeUser(userfetched)
- userNew = fetchUser("random2013")
+ MongoUtil.storeUser(userfetched)
+ userNew = MongoUtil.fetchUser("random2013")
  for key in userNew.__dict__:
      print  "brandnew,",key,":",userNew.__dict__[key]
  print 'serialize:',userNew.serialize()
- 
  """
  user2.lastMessage = {"Message":"RealMessage"}
  user2.lastMessage['Coolmessage'] = "Cool message"

@@ -19,6 +19,7 @@ from featherhandler import UploadHandler
 from featherhandler import FeatherLogin
 from featherhandler import FeatherRegister
 from featherhandler import FeatherContacts
+from featherhandler import PhotoHandler
 
 render = web.template.render('templates/')
 WebContext.render = render
@@ -35,7 +36,8 @@ urls = (
  '/upload', 'UploadHandler',
  '/login', 'FeatherLogin',
  '/register', 'FeatherRegister',
- '/query/contacts','FeatherContacts'
+ '/query/contacts','FeatherContacts',
+ '/photo/info',"PhotoHandler"
  
 )
 
