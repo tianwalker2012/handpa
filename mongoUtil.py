@@ -63,11 +63,13 @@ class MongoUtil:
     @classmethod
     def update(self, colName, values):
         cols = db[colName]
-        #The condition of the update    
-        conds = {'_id':values['_id']}
+        #The condition of the update
+        cid = values['_id']
+        conds = {'_id':cid}
         #remove the id from the dictionary
         values.pop('_id',None)
         cols.update(conds,{"$set":values})
+        values['_id'] = cid
 
     @classmethod
     def save(self, colName, values):

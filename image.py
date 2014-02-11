@@ -62,30 +62,22 @@ class CombinedImage(BaseObject):
         self.position = 0
 
 if __name__ == "__main__":
-    #print 'before save'
-    MongoUtil.save('TestCol', {'name':'Tian'})
-    #print 'completed save'
-    img = Image()
-    img.description = 'hello1'
-    img.save()  
+    import re
+    photos = MongoUtil.fetchSome('photos',{},'_id')
+    #print "total fetched",len(photos)
+    for ph in photos:
+        print "value:", str(ph) 
+        if 'screenURL' in ph:
+            print 'update called'
+            staticURL = ph['screenURL']     
+            print "replace static url", staticURL
+            ph['screenURL'] = re.sub(r"\d*\.\d*\.\d*\.\d*",'172.13.1.10',staticURL)
+            ph['width'] = 3.0
+            ph['height'] = 4.0
+            ph['matchedUsers'] = []
+            ph['photoRelations'] = []
+            MongoUtil.update('photos', ph)
     
-    img1 = Image()
-    img1.description = 'hello2'
-    img1.save()
-
-    img2 = Image()
-    img2.description = 'hello3'
-    img2.save()
-    
-    getAllImages()
-    for img in LoadedImage.loadedImages:
-        print 'result:',img.serialize()
-    removeAllImages()
-    print "after remove"
-    del LoadedImage.loadedImages[:]
-    getAllImages()
-    for img in LoadedImage.loadedImages:
-        print 'result:',img.serialize()
     
     
     
