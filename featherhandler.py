@@ -52,6 +52,7 @@ def fillPhotoRelation(photo):
             res.append(cleanPhoto(subPhoto))
         photo['photoRelations'] = res
 
+        
 #will store update the photo information
 class DataUtil:
     photoColName = 'photos'
@@ -123,9 +124,11 @@ class ExchangeHandler:
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        #userSession = unicode(userSession, "utf-8")
+        web.debug("params:"+ params+ ", userSession:"+userSession)
+        #web.debug(str(web.ctx))
         jsons = simplejson.loads(params)
         ownerID = ObjectId(userSession)
-        web.debug("params:"+ params)
         photoID = None
         if 'assetURL' in jsons:
             jsons['personID'] = ObjectId(userSession)
@@ -133,25 +136,33 @@ class ExchangeHandler:
         elif 'photoID' in jsons:
             photoID = ObjectId(jsons['photoID'])
         else:
-            raise 'not enough message'
+            web.ctx.status = '402 invalid parameters'
+            return 'Need photoID'
         
-        matchPhoto = MongoUtil.fetch('photos', {'personID':{'$ne':ownerID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]})        
+        matchPhoto = MongoUtil.fetch('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]})        
         web.debug("matched photo:"+ str(matchPhoto))        
         srcPhoto = MongoUtil.fetchByID('photos', photoID)
         if matchPhoto:
             if not 'matchedUsers' in matchPhoto:
                 matchPhoto['matchedUsers'] = []
+            web.debug("before insert:"+ str(matchPhoto['matchedUsers']))
+            
             matchPhoto['matchedUsers'].append(userSession)
+            #matchPhoto['matchedUsers'].append('Random')
+            web.debug("after insert:"+ str(matchPhoto['matchedUsers']))
             MongoUtil.update('photos', matchPhoto)
             if not 'photoRelations' in srcPhoto:
                 srcPhoto['photoRelations'] = []
             srcPhoto['photoRelations'].append(matchPhoto['_id'])
             MongoUtil.update('photos', srcPhoto)
             cleanPhoto(matchPhoto)
-        web.debug('returned photo:'+ str(matchPhoto))
-        return simplejson.dumps(matchPhoto)
-        
-        
+            matchPhoto.pop('photoRelations', None)
+            web.debug('returned photo:'+ str(matchPhoto))
+            return simplejson.dumps(matchPhoto)
+        else:
+            web.ctx.status = '404 Not found'
+            return 'No match photo:'+ str(photoID)
+
 class PersonHandler:
     def GET(self):
         params = web.data()

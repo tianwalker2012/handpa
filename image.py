@@ -9,6 +9,7 @@ from baseobject import BaseObject
 from user import fetchUser
 from mongoUtil import MongoUtil
 from time import sleep
+from bson.objectid import ObjectId
 
 imgColName = 'images'
 class LoadedImage:
@@ -61,7 +62,7 @@ class CombinedImage(BaseObject):
         #so we could check the image out
         self.position = 0
 
-if __name__ == "__main__":
+def updateURL():
     import re
     photos = MongoUtil.fetchSome('photos',{},'_id')
     #print "total fetched",len(photos)
@@ -77,6 +78,19 @@ if __name__ == "__main__":
             ph['matchedUsers'] = []
             ph['photoRelations'] = []
             MongoUtil.update('photos', ph)
+
+
+
+if __name__ == "__main__":
+    #updateURL();
+    photos = MongoUtil.fetchSome('photos',{},'_id')
+    for ph in photos:
+        if ('matchedUsers' in ph) and (len(ph['matchedUsers']) > 0):
+            print "value:", str(ph['matchedUsers']) 
+    
+    
+    
+    
     
     
     
