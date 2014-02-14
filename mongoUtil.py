@@ -37,9 +37,21 @@ class MongoUtil:
         return cols.find().sort(sorts)
 
     @classmethod
-    def fetchSome(self, colName, conds, sorts):
+    def fetchSome(self, colName, conds, sorts = None):
         cols = db[colName]
-        return cols.find(conds).sort(sorts)
+        if sorts:
+            return cols.find(conds).sort(sorts)
+        else:
+            return cols.find(conds)
+    
+    @classmethod 
+    def fetchPage(self, colName, conds, startPage, pageSize, sorts = None):
+        cols = db[colName]
+        if sorts:        
+            return cols.find(conds).skip(startPage * pageSize).limit(pageSize).sort(sorts)
+        else:
+            return cols.find(conds).skip(startPage * pageSize).limit(pageSize)
+                
 
     @classmethod
     def removeAll(self, colName):

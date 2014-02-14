@@ -12,6 +12,7 @@ from mongoUtil import MongoUtil
 from bson.objectid import ObjectId
 import re
 import os
+import math
 webURL = None
 #why this style, because I can use the chain style which is a powerful tools
 def cleanPerson(person):
@@ -23,10 +24,20 @@ def cleanPerson(person):
         del person['password']
     if 'createTime' in person:
         person['createTime'] = str(person['createTime'])
-
+    person.pop('friends', None)
     return person
 #how to automatically clean not jsonfiable object?
 #doing it at the next iteration.
+def cleanConversation(conversation):
+    if 'date' in conversation:
+        conversation['date'] = str(conversation['date'])
+    return conversation
+
+def cleanConversations(conversations):
+    for cs in conversations:
+        cleanConversation(cs)
+    return conversations
+    
 def cleanPhoto(photo):
     #pid = ''
     if '_id' in photo:
@@ -41,7 +52,38 @@ def cleanPhoto(photo):
         del photo['matchedUsers']
     if 'screenURL' in photo:
         photo['screenURL'] = re.sub(r"\d*\.\d*\.\d*\.\d*:\d*",web.ctx.env.get('HTTP_HOST'),photo['screenURL'])
+    if 'conversations' in photo:
+        cleanConversations(photo['conversations'])
     return photo
+
+def distance_on_unit_sphere(lat1, long1, lat2, long2):
+
+    # Convert latitude and longitude to 
+    # spherical coordinates in radians.
+    degrees_to_radians = math.pi/180.0
+        
+    # phi = 90 - latitude
+    phi1 = (90.0 - lat1)*degrees_to_radians
+    phi2 = (90.0 - lat2)*degrees_to_radians
+    # theta = longitude
+    theta1 = long1*degrees_to_radians
+    theta2 = long2*degrees_to_radians
+        
+    # Compute spherical distance from spherical coordinates.
+        
+    # For two locations in spherical coordinates 
+    # (1, theta, phi) and (1, theta, phi)
+    # cosine( arc length ) = 
+    #    sin phi sin phi' cos(theta-theta') + cos phi cos phi'
+    # distance = rho * arc length
+    
+    cos = (math.sin(phi1)*math.sin(phi2)*math.cos(theta1 - theta2) + 
+           math.cos(phi1)*math.cos(phi2))
+    arc = math.acos( cos )
+
+    # Remember to multiply arc by the radius of the earth 
+    # in your favorite set of units to get length.
+    return arc
 
 #For the purpose of getting related information to the photo.
 def fillPhotoRelation(photo):
@@ -114,13 +156,81 @@ class DataUtil:
         return None        
         #profileID = MongoUtil.create('person_profile', {'password':infos['password'],'email':infos['email'],'mobile':infos['mobile']})
 
+#Query the information of all the friend.
+class FriendShip:
+    def GET(self):
+        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')    
+        web.debug('userSession:'+ userSession)
+        persons = MongoUtil.fetchSome('persons', {'friends':userSession})
+        web.debug('Friend query:'+ userSession)
+        res = []
+        for ps in persons:
+           res.append(cleanPerson(ps))
+        web.debug('Total friend:'+ str(len(res)))
+        return simplejson.dumps(res)        
+    
+    def kickFriend(self, ownerSession, target):
+        myself = MongoUtil.fetchByID('persons', ObjectId(ownerSession))
+        friend = MongoUtil.fetchByID('persons', ObjectId(target))
+        def kickOther(txt):
+            return not (txt == target)
+        def kickOwn(txt):
+            return not (txt == ownerSession)
+        myself['friends'] = self.filtered(myself['friends'], kickOther)
+        friend['friends'] = self.filtered(friend['friends'], kickOwn)
+        MongoUtil.update('persons', myself)
+        MongoUtil.update('persons', friend)
+        return 'Success'
+                
+    def filtered(self, values, process):
+        res = []
+        for val in values:        
+            if process(val):
+                res.append(val)
+        return res
+        
+    def addFriend(self, ownerSession, target):
+        myself = MongoUtil.fetchByID('persons', ObjectId(ownerSession))
+        friend = MongoUtil.fetchByID('persons', ObjectId(target))
+        if not 'friends' in myself:
+            myself['friends'] = [];
+        if not 'friends' in friend:
+            friend['friends'] = [];
+        myself['friends'].append(target)
+        friend['friends'].append(ownerSession)
+        
+        MongoUtil.update('persons', myself)
+        MongoUtil.update('persons', friend)
+        return 'Success'
+        
+        
+    def inviteFriend(self, ownerSession, target):
+        return 'Send invite'
+        
+    def POST(self):
+        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        params = web.data()
+        web.debug('user:'+str(userSession)+",parameters:"+str(params))
+        paramJson = simplejson.loads(params)
+        cmd = paramJson['cmd']
+        if cmd == 'kick':
+            return self.kickFriend(userSession, paramJson['friendID'])
+        elif cmd == 'add':
+            return self.addFriend(userSession, paramJson['friendID'])
+        elif cmd == 'invite':
+            return self.inviteFriend(userSession, paramJson['friendID'])
+        else:
+            web.ctx.status = '401 No Parameter'
+            return 'Check Parameter'
 
+        
 class ExchangeHandler:
     def GET(self):
         return self.process();        
     def POST(self):
         return self.process();
-        
+    
+    #Exchange support non-exist photoss    
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
@@ -135,11 +245,18 @@ class ExchangeHandler:
             photoID = DataUtil.savePhoto(jsons)  
         elif 'photoID' in jsons:
             photoID = ObjectId(jsons['photoID'])
-        else:
-            web.ctx.status = '402 invalid parameters'
-            return 'Need photoID'
         
-        matchPhoto = MongoUtil.fetch('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]})        
+        else:
+            #not uploaded yet, will try to fetch matched image now
+            #web.ctx.status = '402 invalid parameters'
+            #return 'Need photoID'
+            photoID = DataUtil.savePhoto({'createdTime':datetime.now(), 'personID':ownerID, 'uploaded':'0'})
+            
+        
+        photos  = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
+        matchPhoto = None     
+        web.debug('cursor:'+ str(photos))
+        if photos.count() > 0 : matchPhoto = photos[0]
         web.debug("matched photo:"+ str(matchPhoto))        
         srcPhoto = MongoUtil.fetchByID('photos', photoID)
         if matchPhoto:
@@ -157,8 +274,9 @@ class ExchangeHandler:
             MongoUtil.update('photos', srcPhoto)
             cleanPhoto(matchPhoto)
             matchPhoto.pop('photoRelations', None)
+            matchPhoto['srcPhotoID'] = str(photoID)
             web.debug('returned photo:'+ str(matchPhoto))
-            return simplejson.dumps(matchPhoto)
+            return  simplejson.dumps(matchPhoto)
         else:
             web.ctx.status = '404 Not found'
             return 'No match photo:'+ str(photoID)
@@ -215,12 +333,18 @@ class PhotoHandler:
     def GET(self):
         return self.process()
         
-    def process(self):
-        params = web.data()
-        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
-        web.debug("data:"+ str(params)+","+str(userSession))
-        jsons = simplejson.loads(params)
-        #web.debug("data:"+ str(params)+"json count:"+str(len(jsons)))
+        
+    def queryPhotos(self, jsons, userSession):
+        startPage = jsons['startPage']
+        pageSize = jsons['pageSize']
+        res = []        
+        photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, startPage, pageSize, [('createdTime', -1)])
+        for photo in photos:
+            res.append(cleanPhoto(photo))
+        web.debug("Got "+ len(res) + " for "+ str(jsons));
+        return simplejson.dumps(res)
+        
+    def uploadInfo(self, jsons, userSession):
         res = []
         for js in jsons:
             #web.debug("inside json")
@@ -239,6 +363,36 @@ class PhotoHandler:
         #finalRes = simplejson.dumps(res)
         web.debug("final result:"+ str(res))
         return simplejson.dumps(res)
+    
+    def removeMatch(self, photoID, userSession):
+        photo = MongoUtil.fetchByID('photos', ObjectId(photoID))
+        if not photo:
+            web.ctx.status = '404 Can not Find'
+            return 'failed to find ' + photoID
+        matchedUsers = photo['matchedUsers']
+        newList = []
+        for user in matchedUsers:
+            if not user == userSession:
+                newList.append(user)
+        photo['matchedUsers'] = newList
+        MongoUtil.update('photos', photo)
+        return 'Success'
+        
+    def process(self):
+        params = web.data()
+        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        web.debug("data:"+ str(params)+","+str(userSession))
+        jsons = simplejson.loads(params)
+        
+        cmd = jsons['cmd']
+        if cmd == 'upload':
+            #web.debug("data:"+ str(params)+"json count:"+str(len(jsons)))
+            return self.uploadInfo(jsons['photos'], userSession)
+        elif cmd == 'query':
+            return self.queryPhotos(jsons, userSession)
+        elif cmd == 'removeMatch':
+            return self.removeMatch(jsons['photoID'], userSession)
+            
 
 class FeatherContacts:
     def GET(self):

@@ -22,6 +22,7 @@ from featherhandler import FeatherContacts
 from featherhandler import PhotoHandler
 from featherhandler import PersonHandler
 from featherhandler import ExchangeHandler
+from featherhandler import FriendShip
 
 render = web.template.render('templates/')
 WebContext.render = render
@@ -41,8 +42,8 @@ urls = (
  '/query/contacts','FeatherContacts',
  '/photo/info',"PhotoHandler",
  '/person/info',"PersonHandler",
- '/photo/exchange', 'ExchangeHandler'
-
+ '/photo/exchange', 'ExchangeHandler',
+ '/friend', 'FriendShip'
 )
 
 class JsonObject(BaseObject):

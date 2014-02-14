@@ -83,11 +83,14 @@ def updateURL():
 
 if __name__ == "__main__":
     #updateURL();
-    photos = MongoUtil.fetchSome('photos',{},'_id')
+    photos = MongoUtil.fetchPage('photos',{}, 0, 100, [('createdTime',-1)])
     for ph in photos:
+        print str(ph)
         if ('matchedUsers' in ph) and (len(ph['matchedUsers']) > 0):
-            print "value:", str(ph['matchedUsers']) 
-    
+            print ph['matchedUsers']
+        ph['matchedUsers'] = []
+        ph['photoRelations'] = []
+        MongoUtil.update('photos', ph)
     
     
     
