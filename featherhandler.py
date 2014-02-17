@@ -54,6 +54,7 @@ def cleanPhoto(photo):
         photo['screenURL'] = re.sub(r"\d*\.\d*\.\d*\.\d*:\d*",web.ctx.env.get('HTTP_HOST'),photo['screenURL'])
     if 'conversations' in photo:
         cleanConversations(photo['conversations'])
+    photo.pop('photoRelations', None)
     return photo
 
 def distance_on_unit_sphere(lat1, long1, lat2, long2):
@@ -306,11 +307,7 @@ class PersonHandler:
         if not relation:
             MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now()})
 
-    def process(self):
-        params = web.data()
-        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
-        web.debug("data:"+ str(params)+","+str(userSession))
-        jsons = simplejson.loads(params)
+    def mobileQuery(self, jsons, userSession):
         res = []
         for js in jsons:
             person = DataUtil.findByMobile(js)
@@ -325,6 +322,27 @@ class PersonHandler:
                 res.append(person)
             self.saveNotExist(ObjectId(userSession), pid)
         return simplejson.dumps(res)
+
+    def queryByID(self, pids):
+        res = []
+        for pid in pids:
+            person = MongoUtil.fetchByID('persons', ObjectId(pid))
+            res.append(cleanPerson(person))
+        return simplejson.dumps(res)
+            
+    
+    def process(self):
+        params = web.data()
+        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        web.debug("data:"+ str(params)+","+str(userSession))
+        jsons = simplejson.loads(params)
+        
+        cmd = jsons['cmd']
+        if cmd == 'mobile':
+            return self.mobileQuery(jsons['mobiles'], userSession)
+        elif cmd == 'personID':
+            return self.queryByID(jsons['personIDs'])
+        
             
 class PhotoHandler:
     def POST(self):
@@ -337,11 +355,13 @@ class PhotoHandler:
     def queryPhotos(self, jsons, userSession):
         startPage = jsons['startPage']
         pageSize = jsons['pageSize']
+        web.debug('startPage:%d, pageSize:%d'%(startPage, pageSize))
         res = []        
         photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, startPage, pageSize, [('createdTime', -1)])
         for photo in photos:
+            fillPhotoRelation(photo)
             res.append(cleanPhoto(photo))
-        web.debug("Got "+ len(res) + " for "+ str(jsons));
+        web.debug("Got "+ str(len(res)) + " for "+ str(res));
         return simplejson.dumps(res)
         
     def uploadInfo(self, jsons, userSession):
@@ -364,8 +384,11 @@ class PhotoHandler:
         web.debug("final result:"+ str(res))
         return simplejson.dumps(res)
     
-    def removeMatch(self, photoID, userSession):
+    #remove the source photoID too
+    def removeMatch(self, photoID,srcPhotoID, userSession):
+        web.debug("will remove %s from %s" % (srcPhotoID, photoID))
         photo = MongoUtil.fetchByID('photos', ObjectId(photoID))
+        MongoUtil.remove('photos', {'_id':ObjectId(srcPhotoID)})
         if not photo:
             web.ctx.status = '404 Can not Find'
             return 'failed to find ' + photoID
@@ -377,21 +400,38 @@ class PhotoHandler:
         photo['matchedUsers'] = newList
         MongoUtil.update('photos', photo)
         return 'Success'
-        
+    
+    def updatePhotos(self, photos, userSession):
+        res = []
+        web.debug("Will update photo for:%r"%(photos))
+        for ph in photos:
+            existPhoto = MongoUtil.fetchByID('photos', ObjectId(ph['photoID']))
+            if not existPhoto:
+                web.ctx.status = "404 can't find ID"
+                return "Can not find %s" % (ph['photoID'])
+            ph['_id'] = existPhoto['_id']
+            ph['personID'] = ObjectId(ph['personID'])
+            ph.pop('photoID', None)
+            DataUtil.updatePhoto(ph)
+            res.append(cleanPhoto(ph))
+        return simplejson.dumps(res)
+    
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
-        web.debug("data:"+ str(params)+","+str(userSession))
+        web.debug("photo operation data:"+ str(params)+","+str(userSession))
         jsons = simplejson.loads(params)
         
         cmd = jsons['cmd']
         if cmd == 'upload':
             #web.debug("data:"+ str(params)+"json count:"+str(len(jsons)))
             return self.uploadInfo(jsons['photos'], userSession)
+        elif cmd == 'update':
+            return self.updatePhotos(jsons['photos'], userSession)
         elif cmd == 'query':
             return self.queryPhotos(jsons, userSession)
         elif cmd == 'removeMatch':
-            return self.removeMatch(jsons['photoID'], userSession)
+            return self.removeMatch(jsons['photoID'],jsons['srcPhotoID'], userSession)
             
 
 class FeatherContacts:

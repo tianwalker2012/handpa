@@ -57,6 +57,11 @@ class MongoUtil:
     def removeAll(self, colName):
         cols = db[colName]
         cols.remove()
+        
+    @classmethod
+    def remove(self, colName, conds):
+        cols = db[colName]
+        cols.remove(conds)
 
 #This is a distructive method.
 #some type of smell, I will get it done.

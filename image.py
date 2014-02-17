@@ -83,15 +83,15 @@ def updateURL():
 
 if __name__ == "__main__":
     #updateURL();
-    photos = MongoUtil.fetchPage('photos',{}, 0, 100, [('createdTime',-1)])
+    photos = MongoUtil.fetchPage('photos', {'personID':ObjectId('530157b4e7b5b99901f147ea')}, 0, 5, [('createdTime', -1)])
+    print "fetched back"
     for ph in photos:
-        print str(ph)
-        if ('matchedUsers' in ph) and (len(ph['matchedUsers']) > 0):
-            print ph['matchedUsers']
-        ph['matchedUsers'] = []
-        ph['photoRelations'] = []
-        MongoUtil.update('photos', ph)
+        print "photo is:%r" % (ph)
     
+    photos = MongoUtil.fetchSome('photos', {'personID':ObjectId('530157b4e7b5b99901f147ea')})
+    print "different fetch method"
+    for ph in photos:
+        print "photo is:%r" % (ph)
     
     
     
