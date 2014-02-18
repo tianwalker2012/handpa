@@ -37,6 +37,9 @@ def cleanConversations(conversations):
     for cs in conversations:
         cleanConversation(cs)
     return conversations
+
+#prepare the photo before storage    
+#def preparePhoto(photo):
     
 def cleanPhoto(photo):
     #pid = ''
@@ -54,7 +57,7 @@ def cleanPhoto(photo):
         photo['screenURL'] = re.sub(r"\d*\.\d*\.\d*\.\d*:\d*",web.ctx.env.get('HTTP_HOST'),photo['screenURL'])
     if 'conversations' in photo:
         cleanConversations(photo['conversations'])
-    photo.pop('photoRelations', None)
+    #photo.pop('photoRelations', None)
     return photo
 
 def distance_on_unit_sphere(lat1, long1, lat2, long2):
@@ -88,10 +91,12 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
 #For the purpose of getting related information to the photo.
 def fillPhotoRelation(photo):
+    web.debug('photo detail:%r' % (photo))
     if 'photoRelations' in photo:
         res = []
         for pid in photo['photoRelations']:
-            subPhoto = MongoUtil.fetchByID('photos', pid)
+            subPhoto = MongoUtil.fetchByID('photos',ObjectId(pid))
+            subPhoto.pop('photoRelations', None)
             res.append(cleanPhoto(subPhoto))
         photo['photoRelations'] = res
 
@@ -241,6 +246,7 @@ class ExchangeHandler:
         jsons = simplejson.loads(params)
         ownerID = ObjectId(userSession)
         photoID = None
+        #created = False
         if 'assetURL' in jsons:
             jsons['personID'] = ObjectId(userSession)
             photoID = DataUtil.savePhoto(jsons)  
@@ -248,11 +254,12 @@ class ExchangeHandler:
             photoID = ObjectId(jsons['photoID'])
         
         else:
+            web.debug('Just ask for match')
             #not uploaded yet, will try to fetch matched image now
             #web.ctx.status = '402 invalid parameters'
             #return 'Need photoID'
-            photoID = DataUtil.savePhoto({'createdTime':datetime.now(), 'personID':ownerID, 'uploaded':'0'})
-            
+            #photoID = DataUtil.savePhoto({'createdTime':datetime.now(), 'personID':ownerID, 'uploaded':'0'})
+            #created = True
         
         photos  = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
         matchPhoto = None     
@@ -269,18 +276,27 @@ class ExchangeHandler:
             #matchPhoto['matchedUsers'].append('Random')
             web.debug("after insert:"+ str(matchPhoto['matchedUsers']))
             MongoUtil.update('photos', matchPhoto)
-            if not 'photoRelations' in srcPhoto:
-                srcPhoto['photoRelations'] = []
-            srcPhoto['photoRelations'].append(matchPhoto['_id'])
-            MongoUtil.update('photos', srcPhoto)
+            if srcPhoto:
+                if not 'photoRelations' in srcPhoto:
+                    srcPhoto['photoRelations'] = []
+                srcPhoto['photoRelations'].append(matchPhoto['_id'])
+                MongoUtil.update('photos', srcPhoto)
             cleanPhoto(matchPhoto)
             matchPhoto.pop('photoRelations', None)
-            matchPhoto['srcPhotoID'] = str(photoID)
+            #matchPhoto['srcPhotoID'] = str(photoID)
+            #cleanPhoto(srcPhoto)
             web.debug('returned photo:'+ str(matchPhoto))
             return  simplejson.dumps(matchPhoto)
         else:
+            #return simplejson.dumps({'srcPhotoID':str(photoID)})
+            #I can only fetch the source photoBack.
+            #if created:
+            #    web.debug('Found no match remove id:%r'%(photoID))
+            #    MongoUtil.remove('photos', {'_id':photoID})
+            #return simplejson.dumps({'srcPhotoID':str(photoID)})
             web.ctx.status = '404 Not found'
             return 'No match photo:'+ str(photoID)
+            
 
 class PersonHandler:
     def GET(self):
@@ -385,10 +401,10 @@ class PhotoHandler:
         return simplejson.dumps(res)
     
     #remove the source photoID too
-    def removeMatch(self, photoID,srcPhotoID, userSession):
-        web.debug("will remove %s from %s" % (srcPhotoID, photoID))
+    def removeMatch(self, photoID, userSession):
+        web.debug("will remove %s from %s" % (userSession, photoID))
         photo = MongoUtil.fetchByID('photos', ObjectId(photoID))
-        MongoUtil.remove('photos', {'_id':ObjectId(srcPhotoID)})
+        #MongoUtil.remove('photos', {'_id':ObjectId(srcPhotoID)})
         if not photo:
             web.ctx.status = '404 Can not Find'
             return 'failed to find ' + photoID
@@ -405,14 +421,21 @@ class PhotoHandler:
         res = []
         web.debug("Will update photo for:%r"%(photos))
         for ph in photos:
-            existPhoto = MongoUtil.fetchByID('photos', ObjectId(ph['photoID']))
+            existPhoto = None
+            if 'photoID' in ph:
+                web.debug("have photoID:%r url:%r" % (ph['photoID'], ph['assetURL']))
+                existPhoto = MongoUtil.fetchByID('photos', ObjectId(ph['photoID']))
+                ph['_id'] = existPhoto['_id']
+                ph['personID'] = ObjectId(ph['personID'])
+                ph.pop('photoID', None)
+                DataUtil.updatePhoto(ph)
             if not existPhoto:
-                web.ctx.status = "404 can't find ID"
-                return "Can not find %s" % (ph['photoID'])
-            ph['_id'] = existPhoto['_id']
-            ph['personID'] = ObjectId(ph['personID'])
-            ph.pop('photoID', None)
-            DataUtil.updatePhoto(ph)
+                #web.ctx.status = "404 can't find ID"
+                #return "Can not find %s" % (ph['photoID'])
+                ph['personID'] = ObjectId(ph['personID'])
+                #ph.pop('photoID', None)
+                storedID = MongoUtil.save('photos', ph)
+                ph['photoID'] = str(storedID)
             res.append(cleanPhoto(ph))
         return simplejson.dumps(res)
     
@@ -431,7 +454,7 @@ class PhotoHandler:
         elif cmd == 'query':
             return self.queryPhotos(jsons, userSession)
         elif cmd == 'removeMatch':
-            return self.removeMatch(jsons['photoID'],jsons['srcPhotoID'], userSession)
+            return self.removeMatch(jsons['photoID'],userSession)
             
 
 class FeatherContacts:
@@ -488,6 +511,11 @@ class FeatherRegister:
         #uploaded['personID'] = str(personid)
         return simplejson.dumps(cleanPerson(person))
 
+def makeIfNone(dirName):
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)
+    
+    
 class UploadHandler:
     def GET(self):
         web.debug("upload get called"+ str(web.data()))
@@ -497,9 +525,13 @@ class UploadHandler:
         #web.debug("upload post get called:"+ str(web.input()))
         x = web.input(myfile={})
         photoID = x["photoID"]
-        #userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
-        storedDir = os.getcwd()+'/static/'
-        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'
+        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        if not userSession:
+            web.debug("quit for no session")
+            return 'failed'
+        storedDir = os.getcwd()+'/static/'+userSession+'/'
+        makeIfNone(storedDir)
+        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
         postFix = filePath.split('.')[-1]
         hashedName = hashlib.md5(filePath + str(datetime.now())).hexdigest() + '.' + postFix
