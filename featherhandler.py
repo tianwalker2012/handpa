@@ -507,9 +507,28 @@ class FeatherRegister:
         web.debug("post inputs:"+ str(params))
         uploaded = simplejson.loads(params)
         #dups = DataUtil.findDuplicated(uploaded)
-        person = DataUtil.saveRegister(uploaded)
-        #uploaded['personID'] = str(personid)
-        return simplejson.dumps(cleanPerson(person))
+        mock = None
+        if 'mock' in uploaded: 
+            mock = uploaded['mock']
+        
+        personID = None
+        if 'personID' in uploaded:
+            personID = uploaded['personID']
+        avatarURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar.png'
+        web.debug("mock:%r, personID:%r" % (mock, personID))
+        uploaded['avatar'] = avatarURL
+        if personID:
+            person = MongoUtil.fetchByID('persons', ObjectId(personID))
+            web.debug("mock user register:%r" % (person))
+            uploaded.pop('personID', None)
+            uploaded['_id'] = ObjectId(personID)
+            uploaded['mock'] = '0'
+            MongoUtil.update('persons', uploaded)
+            return simplejson.dumps(cleanPerson(uploaded))
+        else:
+            person = DataUtil.saveRegister(uploaded)
+            #uploaded['personID'] = str(personid)
+            return simplejson.dumps(cleanPerson(person))
 
 def makeIfNone(dirName):
     if not os.path.exists(dirName):
