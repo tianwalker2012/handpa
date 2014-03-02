@@ -16,8 +16,8 @@ import math
 webURL = None
 #why this style, because I can use the chain style which is a powerful tools
 def cleanPerson(person):
-    pid = person['_id']
     if '_id' in person:
+        pid = person['_id']
         del person['_id']
         person['personID'] = str(pid)
     if 'password' in person:
@@ -299,7 +299,7 @@ class ExchangeHandler:
             
 
 class PersonHandler:
-    def GET(self):
+    def oldGet(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
         web.debug("data:"+ str(params)+","+str(userSession))
@@ -314,6 +314,9 @@ class PersonHandler:
         for ps in persons:
             cleanPerson(ps)
         return simplejson.dumps(persons);
+    
+    def GET(self):
+       return self.process()
         
     def POST(self):
         return self.process()
@@ -341,9 +344,13 @@ class PersonHandler:
 
     def queryByID(self, pids):
         res = []
+        web.debug('pid: %r' % pids)
         for pid in pids:
+            
             person = MongoUtil.fetchByID('persons', ObjectId(pid))
-            res.append(cleanPerson(person))
+            if person:
+                web.debug("person detail %r" % person)
+                res.append(cleanPerson(person))
         return simplejson.dumps(res)
             
     
@@ -438,7 +445,12 @@ class PhotoHandler:
                 ph['photoID'] = str(storedID)
             res.append(cleanPhoto(ph))
         return simplejson.dumps(res)
-    
+    def likePhoto(photoID, personID, like):
+        photo = MongoUtil.fetchByID(ObjectId(photoID));
+        
+                    
+        
+        
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
@@ -455,7 +467,10 @@ class PhotoHandler:
             return self.queryPhotos(jsons, userSession)
         elif cmd == 'removeMatch':
             return self.removeMatch(jsons['photoID'],userSession)
-            
+        elif cmd == "like":
+            return self.likePhoto(jsons['photoID'], userSession, True)
+        elif cmd == "dislike":
+            return self.likePhoto(jsons['photoID'], userSession, False)
 
 class FeatherContacts:
     def GET(self):
@@ -536,18 +551,8 @@ def makeIfNone(dirName):
     
     
 class UploadHandler:
-    def GET(self):
-        web.debug("upload get called"+ str(web.data()))
-        return simplejson.dumps(dict(info='what up'))
-        
-    def POST(self):
-        #web.debug("upload post get called:"+ str(web.input()))
-        x = web.input(myfile={})
+    def uploadPhoto(self, x, userSession):
         photoID = x["photoID"]
-        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
-        if not userSession:
-            web.debug("quit for no session")
-            return 'failed'
         storedDir = os.getcwd()+'/static/'+userSession+'/'
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
@@ -571,3 +576,39 @@ class UploadHandler:
         #web.debug(x['myfile'].file.read())  Or use a file(-like) object
         #raise web.seeother('/static/'+hashedName)
         return simplejson.dumps(dict(screenURL = baseURL+hashedName))
+    def uploadAvatar(self, x, userSession):
+        #photoID = x["photoID"]
+        storedDir = os.getcwd()+'/static/avatar/'+userSession+'/'
+        makeIfNone(storedDir)
+        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+userSession+'/'
+        filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
+        postFix = filePath.split('.')[-1]
+        hashedName = hashlib.md5(filePath + str(datetime.now())).hexdigest() + '.' + postFix
+        fout = open(storedDir+hashedName, 'w')
+        fout.write(x.myfile.file.read())
+        fout.close()
+        #web.debug("photoID:"+ photoID +","+x['myfile'].filename) # This is the filename
+        person = MongoUtil.fetchByID('persons', ObjectId(userSession))
+        person['avatar'] = baseURL + hashedName
+        web.debug("upload for avatar:%s" % person['avatar'])
+        MongoUtil.update('persons', person)
+        return simplejson.dumps({'avatar':baseURL+hashedName})
+    
+    def GET(self):
+        web.debug("upload get called"+ str(web.data()))
+        return simplejson.dumps(dict(info='what up'))
+        
+    def POST(self):
+        #web.debug("upload post get called:"+ str(web.input()))
+        x = web.input(myfile={})
+        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        if not userSession:
+            web.ctx.status = '406 Not login'
+            return 'not userID'
+        if not userSession:
+            web.debug("quit for no session")
+            return 'failed'
+        if 'photoID' in x:
+            return self.uploadPhoto(x, userSession) 
+        else:
+            return self.uploadAvatar(x, userSession)
