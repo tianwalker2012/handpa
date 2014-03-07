@@ -134,6 +134,7 @@ class DataUtil:
     @classmethod
     def saveRegister(self, infos):
         infos['createTime'] = datetime.now()
+        infos['joined'] = '1'
         MongoUtil.create('persons', infos)
         #web.debug("id in info:"+str(infos['_id']))
         #infos['personID'] = str(personId)
@@ -246,6 +247,7 @@ class ExchangeHandler:
         jsons = simplejson.loads(params)
         ownerID = ObjectId(userSession)
         photoID = None
+        personID = None
         #created = False
         if 'assetURL' in jsons:
             jsons['personID'] = ObjectId(userSession)
@@ -253,7 +255,9 @@ class ExchangeHandler:
         elif 'photoID' in jsons:
             photoID = ObjectId(jsons['photoID'])
         
-        else:
+        elif 'personID' in jsons:
+            personID = ObjectId(jsons['personID']) 
+        else :
             web.debug('Just ask for match')
             #not uploaded yet, will try to fetch matched image now
             #web.ctx.status = '402 invalid parameters'
@@ -261,7 +265,12 @@ class ExchangeHandler:
             #photoID = DataUtil.savePhoto({'createdTime':datetime.now(), 'personID':ownerID, 'uploaded':'0'})
             #created = True
         
-        photos  = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
+        photos = None
+        if(personID):
+            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'personID':personID, '_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)]) 
+        else:
+            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
+        
         matchPhoto = None     
         web.debug('cursor:'+ str(photos))
         if photos.count() > 0 : matchPhoto = photos[0]
@@ -352,11 +361,47 @@ class PersonHandler:
                 web.debug("person detail %r" % person)
                 res.append(cleanPerson(person))
         return simplejson.dumps(res)
+    #who will invoke this?
+    #Store photobook relations 
+    #if person specifically want to be my friend
+    def establishFriendship(self, owner, friend, isPhotoBook='0'):
+        relation = MongoUtil.fetch('friendship', {'owner':owner,'friend':friend})
+        if not relation:
+            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(),'photobook':'1' if isPhotoBook else '0'})
+            return isPhotoBook
+        else:
+            return relation['photobook']
             
-    
+    #If not login, then each person use it's own name
+    #If joined, every body use the name choose the user. 
+    def uploadPerson(self, persons, userSession):
+        res = []
+        for ps in persons:
+            web.debug("person detail:%r" % ps)
+            person = DataUtil.findByMobile(ps)
+            #pid = person['_id']
+            if not person:
+                pid = MongoUtil.create('persons', ps)
+                person = ps
+                cleanPerson(ps)
+                #res.append(js)
+            else:
+                pid = person['_id']
+                cleanPerson(person)
+                #res.append(person)
+            relations = self.establishFriendship(ObjectId(userSession), pid, '1')
+            person['photobook'] = relations
+            res.append(person)
+        return simplejson.dumps(res)
+        
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        if not userSession:
+            web.debug("No valid user")
+            web.ctx.status = '406 No User'
+            return 'No user'
+        
         web.debug("data:"+ str(params)+","+str(userSession))
         jsons = simplejson.loads(params)
         
@@ -365,7 +410,8 @@ class PersonHandler:
             return self.mobileQuery(jsons['mobiles'], userSession)
         elif cmd == 'personID':
             return self.queryByID(jsons['personIDs'])
-        
+        elif cmd == 'upload':
+            return self.uploadPerson(jsons['persons'], userSession)
             
 class PhotoHandler:
     def POST(self):
@@ -378,9 +424,17 @@ class PhotoHandler:
     def queryPhotos(self, jsons, userSession):
         startPage = jsons['startPage']
         pageSize = jsons['pageSize']
-        web.debug('startPage:%d, pageSize:%d'%(startPage, pageSize))
-        res = []        
-        photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, startPage, pageSize, [('createdTime', -1)])
+        otherID = None
+        if 'otherID' in jsons:
+            otherID = jsons['otherID']
+        web.debug('startPage:%d, pageSize:%d, otherID %s'%(startPage, pageSize, otherID))
+        res = [] 
+        photos = None
+        if not otherID:
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, startPage, pageSize, [('createdTime', -1)])
+        else:
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'relationUsers':otherID}, startPage, pageSize, [('createdTime', -1)])
+        
         for photo in photos:
             fillPhotoRelation(photo)
             res.append(cleanPhoto(photo))
