@@ -10,6 +10,7 @@ import hashlib
 from datetime import datetime
 from mongoUtil import MongoUtil
 from bson.objectid import ObjectId
+from imageutil import ImageUtil
 import re
 import os
 import math
@@ -612,10 +613,12 @@ class UploadHandler:
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
         postFix = filePath.split('.')[-1]
-        hashedName = hashlib.md5(filePath + str(datetime.now())).hexdigest() + '.' + postFix
-        fout = open(storedDir+hashedName, 'w')
+        hashedName = hashlib.md5(filePath + str(datetime.now()) + userSession).hexdigest() + '.' + postFix
+        imageFileName = storedDir+hashedName;
+        fout = open(imageFileName, 'w')
         fout.write(x.myfile.file.read())
         fout.close()
+        ImageUtil.resize(imageFileName, 60, 'tb')
         web.debug("photoID:"+ photoID +","+x['myfile'].filename) # This is the filename
         
         storedPhoto = DataUtil.getPhotoByID(photoID)
