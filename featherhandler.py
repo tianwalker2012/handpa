@@ -477,12 +477,12 @@ class PhotoHandler:
                 newList.append(user)
         photo['matchedUsers'] = newList
         MongoUtil.update('photos', photo)
-        return 'Success'
+        return simplejson.dumps({'result':'success'})
 
     def deletePhoto(self, photoID, userSession):
         web.debug("will remove photo:%s" % photoID)
         MongoUtil.remove('photos', {'_id': ObjectId(photoID)})
-        return 'Success'
+        return simplejson.dumps({'result':'success'})
     
     def updatePhotos(self, photos, userSession):
         res = []
@@ -618,7 +618,7 @@ class UploadHandler:
         storedPhoto = DataUtil.getPhotoByID(photoID)
         web.debug("fetch back photo:%r" % storedPhoto)
         if not storedPhoto:
-            return "photo removed"
+            return simplejson.dumps({'removed':photoID})
 
         storedDir = os.getcwd()+'/static/'+userSession+'/'
         makeIfNone(storedDir)
