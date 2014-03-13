@@ -615,6 +615,10 @@ def makeIfNone(dirName):
 class UploadHandler:
     def uploadPhoto(self, x, userSession):
         photoID = x["photoID"]
+        storedPhoto = DataUtil.getPhotoByID(photoID)
+        if not storedPhoto:
+            return "photo removed"
+
         storedDir = os.getcwd()+'/static/'+userSession+'/'
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
@@ -629,6 +633,7 @@ class UploadHandler:
         web.debug("photoID:"+ photoID +","+x['myfile'].filename) # This is the filename
         
         storedPhoto = DataUtil.getPhotoByID(photoID)
+        
         #DataUtil.photoByAssetURL(assetURL, userSession)
         web.debug("upload for photoId:"+str(storedPhoto['_id']))
         #storedId = existPhoto['_id']
