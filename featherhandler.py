@@ -478,6 +478,11 @@ class PhotoHandler:
         photo['matchedUsers'] = newList
         MongoUtil.update('photos', photo)
         return 'Success'
+
+    def deletePhoto(self, photoID, userSession):
+        web.debug("will remove photo:%s" % photoID)
+        MongoUtil.remove('photos', {'_id': ObjectId(photoID)})
+        return 'Success'
     
     def updatePhotos(self, photos, userSession):
         res = []
@@ -522,6 +527,8 @@ class PhotoHandler:
             return self.queryPhotos(jsons, userSession)
         elif cmd == 'removeMatch':
             return self.removeMatch(jsons['photoID'],userSession)
+        elif cmd == 'delete':
+            return self.deletePhoto(jsons['photoID'], userSession)
         elif cmd == "like":
             return self.likePhoto(jsons['photoID'], userSession, True)
         elif cmd == "dislike":
