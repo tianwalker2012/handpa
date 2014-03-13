@@ -616,6 +616,7 @@ class UploadHandler:
     def uploadPhoto(self, x, userSession):
         photoID = x["photoID"]
         storedPhoto = DataUtil.getPhotoByID(photoID)
+        web.debug("fetch back photo:%r" % storedPhoto)
         if not storedPhoto:
             return "photo removed"
 
@@ -630,10 +631,7 @@ class UploadHandler:
         fout.write(x.myfile.file.read())
         fout.close()
         ImageUtil.resize(imageFileName, 60, 'tb')
-        web.debug("photoID:"+ photoID +","+x['myfile'].filename) # This is the filename
-        
-        storedPhoto = DataUtil.getPhotoByID(photoID)
-        
+        web.debug("photoID:"+ photoID +","+x['myfile'].filename) # This is the filename 
         #DataUtil.photoByAssetURL(assetURL, userSession)
         web.debug("upload for photoId:"+str(storedPhoto['_id']))
         #storedId = existPhoto['_id']
