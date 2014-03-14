@@ -489,17 +489,17 @@ class PhotoHandler:
         web.debug("Will update photo for:%r"%(photos))
         for ph in photos:
             existPhoto = None
-            if 'photoID' in ph:
+            if 'photoID' in ph and ph['photoID'] != '':
                 web.debug("have photoID:%r url:%r" % (ph['photoID'], ph['assetURL']))
                 existPhoto = MongoUtil.fetchByID('photos', ObjectId(ph['photoID']))
                 ph['_id'] = existPhoto['_id']
                 ph['personID'] = ObjectId(ph['personID'])
                 ph.pop('photoID', None)
                 DataUtil.updatePhoto(ph)
-            if not existPhoto:
+            else:
                 #web.ctx.status = "404 can't find ID"
                 #return "Can not find %s" % (ph['photoID'])
-                ph['personID'] = ObjectId(ph['personID'])
+                #ph['personID'] = ObjectId(ph['personID'])
                 #ph.pop('photoID', None)
                 storedID = MongoUtil.save('photos', ph)
                 ph['photoID'] = str(storedID)
