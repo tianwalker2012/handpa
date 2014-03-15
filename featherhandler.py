@@ -501,6 +501,7 @@ class PhotoHandler:
                 #return "Can not find %s" % (ph['photoID'])
                 #ph['personID'] = ObjectId(ph['personID'])
                 #ph.pop('photoID', None)
+                ph['personID'] = ObjectId(ph['personID'])
                 storedID = MongoUtil.save('photos', ph)
                 ph['photoID'] = str(storedID)
             res.append(cleanPhoto(ph))
