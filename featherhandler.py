@@ -646,10 +646,10 @@ class UploadHandler:
         return simplejson.dumps(dict(screenURL = baseURL+hashedName))
     def uploadAvatar(self, x, userSession):
         #photoID = x["photoID"]
-        userSession = userSession if userSession else 'tmp'
-        storedDir = os.getcwd()+'/static/avatar/'+userSession+'/'
+        tmpDir = userSession if userSession else 'tmp'
+        storedDir = os.getcwd()+'/static/avatar/'+tmpDir+'/'
         makeIfNone(storedDir)
-        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+userSession+'/'
+        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
         postFix = filePath.split('.')[-1]
         hashedName = hashlib.md5(filePath + str(datetime.now())).hexdigest() + '.' + postFix
