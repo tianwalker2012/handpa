@@ -592,9 +592,13 @@ class FeatherRegister:
         personID = None
         if 'personID' in uploaded:
             personID = uploaded['personID']
-        avatarURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar.png'
-        web.debug("mock:%r, personID:%r" % (mock, personID))
-        uploaded['avatar'] = avatarURL
+        if 'avatar' in uploaded and uploaded['avatar'] != '':
+            web.debug('no avatar')
+        else:    
+            avatarURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar.png'
+            web.debug("mock:%r, personID:%r" % (mock, personID))
+            uploaded['avatar'] = avatarURL
+        
         if personID:
             person = MongoUtil.fetchByID('persons', ObjectId(personID))
             web.debug("mock user register:%r" % (person))
