@@ -656,10 +656,11 @@ class UploadHandler:
         fout.write(x.myfile.file.read())
         fout.close()
         #web.debug("photoID:"+ photoID +","+x['myfile'].filename) # This is the filename
-        person = MongoUtil.fetchByID('persons', ObjectId(userSession))
-        person['avatar'] = baseURL + hashedName
-        web.debug("upload for avatar:%s" % person['avatar'])
-        MongoUtil.update('persons', person)
+        if userSession:
+            person = MongoUtil.fetchByID('persons', ObjectId(userSession))
+            person['avatar'] = baseURL + hashedName
+            web.debug("upload for avatar:%s" % person['avatar'])
+            MongoUtil.update('persons', person)
         return simplejson.dumps({'avatar':baseURL+hashedName})
     
     def GET(self):
@@ -670,13 +671,11 @@ class UploadHandler:
         #web.debug("upload post get called:"+ str(web.input()))
         x = web.input(myfile={})
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
-        if not userSession:
-            web.ctx.status = '406 Not login'
-            return 'not userID'
-        if not userSession:
-            web.debug("quit for no session")
-            return 'failed'
+        
         if 'photoID' in x:
+            if not userSession:
+                web.ctx.status = '406 Not login'
+                return 'not userID'
             return self.uploadPhoto(x, userSession) 
         else:
             return self.uploadAvatar(x, userSession)
