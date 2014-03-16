@@ -646,6 +646,7 @@ class UploadHandler:
         return simplejson.dumps(dict(screenURL = baseURL+hashedName))
     def uploadAvatar(self, x, userSession):
         #photoID = x["photoID"]
+        userSession = userSession if userSession else datetime.ctime
         storedDir = os.getcwd()+'/static/avatar/'+userSession+'/'
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+userSession+'/'
