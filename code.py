@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 import web
 from xml.dom.minidom import parseString
@@ -202,5 +202,7 @@ if __name__ == "__main__":
  #Since only some string,I guess I can load them all to memory
  getAllImages()
  print "Previous stored image is:", len(LoadedImage.loadedImages)
+ #logFile = open("/tmp/confirm.log","wt")
+ #print >> logFile, "YES"
  app.run()
 
