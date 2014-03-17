@@ -625,7 +625,7 @@ class UploadHandler:
         if not storedPhoto:
             return simplejson.dumps({'removed':photoID})
 
-        storedDir = os.getcwd()+'/static/'+userSession+'/'
+        storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
@@ -651,7 +651,7 @@ class UploadHandler:
     def uploadAvatar(self, x, userSession):
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
-        storedDir = os.getcwd()+'/static/avatar/'+tmpDir+'/'
+        storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
