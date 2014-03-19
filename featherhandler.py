@@ -100,8 +100,27 @@ def fillPhotoRelation(photo):
             subPhoto.pop('photoRelations', None)
             res.append(cleanPhoto(subPhoto))
         photo['photoRelations'] = res
-
         
+def createRelation(photo, uid):
+    web.debug('create relation photo detail:%r' % (photo))
+    srcID = str(photo['_id'])
+    if 'photoRelations' in photo:
+        for pid in photo['photoRelations']:
+            subPhoto = MongoUtil.fetchByID('photos', ObjectId(pid))
+            if 'photoRelations' in subPhoto:
+                if pid not in subPhoto['photoRelations']:
+                    subPhoto['photoRelations'].append(srcID)
+                    #MongoUtil.update('photos', subPhoto)
+            else:
+                subPhoto['photoRelations'] = [srcID]
+                #MongoUtil.update('photos', subPhoto)
+            
+            if 'matchedUsers' in subPhoto:
+                if uid not in subPhoto['matchedUsers']:
+                    subPhoto['matchedUsers'].append(uid)
+            else:
+                subPhoto['matchedUsers'] = [uid]
+            MongoUtil.update('photos', subPhoto)
 #will store update the photo information
 class DataUtil:
     photoColName = 'photos'
@@ -490,12 +509,13 @@ class PhotoHandler:
         for ph in photos:
             existPhoto = None
             if 'photoID' in ph and ph['photoID'] != '':
-                web.debug("have photoID:%r url:%r" % (ph['photoID'], ph['assetURL']))
+                web.debug("have photo:%r" % ph)
                 existPhoto = MongoUtil.fetchByID('photos', ObjectId(ph['photoID']))
                 ph['_id'] = existPhoto['_id']
                 ph['personID'] = ObjectId(ph['personID'])
                 ph.pop('photoID', None)
                 DataUtil.updatePhoto(ph)
+                createRelation(ph, userSession)
             else:
                 #web.ctx.status = "404 can't find ID"
                 #return "Can not find %s" % (ph['photoID'])
@@ -504,11 +524,25 @@ class PhotoHandler:
                 ph['personID'] = ObjectId(ph['personID'])
                 storedID = MongoUtil.save('photos', ph)
                 ph['photoID'] = str(storedID)
+                createRelation(ph, userSession)
             res.append(cleanPhoto(ph))
         return simplejson.dumps(res)
-    def likePhoto(photoID, personID, like):
-        photo = MongoUtil.fetchByID(ObjectId(photoID));
-        
+    
+    def likePhoto(self,photoID, personID, like):
+        """Will like and dislike according the the calling"""
+        photo = MongoUtil.fetchByID('photos',ObjectId(photoID));
+        if like:
+            if 'likedUsers' in photo:
+                if not personID in photo['likedUsers']:
+                      photo['likedUsers'].append(personID)
+            else:
+                photo['likedUsers'] = [personID]
+        else:
+            if 'likedUsers' in photo:
+                if personID in photo['likedUsers']:
+                    photo['likedUsers'].remove(personID)
+        MongoUtil.update('photos', photo)
+        return 'success'
                     
         
         
