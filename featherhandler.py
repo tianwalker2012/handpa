@@ -554,7 +554,7 @@ class PhotoHandler:
                 if personID in photo['likedUsers']:
                     photo['likedUsers'].remove(personID)
                     updateLike()
-        return 'success'
+        return simplejson.dumps({'result':'success'})
                     
         
         
