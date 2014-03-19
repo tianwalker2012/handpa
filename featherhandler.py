@@ -103,18 +103,23 @@ def fillPhotoRelation(photo):
         
 def createRelation(photo, uid):
     web.debug('create relation photo detail:%r' % (photo))
-    srcID = str(photo['_id'])
+    srcID = photo['_id']
+    def saveNote():
+        #MongoUtil.update('photos', subPhoto)
+        MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':str(srcID), 'createdTime':datetime.now()})
+
     if 'photoRelations' in photo:
         for pid in photo['photoRelations']:
             subPhoto = MongoUtil.fetchByID('photos', ObjectId(pid))
+            #web.debug('subPhoto %r, pid:%s' % (subPhoto, pid))
+            
             if 'photoRelations' in subPhoto:
-                if pid not in subPhoto['photoRelations']:
+                if  srcID not in subPhoto['photoRelations']:
                     subPhoto['photoRelations'].append(srcID)
-                    #MongoUtil.update('photos', subPhoto)
+                    saveNote()
             else:
                 subPhoto['photoRelations'] = [srcID]
-                #MongoUtil.update('photos', subPhoto)
-            
+                saveNote()
             if 'matchedUsers' in subPhoto:
                 if uid not in subPhoto['matchedUsers']:
                     subPhoto['matchedUsers'].append(uid)
@@ -531,17 +536,24 @@ class PhotoHandler:
     def likePhoto(self,photoID, personID, like):
         """Will like and dislike according the the calling"""
         photo = MongoUtil.fetchByID('photos',ObjectId(photoID));
+        def updateLike():
+            MongoUtil.update('photos', photo)
+            likeStr = str(like)
+            MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr})
+
         if like:
             if 'likedUsers' in photo:
                 if not personID in photo['likedUsers']:
                       photo['likedUsers'].append(personID)
+                      updateLike()
             else:
                 photo['likedUsers'] = [personID]
+                updateLike()
         else:
             if 'likedUsers' in photo:
                 if personID in photo['likedUsers']:
                     photo['likedUsers'].remove(personID)
-        MongoUtil.update('photos', photo)
+                    updateLike()
         return 'success'
                     
         

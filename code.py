@@ -23,7 +23,7 @@ from featherhandler import PhotoHandler
 from featherhandler import PersonHandler
 from featherhandler import ExchangeHandler
 from featherhandler import FriendShip
-
+from notify import Notify
 render = web.template.render('templates/')
 WebContext.render = render
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
@@ -43,7 +43,8 @@ urls = (
  '/photo/info',"PhotoHandler",
  '/person/info',"PersonHandler",
  '/photo/exchange', 'ExchangeHandler',
- '/friend', 'FriendShip'
+ '/friend', 'FriendShip',
+ '/notify', 'Notify'
 )
 
 class JsonObject(BaseObject):
