@@ -60,7 +60,7 @@ def cleanNote(note):
     if 'photoID' in note:
         photo = MongoUtil.fetchByID('photos', ObjectId(note['photoID']))
         note['photo'] = cleanPhoto(photo)
-    
+    web.debug("final notes:%r" % note)
     return note
 
 class Notify:
