@@ -41,6 +41,7 @@ def cleanPhoto(photo):
         photo['screenURL'] = re.sub(r"\d*\.\d*\.\d*\.\d*:\d*",web.ctx.env.get('HTTP_HOST'),photo['screenURL'])
     if 'conversations' in photo:
         cleanConversations(photo['conversations'])
+    photo.pop('photoRelations', None)
     #photo.pop('photoRelations', None)
     return photo
 

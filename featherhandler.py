@@ -103,10 +103,10 @@ def fillPhotoRelation(photo):
         
 def createRelation(photo, uid):
     web.debug('create relation photo detail:%r' % (photo))
-    srcID = photo['_id']
+    srcID = str(photo['_id'])
     def saveNote():
         #MongoUtil.update('photos', subPhoto)
-        MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':str(srcID), 'createdTime':datetime.now()})
+        MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID, 'createdTime':datetime.now()})
 
     if 'photoRelations' in photo:
         for pid in photo['photoRelations']:
@@ -313,7 +313,7 @@ class ExchangeHandler:
             if srcPhoto:
                 if not 'photoRelations' in srcPhoto:
                     srcPhoto['photoRelations'] = []
-                srcPhoto['photoRelations'].append(matchPhoto['_id'])
+                srcPhoto['photoRelations'].append(str(matchPhoto['_id']))
                 MongoUtil.update('photos', srcPhoto)
             cleanPhoto(matchPhoto)
             matchPhoto.pop('photoRelations', None)
