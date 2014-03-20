@@ -51,8 +51,8 @@ def cleanNote(note):
         noteID = str(note['_id'])
         note.pop('_id', None)
         note['noteID'] = noteID
-    if 'matchID' in note:
-        photo = MongoUtil.fetchByID('photos', ObjectId(note['matchID']))
+    if 'matchedID' in note:
+        photo = MongoUtil.fetchByID('photos', ObjectId(note['matchedID']))
         note['matchedPhoto'] = cleanPhoto(photo)
     if 'srcID' in note:        
         photo = MongoUtil.fetchByID('photos', ObjectId(note['srcID']))
