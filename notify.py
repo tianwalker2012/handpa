@@ -57,7 +57,8 @@ def cleanNote(note):
     if 'srcID' in note:        
         photo = MongoUtil.fetchByID('photos', ObjectId(note['srcID']))
         note['srcPhoto'] = cleanPhoto(photo)
-        
+    if 'createdTime' in note:
+        note['createdTime'] = str(note['createdTime'])
     if 'photoID' in note:
         photo = MongoUtil.fetchByID('photos', ObjectId(note['photoID']))
         note['photo'] = cleanPhoto(photo)
