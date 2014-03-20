@@ -565,8 +565,7 @@ class PhotoHandler:
         jsons = simplejson.loads(params)
         
         cmd = jsons['cmd']
-        likeStatus = jsons['like']
-        web.debug("photo operation data:%s, %s, %s" % (str(params),str(userSession), likeStatus))
+        web.debug("photo operation data:%s, %s" % (str(params),str(userSession)))
         if cmd == 'upload':
             #web.debug("data:"+ str(params)+"json count:"+str(len(jsons)))
             return self.uploadInfo(jsons['photos'], userSession)
@@ -579,6 +578,7 @@ class PhotoHandler:
         elif cmd == 'delete':
             return self.deletePhoto(jsons['photoID'], userSession)
         elif cmd == "like":
+            likeStatus = jsons['like']
             return self.likePhoto(jsons['photoID'], userSession, likeStatus)
         #elif cmd == "dislike":
         #    return self.likePhoto(jsons['photoID'], userSession, False)
