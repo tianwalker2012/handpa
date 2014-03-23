@@ -721,7 +721,7 @@ class UploadHandler:
                 relations = storedPhoto['photoRelations']
                 #web.debug("Will create notes for user:"+str(storedPhoto['_id']))
                 for pid in relations:
-                    innerPhoto = MongoUtil.fetchByID(ObjectId(pid))
+                    innerPhoto = MongoUtil.fetchByID('photos',ObjectId(pid))
                     innerPersonID = str(innerPhoto['personID'])
                     web.debug("Will create notes for user:%s %r" %(innerPersonID, innerPhoto))
                     photoUploadNote(innerPersonID, str(innerPhoto['_id']), str(storedPhoto['_id']))
