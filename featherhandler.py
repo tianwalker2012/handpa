@@ -271,7 +271,7 @@ class ExchangeHandler:
         photo = {
             'personID':ObjectId(personID),
             'matchedUsers':[userSession],
-            'photoRelations':[str(photoID)],
+            'photoRelations':[str(photoID)] if photoID else [],
             'type':'1'
             }
         MongoUtil.save('photos', photo)
