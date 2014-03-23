@@ -104,13 +104,15 @@ def fillPhotoRelation(photo):
 
 def photoUploadNote(personID, srcPhotoID, destPhotoID):
      MongoUtil.save('notes', {'type':'upload','personID':str(personID), 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now()})
-      
+     
 def createRelation(photo, uid):
     web.debug('create relation photo detail:%r' % (photo))
     srcID = str(photo['_id'])
     def saveNote():
         #MongoUtil.update('photos', subPhoto)
-        MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID, 'createdTime':datetime.now()})
+        existPhoto = MongoUtil.fetch('photos', {'srcID':str(srcID)})
+        if not existPhoto:
+            MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID, 'createdTime':datetime.now()})
 
     if 'photoRelations' in photo:
         for pid in photo['photoRelations']:
