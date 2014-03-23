@@ -33,6 +33,7 @@ urls = (
  '/uploader', 'uploader',
  '/showdetail/(.+)', 'showdetail',
  '/todo', 'todo',
+ '/resttest/(.+)/(.+)', 'RestTest',
  '/haha', 'hahaclass',
  '/outputtest','outputtest',
  '/feather', 'FeatherHandler',
@@ -46,6 +47,10 @@ urls = (
  '/friend', 'FriendShip',
  '/notify', 'Notify'
 )
+
+class RestTest:
+    def GET(self, fst, sec):
+        return 'first value:%s, second value:%s' % (fst, sec)
 
 class JsonObject(BaseObject):
  def __init__(self, name, gender):

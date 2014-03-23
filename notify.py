@@ -53,15 +53,18 @@ def cleanNote(note):
         note['noteID'] = noteID
     if 'matchedID' in note:
         photo = MongoUtil.fetchByID('photos', ObjectId(note['matchedID']))
-        note['matchedPhoto'] = cleanPhoto(photo)
+        if photo:
+            note['matchedPhoto'] = cleanPhoto(photo)
     if 'srcID' in note:        
         photo = MongoUtil.fetchByID('photos', ObjectId(note['srcID']))
-        note['srcPhoto'] = cleanPhoto(photo)
+        if photo:
+            note['srcPhoto'] = cleanPhoto(photo)
     if 'createdTime' in note:
         note['createdTime'] = str(note['createdTime'])
     if 'photoID' in note:
         photo = MongoUtil.fetchByID('photos', ObjectId(note['photoID']))
-        note['photo'] = cleanPhoto(photo)
+        if photo:
+            note['photo'] = cleanPhoto(photo)
     web.debug("final notes:%r" % note)
     return note
 
@@ -71,15 +74,36 @@ class Notify:
     def POST(self):
         return self.process();
     def process(self):
-        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')    
-        web.debug('Notify userSession:'+ userSession)
+        userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID') 
+        params = web.data()
+        jsons = simplejson.loads(params if params else '{}')
+        web.debug('Notify userSession: %s, %r' % (userSession, jsons))
         if not userSession:
                 web.ctx.status = '406 Not login'
-                return 'not userID'
-        notes = MongoUtil.fetchPage('notes',{'personID':userSession},0,5,[('createdTime', -1)])
+                return 'not userID'   
+        remove = True
+        startPage = 0
+        pageSize = 10
+        if 'keep' in jsons:
+            remove = jsons['keep']
+        
+        if 'startPage' in jsons:
+            startPage = jsons['startPage']
+        
+        if 'pageSize' in jsons:
+            pageSize = jsons['pageSize']
+
+        query = {'personID':userSession,}
+        if remove:
+            query = {'personID':userSession, 'remove':{'$ne':'1'}}
+        
+        notes = MongoUtil.fetchPage('notes',query,startPage,pageSize,[('createdTime', -1)])
         #web.debug('notes count:%i' % len(notes))
         res = []
         for note in notes:
+           if remove:
+               note['remove'] = '1'
+               MongoUtil.update('notes', note)
            res.append(cleanNote(note))
         web.debug('Total friend:'+ str(len(res)))
         return simplejson.dumps(res)        

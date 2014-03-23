@@ -97,10 +97,14 @@ def fillPhotoRelation(photo):
         res = []
         for pid in photo['photoRelations']:
             subPhoto = MongoUtil.fetchByID('photos',ObjectId(pid))
-            subPhoto.pop('photoRelations', None)
-            res.append(cleanPhoto(subPhoto))
+            if(subPhoto):
+                subPhoto.pop('photoRelations', None)
+                res.append(cleanPhoto(subPhoto))
         photo['photoRelations'] = res
-        
+
+def photoUploadNote(personID, srcPhotoID, destPhotoID):
+     MongoUtil.save('notes', {'type':'upload','personID':str(personID), 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now()})
+      
 def createRelation(photo, uid):
     web.debug('create relation photo detail:%r' % (photo))
     srcID = str(photo['_id'])
@@ -262,6 +266,18 @@ class ExchangeHandler:
     def POST(self):
         return self.process();
     
+    
+    def createPhotoRequest(self, personID, userSession):
+        photo = {
+            'personID':ObjectId(personID),
+            'matchedUsers':[userSession],
+            #'photoRelations':[photoID],
+            'type':'1'
+            }
+        MongoUtil.save('photos', photo)
+        return photo
+        
+        
     #Exchange support non-exist photoss    
     def process(self):
         params = web.data()
@@ -321,6 +337,9 @@ class ExchangeHandler:
             #cleanPhoto(srcPhoto)
             web.debug('returned photo:'+ str(matchPhoto))
             return  simplejson.dumps(matchPhoto)
+        elif personID:
+            pt = self.createPhotoRequest(personID, userSession)
+            return simplejson.dumps(cleanPhoto(pt))
         else:
             #return simplejson.dumps({'srcPhotoID':str(photoID)})
             #I can only fetch the source photoBack.
@@ -673,7 +692,9 @@ class UploadHandler:
         if not storedPhoto:
             return simplejson.dumps({'removed':photoID})
 
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
         storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        #storedDir = '%s/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
@@ -691,6 +712,17 @@ class UploadHandler:
         #storedPhoto = DataUtil.getPhotoByID(photoID)
         storedPhoto['screenURL'] = baseURL+hashedName
         storedPhoto['uploaded'] = '1'
+        if 'type' in storedPhoto:
+            if storedPhoto['type'] == '1':
+                web.debug('will create notes for %s' % photoID)
+                relations = storedPhoto['photoRelations']
+                #web.debug("Will create notes for user:"+str(storedPhoto['_id']))
+                for pid in relations:
+                    innerPhoto = MongoUtil.fetchByID(ObjectId(pid))
+                    innerPersonID = str(innerPhoto['personID'])
+                    web.debug("Will create notes for user:%s %r" %(innerPersonID, innerPhoto))
+                    photoUploadNote(innerPersonID, str(innerPhoto['_id']), str(storedPhoto['_id']))
+            
         DataUtil.updatePhoto(storedPhoto)
         #web.debug(x['myfile'].value) # This is the file contents
         #web.debug(x['myfile'].file.read())  Or use a file(-like) object
@@ -700,6 +732,7 @@ class UploadHandler:
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
         storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
+        storedDir = '%s/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
