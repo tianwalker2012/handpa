@@ -110,7 +110,7 @@ def createRelation(photo, uid):
     srcID = str(photo['_id'])
     def saveNote():
         #MongoUtil.update('photos', subPhoto)
-        existPhoto = MongoUtil.fetch('photos', {'srcID':str(srcID)})
+        existPhoto = MongoUtil.fetch('notes', {'srcID':str(srcID)})
         if not existPhoto:
             MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID, 'createdTime':datetime.now()})
 
