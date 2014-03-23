@@ -295,11 +295,11 @@ class ExchangeHandler:
             photoID = DataUtil.savePhoto(jsons)  
         elif 'photoID' in jsons:
             photoID = ObjectId(jsons['photoID'])
-        
-        elif 'personID' in jsons:
-            personID = ObjectId(jsons['personID']) 
         else :
             web.debug('Just ask for match')
+        
+        if 'personID' in jsons:
+            personID = ObjectId(jsons['personID'])
             #not uploaded yet, will try to fetch matched image now
             #web.ctx.status = '402 invalid parameters'
             #return 'Need photoID'
