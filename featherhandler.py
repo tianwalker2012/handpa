@@ -267,11 +267,11 @@ class ExchangeHandler:
         return self.process();
     
     
-    def createPhotoRequest(self, personID, userSession):
+    def createPhotoRequest(self, personID, userSession, photoID):
         photo = {
             'personID':ObjectId(personID),
             'matchedUsers':[userSession],
-            #'photoRelations':[photoID],
+            'photoRelations':[str(photoID)],
             'type':'1'
             }
         MongoUtil.save('photos', photo)
@@ -338,7 +338,7 @@ class ExchangeHandler:
             web.debug('returned photo:'+ str(matchPhoto))
             return  simplejson.dumps(matchPhoto)
         elif personID:
-            pt = self.createPhotoRequest(personID, userSession)
+            pt = self.createPhotoRequest(personID, userSession, photoID)
             return simplejson.dumps(cleanPhoto(pt))
         else:
             #return simplejson.dumps({'srcPhotoID':str(photoID)})
@@ -712,8 +712,11 @@ class UploadHandler:
         #storedPhoto = DataUtil.getPhotoByID(photoID)
         storedPhoto['screenURL'] = baseURL+hashedName
         storedPhoto['uploaded'] = '1'
+        
         if 'type' in storedPhoto:
+            web.debug('type in storedPhoto is:%i' % storedPhoto['type'])
             if storedPhoto['type'] == '1':
+                storedPhoto['type'] = '0'
                 web.debug('will create notes for %s' % photoID)
                 relations = storedPhoto['photoRelations']
                 #web.debug("Will create notes for user:"+str(storedPhoto['_id']))
@@ -722,7 +725,7 @@ class UploadHandler:
                     innerPersonID = str(innerPhoto['personID'])
                     web.debug("Will create notes for user:%s %r" %(innerPersonID, innerPhoto))
                     photoUploadNote(innerPersonID, str(innerPhoto['_id']), str(storedPhoto['_id']))
-            
+
         DataUtil.updatePhoto(storedPhoto)
         #web.debug(x['myfile'].value) # This is the file contents
         #web.debug(x['myfile'].file.read())  Or use a file(-like) object
