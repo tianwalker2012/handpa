@@ -714,7 +714,7 @@ class UploadHandler:
         storedPhoto['uploaded'] = '1'
         
         if 'type' in storedPhoto:
-            web.debug('type in storedPhoto is:%i' % storedPhoto['type'])
+            web.debug('type in storedPhoto is:%r' % storedPhoto['type'])
             if storedPhoto['type'] == '1':
                 storedPhoto['type'] = '0'
                 web.debug('will create notes for %s' % photoID)
