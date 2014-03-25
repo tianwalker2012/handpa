@@ -58,6 +58,7 @@ def cleanPhoto(photo):
         photo['screenURL'] = re.sub(r"\d*\.\d*\.\d*\.\d*:\d*",web.ctx.env.get('HTTP_HOST'),photo['screenURL'])
     if 'conversations' in photo:
         cleanConversations(photo['conversations'])
+    #if 'createdTime' in photo:
     #photo.pop('photoRelations', None)
     return photo
 
@@ -274,8 +275,10 @@ class ExchangeHandler:
             'personID':ObjectId(personID),
             'matchedUsers':[userSession],
             #'photoRelations':[str(photoID)] if photoID else [],
+            'createdTime':datetime.now(),            
             'type':'1'
             }
+        web.debug('stored photo:%r' % photo)
         MongoUtil.save('photos', photo)
         return photo
         
@@ -476,10 +479,12 @@ class PhotoHandler:
         web.debug('startPage:%d, pageSize:%d, otherID %s'%(startPage, pageSize, otherID))
         res = [] 
         photos = None
+        td = datetime.now()
+        today = td;#datetime(td.year, td.month, td.day)       
         if not otherID:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]}, startPage, pageSize, [('createdTime', -1)])
         else:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'relationUsers':otherID}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'relationUsers':otherID, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]}, startPage, pageSize, [('createdTime', -1)])
         
         for photo in photos:
             fillPhotoRelation(photo)
@@ -540,6 +545,7 @@ class PhotoHandler:
                 ph['_id'] = existPhoto['_id']
                 ph['personID'] = ObjectId(ph['personID'])
                 ph.pop('photoID', None)
+                ph.pop('createdTime', None)
                 DataUtil.updatePhoto(ph)
                 createRelation(ph, userSession)
             else:
@@ -550,17 +556,26 @@ class PhotoHandler:
                 ph['personID'] = ObjectId(ph['personID'])
                 storedID = MongoUtil.save('photos', ph)
                 ph['photoID'] = str(storedID)
+                ph['createdTime'] = datetime.now()
                 createRelation(ph, userSession)
             res.append(cleanPhoto(ph))
         return simplejson.dumps(res)
     
-    def likePhoto(self,photoID, personID, like):
+    def likePhoto(self,ownPhotoID, photoID, personID, like):
         """Will like and dislike according the the calling"""
         photo = MongoUtil.fetchByID('photos',ObjectId(photoID));
+        ownPhoto = MongoUtil.fetchByID('photos', ObjectId(ownPhotoID));
+        otherPersonID = str(photo['personID'])
         def updateLike():
+            likeFlag = (otherPersonID in ownPhoto['likedUsers'] and personID in photo['likedUsers'])
+            photo['likedFlag'] = likeFlag
             MongoUtil.update('photos', photo)
+            
+            ownPhoto['likedFlag'] = likeFlag
+            MongoUtil.update('photos', ownPhoto)
+
             likeStr = str(like)
-            MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr})
+            MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr,'createdTime':datetime.now()})
 
         if like:
             if 'likedUsers' in photo:
@@ -600,7 +615,7 @@ class PhotoHandler:
             return self.deletePhoto(jsons['photoID'], userSession)
         elif cmd == "like":
             likeStatus = jsons['like']
-            return self.likePhoto(jsons['photoID'], userSession, likeStatus)
+            return self.likePhoto(jsons['ownPhotoID'], jsons['photoID'], userSession, likeStatus)
         #elif cmd == "dislike":
         #    return self.likePhoto(jsons['photoID'], userSession, False)
 
@@ -695,9 +710,10 @@ class UploadHandler:
             return simplejson.dumps({'removed':photoID})
 
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '%s/%s/' % (os.getcwd(),userSession)         
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
+        web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
         postFix = filePath.split('.')[-1]
@@ -719,7 +735,7 @@ class UploadHandler:
             web.debug('type in storedPhoto is:%r' % storedPhoto['type'])
             if storedPhoto['type'] == '1':
                 storedPhoto['type'] = '0'
-                web.debug('will create notes for %s' % photoID)
+                web.debug('will create notes for %s, storedPhoto: %r' % (photoID, storedPhoto))
                 relations = storedPhoto['photoRelations']
                 #web.debug("Will create notes for user:"+str(storedPhoto['_id']))
                 for pid in relations:
@@ -737,7 +753,7 @@ class UploadHandler:
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
         storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
-        storedDir = '%s/%s/' % (os.getcwd(),tmpDir)        
+        #storedDir = '%s/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
@@ -770,3 +786,19 @@ class UploadHandler:
             return self.uploadPhoto(x, userSession) 
         else:
             return self.uploadAvatar(x, userSession)
+
+if __name__ == "__main__":
+    userSession = '532fb562e7b5b9009b79d074'  
+    td = datetime.now()
+    today = td#datetime(td.year, td.month, td.day)  
+    print 'Before query'
+    # , '$or':[{'likedFlag':'1'}, {'createdTime':{'$gte':today}}]         
+    #photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'createdTime':{'$lt':today}}, 0, 10, [('createdTime', -1)])
+    photos= MongoUtil.fetchSome('photos',{'createdTime':{'$exists':'1'}})    
+    #photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), '$or':[{'likedFlag':'1'}, {'createdTime':{'$gte':today}}]}, 0, 5, [('createdTime', -1)])
+    for ph in photos:
+        print 'Photo:%r' % ph
+        ph['createdTime'] = datetime.strptime(ph['createdTime'], "%Y-%m-%d %H:%M:%S.%f" )
+        MongoUtil.update('photos', ph)
+        print 'updated:%r' % ph['createdTime']
+    print 'completed query'
