@@ -195,6 +195,18 @@ class DataUtil:
         return None        
         #profileID = MongoUtil.create('person_profile', {'password':infos['password'],'email':infos['email'],'mobile':infos['mobile']})
 
+class PhotoURL:
+    def GET(self, photoID):
+        web.debug('fetch url for photoID:%s' % photoID)
+        if photoID:
+            pt = MongoUtil.fetchByID('photos', ObjectId(photoID))
+            if pt:
+                web.ctx.status = '302 Moved Temporarily'
+                web.debug('headers:%s, tuple is:%r'% (web.ctx.headers, ('Location', pt['screenURL'].encode("ASCII", 'ignore') if pt['screenURL'] else '')) )
+                web.ctx.headers.append(('Location', pt['screenURL'].encode("ASCII", 'ignore') if pt['screenURL'] else ''))
+                return ''
+        web.ctx.status = '404 Not found'
+        return ''
 #Query the information of all the friend.
 class FriendShip:
     def GET(self):
@@ -480,7 +492,7 @@ class PhotoHandler:
         res = [] 
         photos = None
         td = datetime.now()
-        today = td;#datetime(td.year, td.month, td.day)       
+        today = datetime(td.year, td.month, td.day)       
         if not otherID:
             photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]}, startPage, pageSize, [('createdTime', -1)])
         else:
@@ -546,6 +558,7 @@ class PhotoHandler:
                 ph['personID'] = ObjectId(ph['personID'])
                 ph.pop('photoID', None)
                 ph.pop('createdTime', None)
+                ph.pop('screenURL', None)
                 DataUtil.updatePhoto(ph)
                 createRelation(ph, userSession)
             else:
@@ -557,23 +570,39 @@ class PhotoHandler:
                 storedID = MongoUtil.save('photos', ph)
                 ph['photoID'] = str(storedID)
                 ph['createdTime'] = datetime.now()
+                #baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/
+                ph['screenURL'] = 'http://%s/photourl/%s' % (web.ctx.env.get('HTTP_HOST'), str(storedID))
+                MongoUtil.update('photos', ph)
                 createRelation(ph, userSession)
             res.append(cleanPhoto(ph))
         return simplejson.dumps(res)
-    
+        
     def likePhoto(self,ownPhotoID, photoID, personID, like):
         """Will like and dislike according the the calling"""
         photo = MongoUtil.fetchByID('photos',ObjectId(photoID));
         ownPhoto = MongoUtil.fetchByID('photos', ObjectId(ownPhotoID));
         otherPersonID = str(photo['personID'])
         def updateLike():
-            likeFlag = (otherPersonID in ownPhoto['likedUsers'] and personID in photo['likedUsers'])
-            photo['likedFlag'] = likeFlag
+            likeFlag = -1
+            
+            if 'likedUsers' in ownPhoto and 'likedUsers' in photo:
+                likeFlag = (otherPersonID in ownPhoto['likedUsers'] and personID in photo['likedUsers'])
+                
+            if 'likedFlag' in photo:
+                photo['likedFlag'] += likeFlag
+            else:
+                photo['likedFlag'] = likeFlag
+
+            photo['likedFlag'] = photo['likedFlag'] if photo['likedFlag'] > -1 else 0
             MongoUtil.update('photos', photo)
             
-            ownPhoto['likedFlag'] = likeFlag
-            MongoUtil.update('photos', ownPhoto)
+            if 'likedFlag' in ownPhoto:
+                ownPhoto['likedFlag'] += likeFlag
+            else:
+                ownPhoto['likedFlag'] = likeFlag
 
+            ownPhoto['likedFlag'] = ownPhoto['likedFlag'] if ownPhoto['likedFlag'] > -1 else 0
+            MongoUtil.update('photos', ownPhoto)
             likeStr = str(like)
             MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr,'createdTime':datetime.now()})
 
@@ -597,7 +626,7 @@ class PhotoHandler:
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
-        web.debug("photo operation data:"+ str(params)+","+str(userSession))
+        #web.debug("photo operation data:"+ str(params)+","+str(userSession))
         jsons = simplejson.loads(params)
         
         cmd = jsons['cmd']
@@ -680,9 +709,9 @@ class FeatherRegister:
             web.debug('no avatar')
         else:    
             avatarURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar.png'
-            web.debug("mock:%r, personID:%r" % (mock, personID))
+            #web.debug("mock:%r, personID:%r" % (mock, personID))
             uploaded['avatar'] = avatarURL
-        
+
         if personID:
             person = MongoUtil.fetchByID('persons', ObjectId(personID))
             web.debug("mock user register:%r" % (person))
@@ -692,9 +721,32 @@ class FeatherRegister:
             MongoUtil.update('persons', uploaded)
             return simplejson.dumps(cleanPerson(uploaded))
         else:
-            person = DataUtil.saveRegister(uploaded)
-            #uploaded['personID'] = str(personid)
-            return simplejson.dumps(cleanPerson(person))
+            existPerson = None
+            if uploaded['mobile']:
+                existPerson = MongoUtil.fetch('persons', {'mobile':uploaded['mobile']})
+                web.debug('person exist:%s', existPerson)
+                
+            if existPerson:
+                if existPerson['joined']:
+                    web.ctx.status = '406 Not Allow'
+                    return 'Not Allow'
+                else:
+                    existPerson['joined'] = True
+                    existPerson['name'] = uploaded['name']
+                    existPerson['password']= uploaded['password']
+                    sendJoinNotes(existPerson['_id'])
+                    MongoUtil.update('persons', existPerson)
+            else:                
+                existPerson = DataUtil.saveRegister(uploaded)
+                
+                #uploaded['personID'] = str(personid)
+            return simplejson.dumps(cleanPerson(existPerson))
+
+def sendJoinNotes(joinID):
+    persons = MongoUtil.fetchSome('friendship', {'friend':joinID})
+    for person in persons:
+        web.debug('send notes ownerID:%r, friend:%r' % (person['owner'], joinID))
+        MongoUtil.save('notes', {'personID':str(person['owner']), 'type':'joined', 'otherID':str(joinID), 'createdTime':datetime.now()})
 
 def makeIfNone(dirName):
     if not os.path.exists(dirName):
@@ -710,8 +762,8 @@ class UploadHandler:
             return simplejson.dumps({'removed':photoID})
 
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
+        storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        #storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
@@ -733,9 +785,9 @@ class UploadHandler:
         
         if 'type' in storedPhoto:
             web.debug('type in storedPhoto is:%r' % storedPhoto['type'])
-            if storedPhoto['type'] == '1':
-                storedPhoto['type'] = '0'
-                web.debug('will create notes for %s, storedPhoto: %r' % (photoID, storedPhoto))
+            if storedPhoto['type'] == True:
+                storedPhoto['type'] = False
+                web.debug('type will create notes for %s, storedPhoto: %r' % (photoID, storedPhoto))
                 relations = storedPhoto['photoRelations']
                 #web.debug("Will create notes for user:"+str(storedPhoto['_id']))
                 for pid in relations:

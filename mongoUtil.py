@@ -32,9 +32,11 @@ class MongoUtil:
 #I love this game so much.    
 #db.collection.find().sort( { age: -1 } )
     @classmethod
-    def fetchAll(self, colName, sorts):
+    def fetchAll(self, colName, sorts = None):
         cols = db[colName]
-        return cols.find().sort(sorts)
+        if sorts:
+            return cols.find().sort(sorts)
+        return cols.find()
 
     @classmethod
     def fetchSome(self, colName, conds, sorts = None):

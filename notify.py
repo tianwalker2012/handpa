@@ -25,6 +25,18 @@ def cleanConversations(conversations):
         cleanConversation(cs)
     return conversations
 
+def cleanPerson(person):
+    if '_id' in person:
+        pid = person['_id']
+        del person['_id']
+        person['personID'] = str(pid)
+    if 'password' in person:
+        del person['password']
+    if 'createTime' in person:
+        person['createTime'] = str(person['createTime'])
+    person.pop('friends', None)
+    return person
+
 def cleanPhoto(photo):
     #pid = ''
     if '_id' in photo:
@@ -65,6 +77,12 @@ def cleanNote(note):
         photo = MongoUtil.fetchByID('photos', ObjectId(note['photoID']))
         if photo:
             note['photo'] = cleanPhoto(photo)
+
+    if 'otherID' in note:
+        person = MongoUtil.fetchByID('persons', ObjectId(note['otherID']))
+        if person:
+            note['person'] = cleanPerson(person)
+    
     web.debug("final notes:%r" % note)
     return note
 
