@@ -119,7 +119,9 @@ def createRelation(photo, uid):
         for pid in photo['photoRelations']:
             subPhoto = MongoUtil.fetchByID('photos', ObjectId(pid))
             #web.debug('subPhoto %r, pid:%s' % (subPhoto, pid))
-            
+            if not subPhoto:
+                continue;
+
             if 'photoRelations' in subPhoto:
                 if  srcID not in subPhoto['photoRelations']:
                     subPhoto['photoRelations'].append(srcID)
@@ -324,14 +326,16 @@ class ExchangeHandler:
             #created = True
         
         photos = None
-        if(personID):
-            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'personID':personID, '_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)]) 
-        else:
-            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
+        #if(personID):
+        #    photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'personID':personID, '_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)]) 
+        #else:
+        if not personID:
+            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
         
         matchPhoto = None     
         web.debug('cursor:'+ str(photos))
-        if photos.count() > 0 : matchPhoto = photos[0]
+        if photos:
+            if photos.count() > 0 : matchPhoto = photos[0]
         web.debug("matched photo:"+ str(matchPhoto))        
         srcPhoto = MongoUtil.fetchByID('photos', photoID)
         if matchPhoto:
@@ -805,7 +809,7 @@ class UploadHandler:
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
         storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
-        #storedDir = '%s/%s/' % (os.getcwd(),tmpDir)        
+        #storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
