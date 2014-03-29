@@ -333,7 +333,7 @@ class ExchangeHandler:
             photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
         
         matchPhoto = None     
-        web.debug('cursor: %s, count %i' % (str(photos), photos.count()))
+        #web.debug('cursor: %s, count %i' % (str(photos), photos.count()))
         if photos:
             if photos.count() > 0 : matchPhoto = photos[0]
             web.debug("matched photo:"+ str(matchPhoto))        
