@@ -330,13 +330,14 @@ class ExchangeHandler:
         #    photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'personID':personID, '_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)]) 
         #else:
         if not personID:
-            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
+            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
         
         matchPhoto = None     
-        web.debug('cursor:'+ str(photos))
+        web.debug('cursor: %s, count %i' % (str(photos), photos.count()))
         if photos:
             if photos.count() > 0 : matchPhoto = photos[0]
-        web.debug("matched photo:"+ str(matchPhoto))        
+            web.debug("matched photo:"+ str(matchPhoto))        
+        
         srcPhoto = MongoUtil.fetchByID('photos', photoID)
         if matchPhoto:
             if not 'matchedUsers' in matchPhoto:
