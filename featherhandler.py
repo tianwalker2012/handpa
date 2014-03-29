@@ -496,11 +496,13 @@ class PhotoHandler:
         res = [] 
         photos = None
         td = datetime.now()
-        today = datetime(td.year, td.month, td.day)       
+        today = datetime(td.year, td.month, td.day)   
+        #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
+        #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
         if not otherID:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, startPage, pageSize, [('createdTime', -1)])
         else:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'relationUsers':otherID, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'relationUsers':otherID}, startPage, pageSize, [('createdTime', -1)])
         
         for photo in photos:
             fillPhotoRelation(photo)
