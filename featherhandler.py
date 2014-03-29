@@ -330,7 +330,7 @@ class ExchangeHandler:
         #    photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'personID':personID, '_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)]) 
         #else:
         if not personID:
-            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':'1', '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
+            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
         
         matchPhoto = None     
         web.debug('cursor: %s, count %i' % (str(photos), photos.count()))
@@ -788,7 +788,7 @@ class UploadHandler:
         #storedId = existPhoto['_id']
         #storedPhoto = DataUtil.getPhotoByID(photoID)
         storedPhoto['screenURL'] = baseURL+hashedName
-        storedPhoto['uploaded'] = '1'
+        storedPhoto['uploaded'] = True
         
         if 'type' in storedPhoto:
             web.debug('type in storedPhoto is:%r' % storedPhoto['type'])
