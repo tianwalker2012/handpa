@@ -290,7 +290,7 @@ class ExchangeHandler:
             'matchedUsers':[userSession],
             #'photoRelations':[str(photoID)] if photoID else [],
             'createdTime':datetime.now(),            
-            'type':'1'
+            'type':True
             }
         web.debug('stored photo:%r' % photo)
         MongoUtil.save('photos', photo)
