@@ -66,6 +66,8 @@ def cleanNote(note):
     if 'matchedID' in note:
         photo = MongoUtil.fetchByID('photos', ObjectId(note['matchedID']))
         if photo:
+            if not 'uploded' in photo or not photo['uploaded']:
+                return None   
             note['matchedPhoto'] = cleanPhoto(photo)
     if 'srcID' in note:        
         photo = MongoUtil.fetchByID('photos', ObjectId(note['srcID']))
@@ -119,10 +121,12 @@ class Notify:
         #web.debug('notes count:%i' % len(notes))
         res = []
         for note in notes:
-           if remove:
-               note['remove'] = '1'
-               MongoUtil.update('notes', note)
-           res.append(cleanNote(note))
+           cleanedNote = cleanNote(note)
+           if cleanedNote:
+               res.append(cleanedNote)
+               if remove:
+                   note['remove'] = '1'
+                   MongoUtil.update('notes', note)
         web.debug('Total friend:'+ str(len(res)))
         return simplejson.dumps(res)        
         
