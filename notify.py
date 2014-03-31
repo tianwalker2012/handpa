@@ -57,6 +57,16 @@ def cleanPhoto(photo):
     #photo.pop('photoRelations', None)
     return photo
 
+def maturedNote(note):
+    if 'matchedID' in note:
+        photo = MongoUtil.fetchByID('photos', ObjectId(note['matchedID']))
+        web.debug('matchID is %s, %r' % (note['matchedID'], photo))
+        if photo:
+            if not 'uploaded' in photo or not photo['uploaded']:
+                return False
+    return True
+
+
 def cleanNote(note):
     web.debug('Clean note get called')
     if '_id' in note:
@@ -67,8 +77,6 @@ def cleanNote(note):
         photo = MongoUtil.fetchByID('photos', ObjectId(note['matchedID']))
         web.debug('matchID is %s, %r' % (note['matchedID'], photo))
         if photo:
-            if not 'uploaded' in photo or not photo['uploaded']:
-                return None   
             note['matchedPhoto'] = cleanPhoto(photo)
     if 'sender' in note:
         person = MongoUtil.fetchID('persons', ObjectId(note['sender']))
@@ -128,9 +136,8 @@ class Notify:
         #web.debug('notes count:%i' % len(notes))
         res = []
         for note in notes:
-           cleanedNote = cleanNote(note)
-           if cleanedNote:
-               res.append(cleanedNote)
+           if maturedNote(note):
+               res.append(cleanNote(note))
                if remove:
                    note['remove'] = '1'
                    MongoUtil.update('notes', note)
