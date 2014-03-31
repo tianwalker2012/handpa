@@ -112,8 +112,13 @@ def createRelation(photo, uid):
     def saveNote():
         #MongoUtil.update('photos', subPhoto)
         existPhoto = MongoUtil.fetch('notes', {'srcID':str(srcID)})
+        #matchedPerson = MongoUtil.fetchById('persons', ObjectId(uid))
+        #cleanedPerson = None
+        #if matchedPerson:
+        #    cleanedPerson = cleanPerson(matchedPerson)
+        
         if not existPhoto:
-            MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID, 'createdTime':datetime.now()})
+            MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID,'createdTime':datetime.now(), 'sender':uid})
 
     if 'photoRelations' in photo:
         for pid in photo['photoRelations']:

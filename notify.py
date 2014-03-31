@@ -65,10 +65,17 @@ def cleanNote(note):
         note['noteID'] = noteID
     if 'matchedID' in note:
         photo = MongoUtil.fetchByID('photos', ObjectId(note['matchedID']))
+        web.debug('matchID is %s, %r' % (note['matchedID'], photo))
         if photo:
-            if not 'uploded' in photo or not photo['uploaded']:
+            if not 'uploaded' in photo or not photo['uploaded']:
                 return None   
             note['matchedPhoto'] = cleanPhoto(photo)
+    if 'sender' in note:
+        person = MongoUtil.fetchID('persons', ObjectId(note['sender']))
+        web.debug('sender detail:%r' % person)
+        if person:
+            note['senderPerson'] = cleanPerson(person)
+
     if 'srcID' in note:        
         photo = MongoUtil.fetchByID('photos', ObjectId(note['srcID']))
         if photo:
