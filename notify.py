@@ -137,10 +137,10 @@ class Notify:
         res = []
         for note in notes:
            if maturedNote(note):
-               res.append(cleanNote(note))
                if remove:
                    note['remove'] = '1'
                    MongoUtil.update('notes', note)
+                   res.append(cleanNote(note))
         web.debug('Total friend:'+ str(len(res)))
         return simplejson.dumps(res)        
         
