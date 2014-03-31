@@ -343,7 +343,6 @@ class ExchangeHandler:
             if photos.count() > 0 : matchPhoto = photos[0]
             web.debug("matched photo:"+ str(matchPhoto))        
         
-        srcPhoto = MongoUtil.fetchByID('photos', photoID)
         if matchPhoto:
             if not 'matchedUsers' in matchPhoto:
                 matchPhoto['matchedUsers'] = []
@@ -353,11 +352,15 @@ class ExchangeHandler:
             #matchPhoto['matchedUsers'].append('Random')
             web.debug("after insert:"+ str(matchPhoto['matchedUsers']))
             MongoUtil.update('photos', matchPhoto)
-            if srcPhoto:
-                if not 'photoRelations' in srcPhoto:
-                    srcPhoto['photoRelations'] = []
-                srcPhoto['photoRelations'].append(str(matchPhoto['_id']))
-                MongoUtil.update('photos', srcPhoto)
+            if photoID:
+                srcPhoto = MongoUtil.fetchByID('photos', photoID)
+                if srcPhoto:
+                    if not 'photoRelations' in srcPhoto:
+                        srcPhoto['photoRelations'] = []
+                    srcPhoto['photoRelations'].append(str(matchPhoto['_id']))
+                    MongoUtil.update('photos', srcPhoto)
+                    web.debug('Will create relations for source %r' % srcPhoto)
+                    createRelation(srcPhoto, userSession)
             cleanPhoto(matchPhoto)
             matchPhoto.pop('photoRelations', None)
             #matchPhoto['srcPhotoID'] = str(photoID)

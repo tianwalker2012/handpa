@@ -79,7 +79,7 @@ def cleanNote(note):
         if photo:
             note['matchedPhoto'] = cleanPhoto(photo)
     if 'sender' in note:
-        person = MongoUtil.fetchID('persons', ObjectId(note['sender']))
+        person = MongoUtil.fetchByID('persons', ObjectId(note['sender']))
         web.debug('sender detail:%r' % person)
         if person:
             note['senderPerson'] = cleanPerson(person)
