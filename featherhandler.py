@@ -511,7 +511,7 @@ class PhotoHandler:
         if not otherID:
             photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, startPage, pageSize, [('createdTime', -1)])
         else:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'relationUsers':otherID}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'matchedUsers':otherID}, startPage, pageSize, [('createdTime', -1)])
         
         for photo in photos:
             fillPhotoRelation(photo)
