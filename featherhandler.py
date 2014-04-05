@@ -288,13 +288,22 @@ class ExchangeHandler:
     def POST(self):
         return self.process();
     
-    
+    def createEmptyPhoto(self, userSession):
+        photo = {
+            'personID':ObjectId(userSession),
+            'isPair':True        
+        }    
+        MongoUtil.save('photos', photo)
+        web.debug('Empty photo:%r' % photo)
+        return photo
+
     def createPhotoRequest(self, personID, userSession, photoID):
         photo = {
             'personID':ObjectId(personID),
             'matchedUsers':[userSession],
             #'photoRelations':[str(photoID)] if photoID else [],
-            'createdTime':datetime.now(),            
+            'createdTime':datetime.now(), 
+            'isPair': True,        
             'type':True
             }
         web.debug('stored photo:%r' % photo)
@@ -335,7 +344,7 @@ class ExchangeHandler:
         #    photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'personID':personID, '_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)]) 
         #else:
         if not personID:
-            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)])        
+            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}, {'isPair':True}]},0, 1, [('createdTime', -1)])        
         
         matchPhoto = None     
         #web.debug('cursor: %s, count %i' % (str(photos), photos.count()))
@@ -368,6 +377,7 @@ class ExchangeHandler:
             web.debug('returned photo:'+ str(matchPhoto))
             return  simplejson.dumps(matchPhoto)
         elif personID:
+            web.debug('Exchange request')
             pt = self.createPhotoRequest(personID, userSession, photoID)
             return simplejson.dumps(cleanPhoto(pt))
         else:
