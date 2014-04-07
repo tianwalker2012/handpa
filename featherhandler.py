@@ -438,8 +438,7 @@ class PersonHandler:
     def queryByID(self, pids):
         res = []
         web.debug('pid: %r' % pids)
-        for pid in pids:
-            
+        for pid in pids:         
             person = MongoUtil.fetchByID('persons', ObjectId(pid))
             if person:
                 web.debug("person detail %r" % person)
@@ -478,6 +477,32 @@ class PersonHandler:
             res.append(person)
         return simplejson.dumps(res)
         
+    def queryFriend(self, userSession):
+        """This is method to query all the people based on how many photo are combined by each other"""        
+        #persons = MongoUtil.fetchSome('friendship', {'owner':ObjectId(userSession)})
+        #for ps in persons:
+        photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, 0, 2000, [('createdTime', -1)])
+        matchedUsers = []
+        exists = {}
+        web.debug('total photos:%i' % photos.count())
+        for ph in photos:
+            if 'matchedUsers' in ph:
+                for pid in ph['matchedUsers']:
+                    if not exists.get(pid):
+                        exists[pid] = 1
+                        matchedUsers.append(pid)
+                    else:
+                        exists[pid] += 1 
+        web.debug("total related user:%i" % len(matchedUsers))
+        res = []
+        for pid in matchedUsers:
+            person = MongoUtil.fetchByID('persons', ObjectId(pid))
+            if person:
+                person['photoCount'] = exists[pid]
+                res.append(cleanPerson(person))
+        return simplejson.dumps(res)
+                        
+    
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
@@ -489,11 +514,13 @@ class PersonHandler:
         web.debug("data:"+ str(params)+","+str(userSession))
         jsons = simplejson.loads(params)
         
-        cmd = jsons['cmd']
+        cmd = jsons.get('cmd')
         if cmd == 'mobile':
             return self.mobileQuery(jsons['mobiles'], userSession)
         elif cmd == 'personID':
             return self.queryByID(jsons['personIDs'])
+        elif cmd == 'friend':
+            return self.queryFriend(userSession)
         elif cmd == 'upload':
             return self.uploadPerson(jsons['persons'], userSession)
             
@@ -505,7 +532,7 @@ class PhotoHandler:
         return self.process()
         
         
-    def queryPhotos(self, jsons, userSession):
+    def queryPhotos(self, jsons, userSession, haveTotal):
         startPage = jsons['startPage']
         pageSize = jsons['pageSize']
         otherID = None
@@ -523,11 +550,15 @@ class PhotoHandler:
         else:
             photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'matchedUsers':otherID}, startPage, pageSize, [('createdTime', -1)])
         
+        totalCount = photos.count()
         for photo in photos:
             fillPhotoRelation(photo)
             res.append(cleanPhoto(photo))
-        web.debug("Got "+ str(len(res)) + " for "+ str(res));
-        return simplejson.dumps(res)
+        web.debug("Got %i, %i" % (len(res), totalCount));
+        if haveTotal:
+            return simplejson.dumps({'totalCount':totalCount,'photos':res})
+        else:
+            return simplejson.dumps(res)
         
     def uploadInfo(self, jsons, userSession):
         res = []
@@ -662,7 +693,9 @@ class PhotoHandler:
         elif cmd == 'update':
             return self.updatePhotos(jsons['photos'], userSession)
         elif cmd == 'query':
-            return self.queryPhotos(jsons, userSession)
+            return self.queryPhotos(jsons, userSession, False)
+        elif cmd == 'queryCount':
+            return self.queryPhotos(jsons, userSession, True)
         elif cmd == 'removeMatch':
             return self.removeMatch(jsons['photoID'],userSession)
         elif cmd == 'delete':
