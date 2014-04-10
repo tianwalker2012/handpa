@@ -498,7 +498,7 @@ class PersonHandler:
         for pid in matchedUsers:
             person = MongoUtil.fetchByID('persons', ObjectId(pid))
             if person:
-                person['photoCount'] = exists[pid]
+                #person['photoCount'] = exists[pid]
                 res.append(cleanPerson(person))
         return simplejson.dumps(res)
                         
