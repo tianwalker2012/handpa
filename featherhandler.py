@@ -546,9 +546,9 @@ class PhotoHandler:
         #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
         #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
         if not otherID:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'photoRelations.0': {'$exists': True}}, startPage, pageSize, [('createdTime', -1)])
         else:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'matchedUsers':otherID}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'matchedUsers':otherID, 'photoRelations.0': {'$exists': True}}, startPage, pageSize, [('createdTime', -1)])
         
         totalCount = photos.count()
         for photo in photos:
@@ -588,7 +588,12 @@ class PhotoHandler:
         if not photo:
             web.ctx.status = '404 Can not Find'
             return 'failed to find ' + photoID
-        matchedUsers = photo['matchedUsers']
+        
+        if photo.get('isPair'):
+            MongoUtil.remove('photos', {'_id':ObjectId(photoID)})
+            return simplejson.dumps({'result':'success'})
+        
+        matchedUsers = photo.get('matchedUsers')        
         newList = []
         for user in matchedUsers:
             if not user == userSession:
@@ -820,8 +825,8 @@ class UploadHandler:
             return simplejson.dumps({'removed':photoID})
 
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
@@ -862,8 +867,8 @@ class UploadHandler:
     def uploadAvatar(self, x, userSession):
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
-        storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
-        #storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
+        #storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
+        storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]

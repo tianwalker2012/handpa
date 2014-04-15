@@ -41,6 +41,7 @@ urls = (
  '/feather', 'FeatherHandler',
  '/upload', 'UploadHandler',
  '/login', 'FeatherLogin',
+ '/broken/(.+)', 'BrokenTest',
  '/register', 'FeatherRegister',
  '/query/contacts','FeatherContacts',
  '/photo/info',"PhotoHandler",
@@ -49,6 +50,20 @@ urls = (
  '/friend', 'FriendShip',
  '/notify', 'Notify'
 )
+
+
+class BrokenTest:
+    def GET(self, brokenPoint):
+        bi = int(brokenPoint)
+        web.debug('broken point %i' % int(brokenPoint))
+        web.header('Content-type','images/jpeg')
+        #web.header('Transfer-Encoding','chunked') 
+        f = open("/Users/apple/Documents/handpa/static/0ac59a6b21390f7e06243eb14b343a76.jpg", 'rb')
+        contents = f.read()
+        web.debug('content length:%i' % len(contents))  
+        if(len(contents) < bi):
+            bi = len(contents)
+        return contents[:bi]
 
 class RestTest:
     def GET(self, fst, sec):
