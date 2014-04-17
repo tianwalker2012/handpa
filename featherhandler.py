@@ -11,9 +11,13 @@ from datetime import datetime
 from mongoUtil import MongoUtil
 from bson.objectid import ObjectId
 from imageutil import ImageUtil
+from pushSender import sendPush
+from i18nStrings import localInfo
+from notify import cleanNote
 import re
 import os
 import math
+
 webURL = None
 #why this style, because I can use the chain style which is a powerful tools
 def cleanPerson(person):
@@ -103,9 +107,24 @@ def fillPhotoRelation(photo):
                 res.append(cleanPhoto(subPhoto))
         photo['photoRelations'] = res
 
-def photoUploadNote(personID, srcPhotoID, destPhotoID):
-     MongoUtil.save('notes', {'type':'upload','personID':str(personID), 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now()})
-     
+def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
+    strID = str(personID)
+    noteDict = {'type':'upload','personID':strID, 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now()}
+    MongoUtil.save('notes', noteDict)
+    person = MongoUtil.fetchByID('persons',ObjectId(strID))
+    token = person.get('pushToken')
+    if(token):
+        web.debug('find token for id:%s, token:%s' % (strID, person.get('pushToken')))
+        #filledNote = cleanNote(noteDict)
+        otherPerson = MongoUtil.fetchByID('persons', ObjectId(otherPid))
+        sendPush(token,(localInfo(person.get('lang'), '"%s"回复了您的照片') % otherPerson.get('name')),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID})     
+    else:
+        web.debug('user %s have no token' % strID)
+
+def pid2Token(pid):
+    person = MongoUtil.fetchByID(ObjectId(pid))
+    return person.get('pushToken')
+
 def createRelation(photo, uid):
     web.debug('create relation photo detail:%r' % (photo))
     srcID = str(photo['_id'])
@@ -118,8 +137,25 @@ def createRelation(photo, uid):
         #    cleanedPerson = cleanPerson(matchedPerson)
         
         if not existPhoto:
-            MongoUtil.save('notes', {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID,'createdTime':datetime.now(), 'sender':uid})
-
+            savedNote = {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID,'createdTime':datetime.now(), 'sender':uid}
+            MongoUtil.save('notes', savedNote)
+            person = MongoUtil.fetchByID('persons', subPhoto.get('personID'))
+            token = person.get('pushToken')
+            otherPerson = MongoUtil.fetchByID('persons', ObjectId(uid))
+            if token:
+                #filledNote = cleanNote(savedNote)
+                photoType = subPhoto.get('type')
+                message = None
+                if photoType:
+                    #message = localInfo(person.get('lang'), '"%s"跟您合了照片') % otherPerson.get('name')
+                    #else:
+                    message = localInfo(person.get('lang'), '"%s"给您拍了照片，拍摄后翻看') % otherPerson.get('name')    
+                    sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}) 
+                web.debug('combined photo notes:%r, %r, type:%i' % (person['_id'], otherPerson['_id'], photoType))
+            else:
+                web.debug('%s have no token' % person.get('_id'))
+                
+                
     if 'photoRelations' in photo:
         for pid in photo['photoRelations']:
             subPhoto = MongoUtil.fetchByID('photos', ObjectId(pid))
@@ -139,6 +175,16 @@ def createRelation(photo, uid):
                     subPhoto['matchedUsers'].append(uid)
             else:
                 subPhoto['matchedUsers'] = [uid]
+            
+            ourMatched = photo.get('matchedUsers')
+            otherPid = str(subPhoto.get('personID'))
+            
+            if ourMatched: 
+                if otherPid not in ourMatched:
+                    photo['matchedUsers'].append(otherPid)
+            else:
+                photo['matchedUsers'] = [otherPid]
+            
             MongoUtil.update('photos', subPhoto)
 #will store update the photo information
 class DataUtil:
@@ -476,7 +522,13 @@ class PersonHandler:
             person['photobook'] = relations
             res.append(person)
         return simplejson.dumps(res)
-        
+    
+    def updatePerson(self, person, userSession):
+        pid = ObjectId(userSession)
+        person['_id'] = pid
+        MongoUtil.update('persons', person)
+        return '{}'
+    
     def queryFriend(self, userSession):
         """This is method to query all the people based on how many photo are combined by each other"""        
         #persons = MongoUtil.fetchSome('friendship', {'owner':ObjectId(userSession)})
@@ -502,7 +554,16 @@ class PersonHandler:
                 res.append(cleanPerson(person))
         return simplejson.dumps(res)
                         
-    
+    def uploadMobile(self, mobiles, userSession):
+        web.debug('will upload all the mobile')
+        storeMobiles = MongoUtil.fetch('mobiles', {'personID':userSession})
+        if storeMobiles:
+            storeMobiles['mobiles'] = mobiles
+            MongoUtil.update('mobiles', storeMobiles)
+        else:
+            MongoUtil.save('mobiles', {'personID':userSession, 'mobiles':mobiles})
+        return '{}'
+
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
@@ -523,6 +584,10 @@ class PersonHandler:
             return self.queryFriend(userSession)
         elif cmd == 'upload':
             return self.uploadPerson(jsons['persons'], userSession)
+        elif cmd == 'update':
+            return self.updatePerson(jsons['persons'], userSession)
+        elif cmd == 'mobileupload':
+            return self.uploadMobile(jsons['mobiles'], userSession)
             
 class PhotoHandler:
     def POST(self):
@@ -619,9 +684,9 @@ class PhotoHandler:
                 ph['personID'] = ObjectId(ph['personID'])
                 ph.pop('photoID', None)
                 ph.pop('createdTime', None)
-                ph.pop('screenURL', None)
-                DataUtil.updatePhoto(ph)
+                ph.pop('screenURL', None)                
                 createRelation(ph, userSession)
+                DataUtil.updatePhoto(ph)
             else:
                 #web.ctx.status = "404 can't find ID"
                 #return "Can not find %s" % (ph['photoID'])
@@ -633,8 +698,8 @@ class PhotoHandler:
                 ph['createdTime'] = datetime.now()
                 #baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/
                 ph['screenURL'] = 'http://%s/photourl/%s' % (web.ctx.env.get('HTTP_HOST'), str(storedID))
-                MongoUtil.update('photos', ph)
                 createRelation(ph, userSession)
+                MongoUtil.update('photos', ph)
             res.append(cleanPhoto(ph))
         return simplejson.dumps(res)
         
@@ -792,25 +857,37 @@ class FeatherRegister:
             if existPerson:
                 if existPerson['joined']:
                     web.ctx.status = '406 Not Allow'
-                    return 'Not Allow'
+                    return 'Mobile Exists'
                 else:
                     existPerson['joined'] = True
                     existPerson['name'] = uploaded['name']
                     existPerson['password']= uploaded['password']
-                    sendJoinNotes(existPerson['_id'])
+                    
                     MongoUtil.update('persons', existPerson)
             else:                
                 existPerson = DataUtil.saveRegister(uploaded)
-                
+            
+            sendJoinNotes(existPerson)
                 #uploaded['personID'] = str(personid)
             return simplejson.dumps(cleanPerson(existPerson))
 
-def sendJoinNotes(joinID):
-    persons = MongoUtil.fetchSome('friendship', {'friend':joinID})
+def sendJoinNotes(joinedPerson):
+    mobile = joinedPerson.get('mobile')
+    persons = MongoUtil.fetchWithField('mobiles', {'mobiles':mobile}, {'personID':1})
+    web.debug('mobile %s, joined, will notify %i person' % (mobile, persons.count()))
     for person in persons:
-        web.debug('send notes ownerID:%r, friend:%r' % (person['owner'], joinID))
-        MongoUtil.save('notes', {'personID':str(person['owner']), 'type':'joined', 'otherID':str(joinID), 'createdTime':datetime.now()})
-
+        ps = MongoUtil.fetchByID('persons',ObjectId(person.get('personID')))
+        token = ps.get('pushToken')
+        if ps:
+            web.debug('send notes')
+            note = {'personID':str(ps['_id']), 'type':'joined', 'otherID':str(joinedPerson['_id']), 'createdTime':datetime.now()};
+            MongoUtil.save('notes', note)
+            if token:
+                lang = joinedPerson.get('lang')
+                message = localInfo(lang, '"%s"加入了羽毛') % joinedPerson.get('name')
+                sendPush(token, message, {'noteID':str(note['_id'])})
+        
+                
 def makeIfNone(dirName):
     if not os.path.exists(dirName):
         os.makedirs(dirName)
@@ -825,8 +902,8 @@ class UploadHandler:
             return simplejson.dumps({'removed':photoID})
 
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
@@ -857,7 +934,7 @@ class UploadHandler:
                     innerPhoto = MongoUtil.fetchByID('photos',ObjectId(pid))
                     innerPersonID = str(innerPhoto['personID'])
                     web.debug("Will create notes for user:%s %r" %(innerPersonID, innerPhoto))
-                    photoUploadNote(innerPersonID, str(innerPhoto['_id']), str(storedPhoto['_id']))
+                    photoUploadNote(innerPersonID,userSession, str(innerPhoto['_id']), str(storedPhoto['_id']))
 
         DataUtil.updatePhoto(storedPhoto)
         #web.debug(x['myfile'].value) # This is the file contents
@@ -867,8 +944,8 @@ class UploadHandler:
     def uploadAvatar(self, x, userSession):
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
-        storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
-        #storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
+        #storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
+        storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]

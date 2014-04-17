@@ -45,7 +45,11 @@ class MongoUtil:
             return cols.find(conds).sort(sorts)
         else:
             return cols.find(conds)
-    
+    @classmethod
+    def fetchWithField(self, colName, conds, fields):
+        cols = db[colName]
+        return cols.find(conds, fields)
+
     @classmethod 
     def fetchPage(self, colName, conds, startPage, pageSize, sorts = None):
         cols = db[colName]
