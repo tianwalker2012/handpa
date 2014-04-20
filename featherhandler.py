@@ -117,7 +117,7 @@ def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
         web.debug('find token for id:%s, token:%s' % (strID, person.get('pushToken')))
         #filledNote = cleanNote(noteDict)
         otherPerson = MongoUtil.fetchByID('persons', ObjectId(otherPid))
-        sendPush(token,(localInfo(person.get('lang'), '"%s"回复了您的照片') % otherPerson.get('name')),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID})     
+        sendPush(token,localInfo(person.get('lang'), '朋友回复了您的照片'),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID})     
     else:
         web.debug('user %s have no token' % strID)
 
@@ -149,7 +149,7 @@ def createRelation(photo, uid):
                 if photoType:
                     #message = localInfo(person.get('lang'), '"%s"跟您合了照片') % otherPerson.get('name')
                     #else:
-                    message = localInfo(person.get('lang'), '"%s"给您拍了照片，拍摄后翻看') % otherPerson.get('name')    
+                    message = localInfo(person.get('lang'), '收到朋友新照片')    
                     sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}) 
                 web.debug('combined photo notes:%r, %r, type:%i' % (person['_id'], otherPerson['_id'], photoType))
             else:
@@ -533,25 +533,43 @@ class PersonHandler:
         """This is method to query all the people based on how many photo are combined by each other"""        
         #persons = MongoUtil.fetchSome('friendship', {'owner':ObjectId(userSession)})
         #for ps in persons:
-        photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession)}, 0, 2000, [('createdTime', -1)])
-        matchedUsers = []
+             
+        res = []
+        addedFriends = {}
         exists = {}
+        pf = MongoUtil.fetch('friends',{'personID':userSession})
+        if pf:
+            friends = pf.get('friends')
+            web.debug('got friend')
+            if friends:
+                for pid in friends:
+                    person = MongoUtil.fetchByID('persons', ObjectId(pid))
+                    if person:
+                        addedFriends[pid] = True
+                        res.append(cleanPerson(person))
+        
+        photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'photoRelations.0': {'$exists': True}}, 0, 2000, [('createdTime', -1)])
+        matchedUsers = []
         web.debug('total photos:%i' % photos.count())
         for ph in photos:
             if 'matchedUsers' in ph:
                 for pid in ph['matchedUsers']:
                     if not exists.get(pid):
                         exists[pid] = 1
-                        matchedUsers.append(pid)
+                        if not addedFriends.get(pid):
+                            addedFriends[pid] = True
+                            matchedUsers.append(pid)
                     else:
                         exists[pid] += 1 
         web.debug("total related user:%i" % len(matchedUsers))
-        res = []
+       
         for pid in matchedUsers:
             person = MongoUtil.fetchByID('persons', ObjectId(pid))
             if person:
                 #person['photoCount'] = exists[pid]
                 res.append(cleanPerson(person))
+                
+        
         return simplejson.dumps(res)
                         
     def uploadMobile(self, mobiles, userSession):
@@ -871,12 +889,38 @@ class FeatherRegister:
                 #uploaded['personID'] = str(personid)
             return simplejson.dumps(cleanPerson(existPerson))
 
+def buildMutualFriend(frd1, frd2):
+     #friend = {'personID':str(frd1['_id']) }
+    web.debug('build mutual friend:%s, %s', str(frd1['_id']), str(frd2['_id']))
+    friends1 = MongoUtil.fetch('friends', {'personID':str(frd1['_id'])})
+    if friends1:
+        if friends1.get('friends'):
+            friends1['friends'].append(str(frd2['_id']))
+        else:
+            friends1['friends'] = [str(frd2['_id'])];
+        MongoUtil.update('friends', friends1)
+    else:
+        MongoUtil.save('friends', {'personID':str(frd1['_id']), 'friends':[str(frd2['_id'])]})
+
+    
+    friends2 = MongoUtil.fetch('friends', {'personID':str(frd2['_id'])})
+    if friends2: 
+        if friends2.get('friends'):
+            friends2['friends'].append(str(frd1['_id']))
+        else:
+            friends2['friends'] = [str(frd1['_id'])]
+        MongoUtil.update('friends', friends2)
+    else:
+        MongoUtil.save('friends', {'personID':str(frd2['_id']), 'friends':[str(frd1['_id'])]})
+
 def sendJoinNotes(joinedPerson):
     mobile = joinedPerson.get('mobile')
     persons = MongoUtil.fetchWithField('mobiles', {'mobiles':mobile}, {'personID':1})
+   
     web.debug('mobile %s, joined, will notify %i person' % (mobile, persons.count()))
     for person in persons:
         ps = MongoUtil.fetchByID('persons',ObjectId(person.get('personID')))
+        buildMutualFriend(ps, joinedPerson)
         token = ps.get('pushToken')
         if ps:
             web.debug('send notes')
@@ -884,7 +928,7 @@ def sendJoinNotes(joinedPerson):
             MongoUtil.save('notes', note)
             if token:
                 lang = joinedPerson.get('lang')
-                message = localInfo(lang, '"%s"加入了羽毛') % joinedPerson.get('name')
+                message = localInfo(lang, '新朋友加入了羽毛')
                 sendPush(token, message, {'noteID':str(note['_id'])})
         
                 
