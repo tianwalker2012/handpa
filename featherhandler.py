@@ -17,9 +17,23 @@ from notify import cleanNote
 import re
 import os
 import math
+import string
+import random
 
 webURL = None
+smsCmd = 'curl "http://utf8.sms.webchinese.cn/?Uid=tiange&Key=a62725bf421644799a8d&smsMob=%s&smsText=短信验证码是:%s"'
 #why this style, because I can use the chain style which is a powerful tools
+
+def sendSms(mobile, message):
+    cmd = smsCmd % (mobile, message)
+    res = ""
+    res = os.system(cmd)
+    web.debug('sms result %s, %s' % (res, message))
+
+def createRandomStr():
+    lst = [random.choice(string.digits).lower() for n in xrange(6)]
+    return "".join(lst)
+
 def cleanPerson(person):
     if '_id' in person:
         pid = person['_id']
@@ -140,6 +154,8 @@ def createRelation(photo, uid):
             savedNote = {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID,'createdTime':datetime.now(), 'sender':uid}
             MongoUtil.save('notes', savedNote)
             person = MongoUtil.fetchByID('persons', subPhoto.get('personID'))
+            if not person:
+                return
             token = person.get('pushToken')
             otherPerson = MongoUtil.fetchByID('persons', ObjectId(uid))
             if token:
@@ -237,7 +253,7 @@ class DataUtil:
 
     @classmethod
     def findLogin(self, infos):
-        person = MongoUtil.fetch('persons', {'mobile':infos['mobile'], 'password':infos['password']})
+        person = MongoUtil.fetch('persons', {'mobile':infos['mobile']})
         if(person):
             #pid = str(person['_id'])
             #if '_id' in person: 
@@ -390,7 +406,7 @@ class ExchangeHandler:
         #    photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'personID':personID, '_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)]) 
         #else:
         if not personID:
-            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}, {'isPair':True}]},0, 1, [('createdTime', -1)])        
+            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}, {'isPair':True}, {'deleted':True}]},0, 1, [('createdTime', -1)])        
         
         matchPhoto = None     
         #web.debug('cursor: %s, count %i' % (str(photos), photos.count()))
@@ -582,18 +598,34 @@ class PersonHandler:
             MongoUtil.save('mobiles', {'personID':userSession, 'mobiles':mobiles})
         return '{}'
 
+    def generatePassCode(url, mobile, userSession):
+        web.debug('generate pass code')
+        smsCode = MongoUtil.fetch('smscode', {'mobile':mobile})
+        passCode = createRandomStr();  
+        if smsCode:
+            smsCode['passCode'] = passCode
+            MongoUtil.update('smscode', smsCode)
+        else:            
+            MongoUtil.save('smscode', {'mobile':mobile, 'passCode':passCode})
+        sendSms(mobile, passCode)
+        return '{}';
+
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        web.debug("data:"+ str(params)+","+str(userSession))
+        jsons = simplejson.loads(params)
+        cmd = jsons.get('cmd')
         if not userSession:
+            if cmd == 'passcode':
+                return self.generatePassCode(jsons['mobile'], userSession)
             web.debug("No valid user")
             web.ctx.status = '406 No User'
             return 'No user'
         
-        web.debug("data:"+ str(params)+","+str(userSession))
-        jsons = simplejson.loads(params)
         
-        cmd = jsons.get('cmd')
+        
+        
         if cmd == 'mobile':
             return self.mobileQuery(jsons['mobiles'], userSession)
         elif cmd == 'personID':
@@ -606,7 +638,23 @@ class PersonHandler:
             return self.updatePerson(jsons['persons'], userSession)
         elif cmd == 'mobileupload':
             return self.uploadMobile(jsons['mobiles'], userSession)
-            
+        
+def disbind(srcPhoto, photoID):
+    relations = []
+    if not srcPhoto:
+        return
+    
+    pr = srcPhoto.get('photoRelations')
+    if pr:
+        for pid in pr:
+            if pid != photoID:
+                relations.append(pid)
+    srcPhoto['photoRelations'] = relations
+    if srcPhoto.get('type') == 1:
+        srcPhoto['deleted'] = 1
+    MongoUtil.update('photos', srcPhoto)
+    MongoUtil.save('notes', {'personID':str(srcPhoto.get('personID')), 'type':'deleted', 'sourcePid':str(srcPhoto['_id']), 'deletedID':photoID})
+
 class PhotoHandler:
     def POST(self):
         return self.process()
@@ -629,9 +677,9 @@ class PhotoHandler:
         #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
         #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
         if not otherID:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'photoRelations.0': {'$exists': True}}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession),'$nor':[{'deleted':True}], 'photoRelations.0': {'$exists': True}}, startPage, pageSize, [('createdTime', -1)])
         else:
-            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'matchedUsers':otherID, 'photoRelations.0': {'$exists': True}}, startPage, pageSize, [('createdTime', -1)])
+            photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession),'$nor':[{'deleted':True}], 'matchedUsers':otherID, 'photoRelations.0': {'$exists': True}}, startPage, pageSize, [('createdTime', -1)])
         
         totalCount = photos.count()
         for photo in photos:
@@ -687,8 +735,11 @@ class PhotoHandler:
 
     def deletePhoto(self, photoID, userSession):
         web.debug("will remove photo:%s" % photoID)
-        MongoUtil.remove('photos', {'_id': ObjectId(photoID)})
-        return simplejson.dumps({'result':'success'})
+        MongoUtil.update('photos', {'_id': ObjectId(photoID), 'deleted':True})
+        photos = MongoUtil.fetchSome('photos', {'photoRelations':photoID})
+        for ph in photos:
+            disbind(ph, photoID)
+        return '{}'#simplejson.dumps({'result':'success'})
     
     def updatePhotos(self, photos, userSession):
         res = []
@@ -834,7 +885,18 @@ class FeatherLogin:
         web.debug("post inputs:"+ str(params))
         uploaded = simplejson.loads(params)
         person = DataUtil.findLogin(uploaded)
-        return simplejson.dumps(cleanPerson(person))
+
+        mobile = uploaded.get('mobile')
+        passwd = uploaded.get('password')
+        passCode = MongoUtil.fetch('smscode', {'mobile':mobile})
+        web.debug('passcode for mobile:%s, %r' % (mobile, passCode))
+        if passCode:
+            pc = passCode.get('passCode')
+            web.debug('stored passcode:%s, passwd:%s' % (passCode, passwd))
+            if pc == passwd:
+                return simplejson.dumps(cleanPerson(person))
+        web.ctx.status = '406 Not Allow'
+        return '{}'
 
 class FeatherRegister:
     def GET(self):
@@ -858,6 +920,8 @@ class FeatherRegister:
             #web.debug("mock:%r, personID:%r" % (mock, personID))
             uploaded['avatar'] = avatarURL
 
+        passCode = uploaded.get('passCode')
+        
         if personID:
             person = MongoUtil.fetchByID('persons', ObjectId(personID))
             web.debug("mock user register:%r" % (person))
@@ -867,19 +931,24 @@ class FeatherRegister:
             MongoUtil.update('persons', uploaded)
             return simplejson.dumps(cleanPerson(uploaded))
         else:
-            existPerson = None
-            if uploaded['mobile']:
-                existPerson = MongoUtil.fetch('persons', {'mobile':uploaded['mobile']})
-                web.debug('person exist:%s', existPerson)
-                
+            mobile = uploaded.get('mobile')
+            if not mobile:
+                web.ctx.status = '406 Not Allow'
+                return '{}'
+            existPerson = MongoUtil.fetch('persons', {'mobile':uploaded['mobile']})
+            storedPassCode = MongoUtil.fetch('smscode', {'mobile':mobile})
+                        
+            if storedPassCode.get('passCode') != passCode:
+                web.ctx.status = '407 Not Allow'
+                return '{}'
             if existPerson:
                 if existPerson['joined']:
-                    web.ctx.status = '406 Not Allow'
-                    return 'Mobile Exists'
+                    web.ctx.status = '408 Not Allow'
+                    return '{}'
                 else:
                     existPerson['joined'] = True
                     existPerson['name'] = uploaded['name']
-                    existPerson['password']= uploaded['password']
+                    #existPerson['password']= uploaded['password']
                     
                     MongoUtil.update('persons', existPerson)
             else:                
