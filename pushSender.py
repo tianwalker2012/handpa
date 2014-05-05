@@ -12,8 +12,10 @@ import simplejson
 import sys
 import thread
 
-def sendPush(token, textInfo, dictInfo):
-    apns = APNs(use_sandbox=True, cert_file='feather_cer.pem', key_file='feather_key_plain.pem')
+def sendPush(token, textInfo, dictInfo,sandBox = True):
+    print 'sandBox is:%i' % sandBox
+    
+    apns = APNs(use_sandbox=sandBox, cert_file='feather_cer.pem' if sandBox else 'feather_cer_prod.pem' , key_file='feather_key_plain.pem' if sandBox else 'feather_key_plain_prod.pem')
     payload = Payload(alert=textInfo, sound="default", badge=1, custom = dictInfo)
     print 'before send push'
     

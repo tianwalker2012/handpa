@@ -19,9 +19,11 @@ import os
 import math
 import string
 import random
+from random import randint
 
 webURL = None
 smsCmd = 'curl "http://utf8.sms.webchinese.cn/?Uid=tiange&Key=a62725bf421644799a8d&smsMob=%s&smsText=短信验证码是:%s"'
+
 #why this style, because I can use the chain style which is a powerful tools
 
 def sendSms(mobile, message):
@@ -122,6 +124,8 @@ def fillPhotoRelation(photo):
         photo['photoRelations'] = res
 
 def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
+    prod = web.ctx.env.get('HTTP_X_PROD')
+    web.debug('the production flag is:%s' % prod)
     strID = str(personID)
     noteDict = {'type':'upload','personID':strID, 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now()}
     MongoUtil.save('notes', noteDict)
@@ -131,7 +135,7 @@ def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
         web.debug('find token for id:%s, token:%s' % (strID, person.get('pushToken')))
         #filledNote = cleanNote(noteDict)
         otherPerson = MongoUtil.fetchByID('persons', ObjectId(otherPid))
-        sendPush(token,localInfo(person.get('lang'), '朋友回复了您的照片'),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID})     
+        sendPush(token,localInfo(person.get('lang'), '朋友回复了您的照片'),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID}, prod != '1')     
     else:
         web.debug('user %s have no token' % strID)
 
@@ -143,6 +147,7 @@ def createRelation(photo, uid):
     web.debug('create relation photo detail:%r' % (photo))
     srcID = str(photo['_id'])
     def saveNote():
+        prod = web.ctx.env.get('HTTP_X_PROD')
         #MongoUtil.update('photos', subPhoto)
         existPhoto = MongoUtil.fetch('notes', {'srcID':str(srcID)})
         #matchedPerson = MongoUtil.fetchById('persons', ObjectId(uid))
@@ -166,7 +171,7 @@ def createRelation(photo, uid):
                     #message = localInfo(person.get('lang'), '"%s"跟您合了照片') % otherPerson.get('name')
                     #else:
                     message = localInfo(person.get('lang'), '收到朋友新照片')    
-                    sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}) 
+                    sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}, prod != '1') 
                 web.debug('combined photo notes:%r, %r, type:%i' % (person['_id'], otherPerson['_id'], photoType))
             else:
                 web.debug('%s have no token' % person.get('_id'))
@@ -405,30 +410,46 @@ class ExchangeHandler:
         #if(personID):
         #    photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'personID':personID, '_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}]},0, 1, [('createdTime', -1)]) 
         #else:
+        #web.debug('match source photo id:%s' % photoID)
+        srcPhoto = None
+        if photoID:
+            srcPhoto = MongoUtil.fetchByID('photos',ObjectId(photoID))
         if not personID:
-            photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}, {'isPair':True}, {'deleted':True}]},0, 1, [('createdTime', -1)])        
+            if srcPhoto:
+                web.debug('photo created time:%r, id:%s' %(srcPhoto.get('createdTime'), photoID))
+                photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID},'createdTime':{'$lt':srcPhoto.get('createdTime')}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}, {'isPair':True}, {'deleted':True}]},0, 10, [('createdTime', -1)])        
+            else:
+                photos = MongoUtil.fetchPage('photos', {'personID':{'$ne':ownerID},'_id':{'$ne':photoID}, 'uploaded':True, '$nor':[{'matchedUsers':userSession}, {'isPair':True}, {'deleted':True}]},0, 10, [('createdTime', -1)])        
         
         matchPhoto = None     
         #web.debug('cursor: %s, count %i' % (str(photos), photos.count()))
-        if photos:
-            if photos.count() > 0 : matchPhoto = photos[0]
-            web.debug("matched photo:"+ str(matchPhoto))        
+        if photos and photos.count() > 0 : 
+            randRange = photos.count() - 1
+            if randRange > 10:
+                randRange = 10
+            pos = randint(0, randRange)
+            matchPhoto = photos[pos]
+            web.debug("pos:%i,randRange:%i, count:%i, matched photo:%r" % (pos,randRange,photos.count(),matchPhoto))        
         
         if matchPhoto:
             if not 'matchedUsers' in matchPhoto:
                 matchPhoto['matchedUsers'] = []
-            web.debug("before insert:"+ str(matchPhoto['matchedUsers']))
+            #web.debug("before insert:"+ str(matchPhoto['matchedUsers']))
             
             matchPhoto['matchedUsers'].append(userSession)
             #matchPhoto['matchedUsers'].append('Random')
-            web.debug("after insert:"+ str(matchPhoto['matchedUsers']))
+            #web.debug("after insert:"+ str(matchPhoto['matchedUsers']))
             MongoUtil.update('photos', matchPhoto)
             if photoID:
-                srcPhoto = MongoUtil.fetchByID('photos', photoID)
+                #srcPhoto = MongoUtil.fetchByID('photos', photoID)
                 if srcPhoto:
                     if not 'photoRelations' in srcPhoto:
                         srcPhoto['photoRelations'] = []
                     srcPhoto['photoRelations'].append(str(matchPhoto['_id']))
+                    if not 'matchedUsers' in srcPhoto:
+                        srcPhoto['matchedUsers'] = []
+                        #web.debug("before insert:"+ str(matchPhoto['matchedUsers']))
+                    srcPhoto['matchedUsers'].append(str(matchPhoto.get('personID')))
                     MongoUtil.update('photos', srcPhoto)
                     web.debug('Will create relations for source %r' % srcPhoto)
                     createRelation(srcPhoto, userSession)
@@ -638,7 +659,7 @@ class PersonHandler:
             return self.updatePerson(jsons['persons'], userSession)
         elif cmd == 'mobileupload':
             return self.uploadMobile(jsons['mobiles'], userSession)
-        
+
 def disbind(srcPhoto, photoID):
     relations = []
     if not srcPhoto:
@@ -764,7 +785,8 @@ class PhotoHandler:
                 ph['personID'] = ObjectId(ph['personID'])
                 storedID = MongoUtil.save('photos', ph)
                 ph['photoID'] = str(storedID)
-                ph['createdTime'] = datetime.now()
+                ph['createdTime'] = datetime.strptime(ph['createdTime'], '%Y-%m-%d %H:%M:%S.%f')
+                #ph['createdTime'] = datetime.now()
                 #baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/
                 ph['screenURL'] = 'http://%s/photourl/%s' % (web.ctx.env.get('HTTP_HOST'), str(storedID))
                 createRelation(ph, userSession)
@@ -983,6 +1005,8 @@ def buildMutualFriend(frd1, frd2):
         MongoUtil.save('friends', {'personID':str(frd2['_id']), 'friends':[str(frd1['_id'])]})
 
 def sendJoinNotes(joinedPerson):
+    prod = web.ctx.env.get('HTTP_X_PROD')
+    web.debug('send join')
     mobile = joinedPerson.get('mobile')
     persons = MongoUtil.fetchWithField('mobiles', {'mobiles':mobile}, {'personID':1})
    
@@ -998,7 +1022,7 @@ def sendJoinNotes(joinedPerson):
             if token:
                 lang = joinedPerson.get('lang')
                 message = localInfo(lang, '新朋友加入了羽毛')
-                sendPush(token, message, {'noteID':str(note['_id'])})
+                sendPush(token, message, {'noteID':str(note['_id'])}, prod != '')
         
                 
 def makeIfNone(dirName):
