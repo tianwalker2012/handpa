@@ -124,7 +124,7 @@ def fillPhotoRelation(photo):
         photo['photoRelations'] = res
 
 def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
-    prod = web.ctx.env.get('HTTP_X_PROD')
+    #prod = web.ctx.env.get('HTTP_X_PROD')
     web.debug('the production flag is:%s' % prod)
     strID = str(personID)
     noteDict = {'type':'upload','personID':strID, 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now()}
@@ -134,8 +134,8 @@ def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
     if(token):
         web.debug('find token for id:%s, token:%s' % (strID, person.get('pushToken')))
         #filledNote = cleanNote(noteDict)
-        otherPerson = MongoUtil.fetchByID('persons', ObjectId(otherPid))
-        sendPush(token,localInfo(person.get('lang'), '朋友回复了您的照片'),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID}, prod != '1')     
+        #otherPerson = MongoUtil.fetchByID('persons', ObjectId(otherPid))
+        sendPush(token,localInfo(person.get('lang'), '朋友回复了您的照片'),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID}, person.get('prodFlag') != '1')     
     else:
         web.debug('user %s have no token' % strID)
 
@@ -147,7 +147,7 @@ def createRelation(photo, uid):
     web.debug('create relation photo detail:%r' % (photo))
     srcID = str(photo['_id'])
     def saveNote():
-        prod = web.ctx.env.get('HTTP_X_PROD')
+        #prod = web.ctx.env.get('HTTP_X_PROD')
         #MongoUtil.update('photos', subPhoto)
         existPhoto = MongoUtil.fetch('notes', {'srcID':str(srcID)})
         #matchedPerson = MongoUtil.fetchById('persons', ObjectId(uid))
@@ -171,7 +171,7 @@ def createRelation(photo, uid):
                     #message = localInfo(person.get('lang'), '"%s"跟您合了照片') % otherPerson.get('name')
                     #else:
                     message = localInfo(person.get('lang'), '收到朋友新照片')    
-                    sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}, prod != '1') 
+                    sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}, person.get('prodFlag') != '1') 
                 web.debug('combined photo notes:%r, %r, type:%i' % (person['_id'], otherPerson['_id'], photoType))
             else:
                 web.debug('%s have no token' % person.get('_id'))
@@ -1022,7 +1022,7 @@ def sendJoinNotes(joinedPerson):
             if token:
                 lang = joinedPerson.get('lang')
                 message = localInfo(lang, '新朋友加入了羽毛')
-                sendPush(token, message, {'noteID':str(note['_id'])}, prod != '')
+                sendPush(token, message, {'noteID':str(note['_id'])}, ps.get('prodFlag') != '1')
         
                 
 def makeIfNone(dirName):
