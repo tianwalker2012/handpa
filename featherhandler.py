@@ -125,7 +125,7 @@ def fillPhotoRelation(photo):
 
 def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
     #prod = web.ctx.env.get('HTTP_X_PROD')
-    web.debug('the production flag is:%s' % prod)
+    #web.debug('the production flag is:%s' % prod)
     strID = str(personID)
     noteDict = {'type':'upload','personID':strID, 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now()}
     MongoUtil.save('notes', noteDict)
@@ -1005,7 +1005,7 @@ def buildMutualFriend(frd1, frd2):
         MongoUtil.save('friends', {'personID':str(frd2['_id']), 'friends':[str(frd1['_id'])]})
 
 def sendJoinNotes(joinedPerson):
-    prod = web.ctx.env.get('HTTP_X_PROD')
+    #prod = web.ctx.env.get('HTTP_X_PROD')
     web.debug('send join')
     mobile = joinedPerson.get('mobile')
     persons = MongoUtil.fetchWithField('mobiles', {'mobiles':mobile}, {'personID':1})
