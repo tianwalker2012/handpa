@@ -7,7 +7,7 @@ Created on Thu Feb  6 17:19:11 2014
 import web
 import simplejson
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from mongoUtil import MongoUtil
 from bson.objectid import ObjectId
 from imageutil import ImageUtil
@@ -131,7 +131,7 @@ def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
     strID = str(personID)
     #createdTime = MongoUtil.fetchByID(ObjectId(srcPhotoID))
     
-    noteDict = {'type':'upload','personID':strID, 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now(chinaTime)}
+    noteDict = {'type':'upload','personID':strID, 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now(chinaTime) + timedelta(hours = 8)}
     MongoUtil.save('notes', noteDict)
     person = MongoUtil.fetchByID('persons',ObjectId(strID))
     token = person.get('pushToken')
@@ -160,7 +160,7 @@ def createRelation(photo, uid):
         #    cleanedPerson = cleanPerson(matchedPerson)
         
         if not existPhoto:
-            savedNote = {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID,'createdTime':datetime.now(chinaTime), 'sender':uid}
+            savedNote = {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID,'createdTime':datetime.now(chinaTime)+timedelta(hours=9), 'sender':uid}
             MongoUtil.save('notes', savedNote)
             person = MongoUtil.fetchByID('persons', subPhoto.get('personID'))
             if not person:
@@ -373,7 +373,7 @@ class ExchangeHandler:
             'personID':ObjectId(personID),
             'matchedUsers':[userSession],
             #'photoRelations':[str(photoID)] if photoID else [],
-            'createdTime':datetime.now(chinaTime), 
+            'createdTime':datetime.now(chinaTime)+timedelta(hours = 8), 
             'isPair': True,        
             'type':True
             }
@@ -504,7 +504,7 @@ class PersonHandler:
     def saveNotExist(self, owner, friend):
         relation = MongoUtil.fetch('friendship', {'owner':owner,'friend':friend})
         if not relation:
-            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(chinaTime)})
+            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(chinaTime)+timedelta(hours = 8)})
 
     def mobileQuery(self, jsons, userSession):
         res = []
@@ -537,7 +537,7 @@ class PersonHandler:
     def establishFriendship(self, owner, friend, isPhotoBook='0'):
         relation = MongoUtil.fetch('friendship', {'owner':owner,'friend':friend})
         if not relation:
-            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(chinaTime),'photobook':'1' if isPhotoBook else '0'})
+            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(chinaTime)+timedelta(hours=8),'photobook':'1' if isPhotoBook else '0'})
             return isPhotoBook
         else:
             return relation['photobook']
@@ -697,7 +697,7 @@ class PhotoHandler:
         web.debug('startPage:%d, pageSize:%d, otherID %s'%(startPage, pageSize, otherID))
         res = [] 
         photos = None
-        td = datetime.now(chinaTime)
+        td = datetime.now(chinaTime)+timedelta(8)
         today = datetime(td.year, td.month, td.day)   
         #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
         #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
@@ -825,7 +825,7 @@ class PhotoHandler:
             ownPhoto['likedFlag'] = ownPhoto['likedFlag'] if ownPhoto['likedFlag'] > -1 else 0
             MongoUtil.update('photos', ownPhoto)
             likeStr = str(like)
-            MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr,'createdTime':datetime.now(chinaTime)})
+            MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr,'createdTime':datetime.now(chinaTime)+timedelta(8)})
 
         if like:
             if 'likedUsers' in photo:
@@ -1021,7 +1021,7 @@ def sendJoinNotes(joinedPerson):
         token = ps.get('pushToken')
         if ps:
             web.debug('send notes')
-            note = {'personID':str(ps['_id']), 'type':'joined', 'otherID':str(joinedPerson['_id']), 'createdTime':datetime.now(chinaTime)};
+            note = {'personID':str(ps['_id']), 'type':'joined', 'otherID':str(joinedPerson['_id']), 'createdTime':datetime.now(chinaTime)+timedelta(8)};
             MongoUtil.save('notes', note)
             if token:
                 lang = joinedPerson.get('lang')
