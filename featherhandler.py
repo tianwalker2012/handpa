@@ -20,10 +20,12 @@ import math
 import string
 import random
 from random import randint
+from pytz import timezone
+import pytz
 
 webURL = None
 smsCmd = 'curl "http://utf8.sms.webchinese.cn/?Uid=tiange&Key=a62725bf421644799a8d&smsMob=%s&smsText=短信验证码是:%s"'
-
+chinaTime = timezone('Asia/Shanghai')
 #why this style, because I can use the chain style which is a powerful tools
 
 def sendSms(mobile, message):
@@ -127,7 +129,9 @@ def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
     #prod = web.ctx.env.get('HTTP_X_PROD')
     #web.debug('the production flag is:%s' % prod)
     strID = str(personID)
-    noteDict = {'type':'upload','personID':strID, 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now()}
+    #createdTime = MongoUtil.fetchByID(ObjectId(srcPhotoID))
+    
+    noteDict = {'type':'upload','personID':strID, 'srcID':srcPhotoID, 'matchedID':destPhotoID, 'createdTime':datetime.now(chinaTime)}
     MongoUtil.save('notes', noteDict)
     person = MongoUtil.fetchByID('persons',ObjectId(strID))
     token = person.get('pushToken')
@@ -156,7 +160,7 @@ def createRelation(photo, uid):
         #    cleanedPerson = cleanPerson(matchedPerson)
         
         if not existPhoto:
-            savedNote = {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID,'createdTime':datetime.now(), 'sender':uid}
+            savedNote = {'type':'match','personID':str(subPhoto['personID']), 'srcID':pid, 'matchedID':srcID,'createdTime':datetime.now(chinaTime), 'sender':uid}
             MongoUtil.save('notes', savedNote)
             person = MongoUtil.fetchByID('persons', subPhoto.get('personID'))
             if not person:
@@ -239,7 +243,7 @@ class DataUtil:
 
     @classmethod
     def saveRegister(self, infos):
-        infos['createTime'] = datetime.now()
+        infos['createTime'] = datetime.now(chinaTime)
         infos['joined'] = '1'
         MongoUtil.create('persons', infos)
         #web.debug("id in info:"+str(infos['_id']))
@@ -369,7 +373,7 @@ class ExchangeHandler:
             'personID':ObjectId(personID),
             'matchedUsers':[userSession],
             #'photoRelations':[str(photoID)] if photoID else [],
-            'createdTime':datetime.now(), 
+            'createdTime':datetime.now(chinaTime), 
             'isPair': True,        
             'type':True
             }
@@ -500,7 +504,7 @@ class PersonHandler:
     def saveNotExist(self, owner, friend):
         relation = MongoUtil.fetch('friendship', {'owner':owner,'friend':friend})
         if not relation:
-            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now()})
+            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(chinaTime)})
 
     def mobileQuery(self, jsons, userSession):
         res = []
@@ -533,7 +537,7 @@ class PersonHandler:
     def establishFriendship(self, owner, friend, isPhotoBook='0'):
         relation = MongoUtil.fetch('friendship', {'owner':owner,'friend':friend})
         if not relation:
-            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(),'photobook':'1' if isPhotoBook else '0'})
+            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(chinaTime),'photobook':'1' if isPhotoBook else '0'})
             return isPhotoBook
         else:
             return relation['photobook']
@@ -693,7 +697,7 @@ class PhotoHandler:
         web.debug('startPage:%d, pageSize:%d, otherID %s'%(startPage, pageSize, otherID))
         res = [] 
         photos = None
-        td = datetime.now()
+        td = datetime.now(chinaTime)
         today = datetime(td.year, td.month, td.day)   
         #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
         #, '$or':[{'likedFlag':True}, {'createdTime':{'$gte':today}}]
@@ -821,7 +825,7 @@ class PhotoHandler:
             ownPhoto['likedFlag'] = ownPhoto['likedFlag'] if ownPhoto['likedFlag'] > -1 else 0
             MongoUtil.update('photos', ownPhoto)
             likeStr = str(like)
-            MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr,'createdTime':datetime.now()})
+            MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr,'createdTime':datetime.now(chinaTime)})
 
         if like:
             if 'likedUsers' in photo:
@@ -1017,7 +1021,7 @@ def sendJoinNotes(joinedPerson):
         token = ps.get('pushToken')
         if ps:
             web.debug('send notes')
-            note = {'personID':str(ps['_id']), 'type':'joined', 'otherID':str(joinedPerson['_id']), 'createdTime':datetime.now()};
+            note = {'personID':str(ps['_id']), 'type':'joined', 'otherID':str(joinedPerson['_id']), 'createdTime':datetime.now(chinaTime)};
             MongoUtil.save('notes', note)
             if token:
                 lang = joinedPerson.get('lang')
@@ -1046,7 +1050,7 @@ class UploadHandler:
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
         postFix = filePath.split('.')[-1]
-        hashedName = hashlib.md5(filePath + str(datetime.now()) + userSession).hexdigest() + '.' + postFix
+        hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime)) + userSession).hexdigest() + '.' + postFix
         imageFileName = storedDir+hashedName;
         fout = open(imageFileName, 'w')
         fout.write(x.myfile.file.read())
@@ -1087,7 +1091,7 @@ class UploadHandler:
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
         postFix = filePath.split('.')[-1]
-        hashedName = hashlib.md5(filePath + str(datetime.now())).hexdigest() + '.' + postFix
+        hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
         fout = open(storedDir+hashedName, 'w')
         fout.write(x.myfile.file.read())
         fout.close()
@@ -1118,7 +1122,7 @@ class UploadHandler:
 
 if __name__ == "__main__":
     userSession = '532fb562e7b5b9009b79d074'  
-    td = datetime.now()
+    td = datetime.now(chinaTime)
     today = td#datetime(td.year, td.month, td.day)  
     print 'Before query'
     # , '$or':[{'likedFlag':'1'}, {'createdTime':{'$gte':today}}]         

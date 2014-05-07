@@ -11,6 +11,7 @@ from apns import APNs, Payload
 import simplejson
 import sys
 import thread
+from mongoUtil import MongoUtil
 
 def sendPush(token, textInfo, dictInfo,sandBox = True):
     print 'sandBox is:%i' % sandBox
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     #token_hex = '840cfa497609701e81c61249ca5d873c7f0180b7a03747ecfebead0309bed35e'
     token_hex = '9dcd5e76457082acf22f51b96ba5baa7f9bd137602218f6bdbc0eb84ae369bca'    
     sendPush(token_hex, 'Hello baby', {'cool':'guy'}, True)
-    
+    #MongoUtil.save('timeTest', {'createdTime':});
 """    
     apns = APNs(use_sandbox=True, cert_file='feather_cer.pem', key_file='feather_key_plain.pem')
     print "will send request"
