@@ -24,6 +24,7 @@ from featherhandler import PersonHandler
 from featherhandler import ExchangeHandler
 from featherhandler import FriendShip
 from featherhandler import PhotoURL
+from infocollector import InfoCollector
 from notify import Notify
 render = web.template.render('templates/')
 WebContext.render = render
@@ -48,7 +49,8 @@ urls = (
  '/person/info',"PersonHandler",
  '/photo/exchange', 'ExchangeHandler',
  '/friend', 'FriendShip',
- '/notify', 'Notify'
+ '/notify', 'Notify',
+ '/info','InfoCollector'
 )
 
 
