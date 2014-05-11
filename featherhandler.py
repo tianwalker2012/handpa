@@ -1059,7 +1059,7 @@ class UploadHandler:
 
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
+        #storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
@@ -1100,8 +1100,8 @@ class UploadHandler:
     def uploadAvatar(self, x, userSession):
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
-        #storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
-        storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
+        storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
+        #storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
