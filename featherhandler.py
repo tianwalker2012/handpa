@@ -138,8 +138,8 @@ def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
     if(token):
         web.debug('find token for id:%s, token:%s' % (strID, person.get('pushToken')))
         #filledNote = cleanNote(noteDict)
-        #otherPerson = MongoUtil.fetchByID('persons', ObjectId(otherPid))
-        sendPush(token,localInfo(person.get('lang'), '朋友回复了您的照片'),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID}, person.get('prodFlag') != '1')     
+        otherPerson = MongoUtil.fetchByID('persons', ObjectId(otherPid))
+        sendPush(token,localInfo(person.get('lang'), '%s回复了您的照片' % otherPerson.get('name')),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID}, person.get('prodFlag') != '1')     
     else:
         web.debug('user %s have no token' % strID)
 
@@ -174,7 +174,7 @@ def createRelation(photo, uid):
                 if photoType:
                     #message = localInfo(person.get('lang'), '"%s"跟您合了照片') % otherPerson.get('name')
                     #else:
-                    message = localInfo(person.get('lang'), '收到朋友新照片')    
+                    message = localInfo(person.get('lang'), '收到%s新照片' % otherPerson.get('name'))    
                     sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}, person.get('prodFlag') != '1') 
                 web.debug('combined photo notes:%r, %r, type:%i' % (person['_id'], otherPerson['_id'], photoType))
             else:
@@ -825,8 +825,23 @@ class PhotoHandler:
             ownPhoto['likedFlag'] = ownPhoto['likedFlag'] if ownPhoto['likedFlag'] > -1 else 0
             MongoUtil.update('photos', ownPhoto)
             likeStr = str(like)
-            MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr,'createdTime':datetime.now(chinaTime)+timedelta(8)})
-
+            noteID = MongoUtil.save('notes', {'type':'like','personID':str(photo['personID']),'photoID':photoID,"otherID":personID,"like":likeStr,'createdTime':datetime.now(chinaTime)+timedelta(8)})
+            likedPush = MongoUtil.fetch('sent_like', {'likePerson':personID, 'photoID':photoID})
+            if likedPush:
+                return
+            ps = MongoUtil.fetchByID('persons', ObjectId(photo['personID']))
+            likePerson = MongoUtil.fetchByID('persons', ObjectId(personID))
+            if not ps:
+                return
+            token = ps.get('pushToken')
+            if token:
+                MongoUtil.save('sent_like', {'likePerson':personID, 'photoID':photoID})
+                lang = ps.get('lang')
+                message = localInfo(lang, '%s喜欢了你的照片' % likePerson.get('name'))
+                sendPush(token, message, {'noteID':str(noteID)}, ps.get('prodFlag') != '1')
+            
+            
+            
         if like:
             if 'likedUsers' in photo:
                 if not personID in photo['likedUsers']:
@@ -1043,8 +1058,8 @@ class UploadHandler:
             return simplejson.dumps({'removed':photoID})
 
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
@@ -1085,8 +1100,8 @@ class UploadHandler:
     def uploadAvatar(self, x, userSession):
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
-        storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
-        #storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
+        #storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
+        storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
