@@ -16,7 +16,8 @@ from mongoUtil import MongoUtil
 def sendPush(token, textInfo, dictInfo,sandBox = True):
     print 'sandBox is:%i' % sandBox
     
-    apns = APNs(use_sandbox=sandBox, cert_file='feather_cer.pem' if sandBox else 'prod_push_cer.pem' , key_file='feather_key_plain.pem' if sandBox else 'prod_push_private_plain.pem')
+    #'prod_push_cer.pem', 'prod_push_private_plain.pem'
+    apns = APNs(use_sandbox=True, cert_file='featheraz_cer.pem' if sandBox else 'prod_push_cer.pem' , key_file='feather_key_plain.pem' if sandBox else 'featheraz_p12.pem')
     payload = Payload(alert=textInfo, sound="default", badge=1, custom = dictInfo)
     print 'before send push'
     
