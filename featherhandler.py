@@ -1058,7 +1058,7 @@ class UploadHandler:
             return simplejson.dumps({'removed':photoID})
 
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
         #storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
