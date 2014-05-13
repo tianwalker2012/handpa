@@ -119,7 +119,7 @@ def fillPhotoRelation(photo):
     if 'photoRelations' in photo:
         res = []
         for pid in photo['photoRelations']:
-            subPhoto = MongoUtil.fetchByID('photos',ObjectId(pid))
+            subPhoto = MongoUtil.fetch('photos',{'_id':ObjectId(pid), '$nor':[{'deleted':True}]})
             if(subPhoto):
                 subPhoto.pop('photoRelations', None)
                 res.append(cleanPhoto(subPhoto))
@@ -756,7 +756,7 @@ class PhotoHandler:
                 newList.append(user)
         photo['matchedUsers'] = newList
         MongoUtil.update('photos', photo)
-        return simplejson.dumps({'result':'success'})
+        return '{}'#simplejson.dumps({'result':'success'})
 
     def deletePhoto(self, photoID, userSession):
         web.debug("will remove photo:%s" % photoID)
