@@ -17,7 +17,7 @@ def sendPush(token, textInfo, dictInfo,sandBox = True):
     print 'sandBox is:%i' % sandBox
     
     #'prod_push_cer.pem', 'prod_push_private_plain.pem'
-    apns = APNs(use_sandbox=True, cert_file='featheraz_cer.pem' if sandBox else 'prod_push_cer.pem' , key_file='feather_key_plain.pem' if sandBox else 'featheraz_p12.pem')
+    apns = APNs(use_sandbox=True, cert_file='feather_cer.pem' if sandBox else 'featheraz_cer.pem' , key_file='feather_key_plain.pem' if sandBox else 'featheraz_p12.pem')
     payload = Payload(alert=textInfo, sound="default", badge=1, custom = dictInfo)
     print 'before send push'
     
@@ -30,12 +30,13 @@ def sendPush(token, textInfo, dictInfo,sandBox = True):
             print '%r, %r' % (token_hex, fail_time)
 
         print "send a single success %r" % dictInfo
-    #sendAsync(None, None)
-    thread.start_new_thread(sendAsync, (None, None))
+    sendAsync(None, None)
+    #thread.start_new_thread(sendAsync, (None, None))
 if __name__ == "__main__":
     #token_hex = '840cfa497609701e81c61249ca5d873c7f0180b7a03747ecfebead0309bed35e'
-    token_hex = '9dcd5e76457082acf22f51b96ba5baa7f9bd137602218f6bdbc0eb84ae369bca'    
-    sendPush(token_hex, 'Hello baby', {'cool':'guy'}, True)
+    #token_hex = '9dcd5e76457082acf22f51b96ba5baa7f9bd137602218f6bdbc0eb84ae369bca'    
+    token_hex = 'f15a1aad893e08a10e4a965c120aca8e1b3264f21edadff79a0ccd64d0941683'    
+    sendPush(token_hex, 'Hello baby', {'cool':'guy'}, False)
     #MongoUtil.save('timeTest', {'createdTime':});
 """    
     apns = APNs(use_sandbox=True, cert_file='feather_cer.pem', key_file='feather_key_plain.pem')
