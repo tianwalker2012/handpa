@@ -431,7 +431,7 @@ class ExchangeHandler:
             randRange = photos.count() - 1
             if randRange > 10:
                 randRange = 10
-            pos = randint(0, randRange)
+            pos = 0 #randint(0, randRange)
             matchPhoto = photos[pos]
             web.debug("pos:%i,randRange:%i, count:%i, matched photo:%r" % (pos,randRange,photos.count(),matchPhoto))        
         
