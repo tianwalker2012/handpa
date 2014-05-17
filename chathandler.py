@@ -52,6 +52,7 @@ class ChatHandler:
         chatInfo = {'photos':pids, 'createdTime':timeStamp,'speaker':userSession,'text':text}
         chatID = MongoUtil.save('chats', chatInfo)
         noteID = MongoUtil.save('notes', {'type':'chat','personID':otherPid,'chatID':str(chatID),'createdTime':timeStamp})
+        """            
             likedPush = MongoUtil.fetch('sent_like', {'likePerson':personID, 'photoID':photoID})
             if likedPush:
                 return
@@ -66,7 +67,7 @@ class ChatHandler:
                 message = localInfo(lang, '%s喜欢了你的照片' % likePerson.get('name'))
                 sendPush(token, message, {'noteID':str(noteID)}, ps.get('prodFlag') != '1')
             
-                    
+       """
         
         return simplejson.dumps({'_id':str(chatID)})
         
