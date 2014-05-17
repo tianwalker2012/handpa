@@ -25,6 +25,7 @@ from featherhandler import ExchangeHandler
 from featherhandler import FriendShip
 from featherhandler import PhotoURL
 from infocollector import InfoCollector
+from chathandler import ChatHandler
 from notify import Notify
 render = web.template.render('templates/')
 WebContext.render = render
@@ -50,7 +51,9 @@ urls = (
  '/photo/exchange', 'ExchangeHandler',
  '/friend', 'FriendShip',
  '/notify', 'Notify',
- '/info','InfoCollector'
+ '/info','InfoCollector',
+ '/chat', 'ChatHandler'
+ 
 )
 
 
