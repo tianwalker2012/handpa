@@ -28,6 +28,9 @@ smsCmd = 'curl "http://utf8.sms.webchinese.cn/?Uid=tiange&Key=a62725bf421644799a
 chinaTime = timezone('Asia/Shanghai')
 #why this style, because I can use the chain style which is a powerful tools
 
+def adjustedTime():
+    return datetime.now(chinaTime) + timedelta(hours = 8)
+
 def sendSms(mobile, message):
     cmd = smsCmd % (mobile, message)
     res = ""
@@ -139,7 +142,7 @@ def photoUploadNote(personID,otherPid, srcPhotoID, destPhotoID):
         web.debug('find token for id:%s, token:%s' % (strID, person.get('pushToken')))
         #filledNote = cleanNote(noteDict)
         otherPerson = MongoUtil.fetchByID('persons', ObjectId(otherPid))
-        sendPush(token,localInfo(person.get('lang'), '%s回复了您的照片' % otherPerson.get('name')),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID}, person.get('prodFlag') != '1')     
+        sendPush(token,localInfo(person.get('lang'), '%s回复了你的照片' % otherPerson.get('name')),{'noteID':str(noteDict['_id']), 'photoID':srcPhotoID}, person.get('prodFlag'))     
     else:
         web.debug('user %s have no token' % strID)
 
@@ -175,7 +178,7 @@ def createRelation(photo, uid):
                     #message = localInfo(person.get('lang'), '"%s"跟您合了照片') % otherPerson.get('name')
                     #else:
                     message = localInfo(person.get('lang'), '收到%s新照片' % otherPerson.get('name'))    
-                    sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}, person.get('prodFlag') != '1') 
+                    sendPush(token,message,{'noteID':str(savedNote['_id']), 'photoID':str(subPhoto['_id'])}, person.get('prodFlag')) 
                 web.debug('combined photo notes:%r, %r, type:%i' % (person['_id'], otherPerson['_id'], photoType))
             else:
                 web.debug('%s have no token' % person.get('_id'))
@@ -669,16 +672,17 @@ def disbind(srcPhoto, photoID):
     if not srcPhoto:
         return
     
-    pr = srcPhoto.get('photoRelations')
-    if pr:
-        for pid in pr:
-            if pid != photoID:
-                relations.append(pid)
-    srcPhoto['photoRelations'] = relations
+    #pr = srcPhoto.get('photoRelations')
+    if srcPhoto.get('photoRelations'):
+        srcPhoto.get('photoRelations').remove(photoID)
+        #for pid in pr:
+        #    if pid != photoID:
+        #        relations.append(pid)
+    #srcPhoto['photoRelations'] = relations
     if srcPhoto.get('type') == 1:
         srcPhoto['deleted'] = 1
     MongoUtil.update('photos', srcPhoto)
-    MongoUtil.save('notes', {'personID':str(srcPhoto.get('personID')), 'type':'deleted', 'sourcePid':str(srcPhoto['_id']), 'deletedID':photoID})
+    MongoUtil.save('notes', {'personID':str(srcPhoto.get('personID')), 'type':'deleted', 'sourcePid':str(srcPhoto['_id']), 'deletedID':photoID, 'createdTime':adjustedTime()})
 
 class PhotoHandler:
     def POST(self):
@@ -747,7 +751,7 @@ class PhotoHandler:
         
         if photo.get('isPair'):
             MongoUtil.remove('photos', {'_id':ObjectId(photoID)})
-            return simplejson.dumps({'result':'success'})
+            return '{}'#simplejson.dumps({'result':'success'})
         
         matchedUsers = photo.get('matchedUsers')        
         newList = []
@@ -838,7 +842,7 @@ class PhotoHandler:
                 MongoUtil.save('sent_like', {'likePerson':personID, 'photoID':photoID})
                 lang = ps.get('lang')
                 message = localInfo(lang, '%s喜欢了你的照片' % likePerson.get('name'))
-                sendPush(token, message, {'noteID':str(noteID)}, ps.get('prodFlag') != '1')
+                sendPush(token, message, {'noteID':str(noteID)}, ps.get('prodFlag'))
             
             
             
@@ -858,7 +862,31 @@ class PhotoHandler:
         return simplejson.dumps({'result':'success'})
                     
         
+    def disBandPhoto(self, jsons):
+        srcID = jsons.get('srcID')
+        destID = jsons.get('destID')
+        src = MongoUtil.fetchByID('photos',ObjectId(srcID));
+        dest = MongoUtil.fetchByID('photos', ObjectId(destID));
+        #otherPersonID = str(photo['personID'])
+        personID = str(dest.get('personID'))
         
+        #if 'photoRelations' in photo:
+        if src and src.get('photoRelations'):
+            try:
+                src.get('photoRelations').remove(destID)
+                MongoUtil.update('photos', src)
+            except ValueError:
+                web.debug('Error:already removed %s from %s' % (destID, srcID))
+        if dest and dest.get('photoRelations'):
+            try:
+                dest.get('photoRelations').remove(srcID)
+                MongoUtil.update('photos', dest)
+            except ValueError:
+                web.debug('Error:already removed %s from %s' % (srcID, destID))
+        web.debug('personID:%s, sourcePid:%s, destPid:%s' % (personID, srcID, destID))
+        MongoUtil.save('notes', {'personID':personID, 'type':'deleted', 'sourcePid':destID, 'deletedID':srcID, 'createdTime':adjustedTime()})
+        return '{}'
+
     def process(self):
         params = web.data()
         userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
@@ -883,6 +911,8 @@ class PhotoHandler:
         elif cmd == "like":
             likeStatus = jsons['like']
             return self.likePhoto(jsons['ownPhotoID'], jsons['photoID'], userSession, likeStatus)
+        elif cmd == "disband":
+            return self.disBandPhoto(jsons)
         #elif cmd == "dislike":
         #    return self.likePhoto(jsons['photoID'], userSession, False)
 
@@ -1042,7 +1072,7 @@ def sendJoinNotes(joinedPerson):
             if token:
                 lang = joinedPerson.get('lang')
                 message = localInfo(lang, '新朋友加入了羽毛')
-                sendPush(token, message, {'noteID':str(note['_id'])}, ps.get('prodFlag') != '1')
+                sendPush(token, message, {'noteID':str(note['_id'])}, ps.get('prodFlag'))
         
                 
 def makeIfNone(dirName):
