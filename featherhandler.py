@@ -400,7 +400,7 @@ class ExchangeHandler:
         if 'assetURL' in jsons:
             jsons['personID'] = ObjectId(userSession)
             photoID = DataUtil.savePhoto(jsons)  
-        elif 'photoID' in jsons:
+        elif 'photoID' in jsons and not jsons.get('photoID') == '' :
             photoID = ObjectId(jsons['photoID'])
         else :
             web.debug('Just ask for match')
