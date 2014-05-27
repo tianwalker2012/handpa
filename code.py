@@ -52,11 +52,20 @@ urls = (
  '/friend', 'FriendShip',
  '/notify', 'Notify',
  '/info','InfoCollector',
- '/chat', 'ChatHandler'
- 
+ '/chat', 'ChatHandler',
+ '/store', 'AppStore'
 )
 
-
+class AppStore:
+    def GET(self):
+        return self.POST()
+    
+    def POST(self):
+        web.ctx.status = '302 Moved Temporarily'
+        #web.debug('headers:%s, tuple is:%r'% (web.ctx.headers, ('Location', pt['screenURL'].encode("ASCII", 'ignore') if pt['screenURL'] else '')) )
+        web.ctx.headers.append(('Location','https://itunes.apple.com/cn/app/yu-mao/id873928141?mt=8'))
+        return ''
+        
 class BrokenTest:
     def GET(self, brokenPoint):
         bi = int(brokenPoint)
