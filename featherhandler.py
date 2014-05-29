@@ -1008,21 +1008,20 @@ class FeatherRegister:
                 return '{}'
             existPerson = MongoUtil.fetch('persons', {'mobile':uploaded['mobile']})
             storedPassCode = MongoUtil.fetch('smscode', {'mobile':mobile})
+            if existPerson and existPerson.get('joined'):
+                web.ctx.status = '408 Not Allow'
+                return '{}'            
             if passCode == '167791':
                 web.debug('potent code')  
             elif storedPassCode.get('passCode') != passCode:
                 web.ctx.status = '407 Not Allow'
                 return '{}'
             if existPerson:
-                if existPerson['joined']:
-                    web.ctx.status = '408 Not Allow'
-                    return '{}'
-                else:
-                    existPerson['joined'] = True
-                    existPerson['name'] = uploaded['name']
-                    #existPerson['password']= uploaded['password']
-                    
-                    MongoUtil.update('persons', existPerson)
+                existPerson['joined'] = True
+                existPerson['name'] = uploaded.get('name')
+                #existPerson['password']= uploaded['password']
+                existPerson['avatar'] = uploaded.get('avatar')
+                MongoUtil.update('persons', existPerson)
             else:                
                 existPerson = DataUtil.saveRegister(uploaded)
             
