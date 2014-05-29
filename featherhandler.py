@@ -1031,8 +1031,11 @@ class FeatherRegister:
 
 def buildMutualFriend(frd1, frd2):
      #friend = {'personID':str(frd1['_id']) }
+    if not frd1 or not frd2:
+        web.debug('mutual friend with null')
+        return
     web.debug('build mutual friend:%s, %s', str(frd1['_id']), str(frd2['_id']))
-    friends1 = MongoUtil.fetch('friends', {'personID':str(frd1['_id'])})
+    friends1 = frd1#MongoUtil.fetch('friends', {'personID':str(frd1['_id'])})
     if friends1:
         if friends1.get('friends'):
             friends1['friends'].append(str(frd2['_id']))
@@ -1043,7 +1046,7 @@ def buildMutualFriend(frd1, frd2):
         MongoUtil.save('friends', {'personID':str(frd1['_id']), 'friends':[str(frd2['_id'])]})
 
     
-    friends2 = MongoUtil.fetch('friends', {'personID':str(frd2['_id'])})
+    friends2 = frd2#MongoUtil.fetch('friends', {'personID':str(frd2['_id'])})
     if friends2: 
         if friends2.get('friends'):
             friends2['friends'].append(str(frd1['_id']))
@@ -1058,9 +1061,9 @@ def sendJoinNotes(joinedPerson):
     web.debug('send join')
     mobile = joinedPerson.get('mobile')
     persons = MongoUtil.fetchWithField('mobiles', {'mobiles':mobile}, {'personID':1})
-   
     web.debug('mobile %s, joined, will notify %i person' % (mobile, persons.count()))
     for person in persons:
+        web.debug('person mobile:%r' % person)
         ps = MongoUtil.fetchByID('persons',ObjectId(person.get('personID')))
         buildMutualFriend(ps, joinedPerson)
         token = ps.get('pushToken')
