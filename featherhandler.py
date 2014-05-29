@@ -1065,10 +1065,10 @@ def sendJoinNotes(joinedPerson):
     for person in persons:
         web.debug('person mobile:%r' % person)
         ps = MongoUtil.fetchByID('persons',ObjectId(person.get('personID')))
-        buildMutualFriend(ps, joinedPerson)
-        token = ps.get('pushToken')
         if ps:
             web.debug('send notes')
+            buildMutualFriend(ps, joinedPerson)
+            token = ps.get('pushToken')            
             note = {'personID':str(ps['_id']), 'type':'joined', 'otherID':str(joinedPerson['_id']), 'createdTime':datetime.now(chinaTime)+timedelta(8)};
             MongoUtil.save('notes', note)
             if token:
