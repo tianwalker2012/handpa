@@ -592,7 +592,7 @@ class PersonHandler:
                         addedFriends[pid] = True
                         res.append(cleanPerson(person))
         
-        photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession), 'photoRelations.0': {'$exists': True}}, 0, 2000, [('createdTime', -1)])
+        photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession),'$nor':[{'deleted':True}], 'photoRelations.0': {'$exists': True}}, 0, 2000, [('createdTime', -1)])
         matchedUsers = []
         web.debug('total photos:%i' % photos.count())
         for ph in photos:
@@ -1035,7 +1035,7 @@ def buildMutualFriend(frd1, frd2):
         web.debug('mutual friend with null')
         return
     web.debug('build mutual friend:%s, %s', str(frd1['_id']), str(frd2['_id']))
-    friends1 = frd1#MongoUtil.fetch('friends', {'personID':str(frd1['_id'])})
+    friends1 = MongoUtil.fetch('friends', {'personID':str(frd1['_id'])})
     if friends1:
         if friends1.get('friends'):
             friends1['friends'].append(str(frd2['_id']))
@@ -1046,8 +1046,8 @@ def buildMutualFriend(frd1, frd2):
         MongoUtil.save('friends', {'personID':str(frd1['_id']), 'friends':[str(frd2['_id'])]})
 
     
-    friends2 = frd2#MongoUtil.fetch('friends', {'personID':str(frd2['_id'])})
-    if friends2: 
+    friends2 = MongoUtil.fetch('friends', {'personID':str(frd2['_id'])})
+    if friends2:
         if friends2.get('friends'):
             friends2['friends'].append(str(frd1['_id']))
         else:
