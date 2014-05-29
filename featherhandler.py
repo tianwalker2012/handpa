@@ -577,7 +577,6 @@ class PersonHandler:
         """This is method to query all the people based on how many photo are combined by each other"""        
         #persons = MongoUtil.fetchSome('friendship', {'owner':ObjectId(userSession)})
         #for ps in persons:
-             
         res = []
         addedFriends = {}
         exists = {}
@@ -596,8 +595,12 @@ class PersonHandler:
         matchedUsers = []
         web.debug('total photos:%i' % photos.count())
         for ph in photos:
-            if 'matchedUsers' in ph:
-                for pid in ph['matchedUsers']:
+            if 'photoRelations' in ph:
+                for phid in ph['photoRelations']:
+                    pht = MongoUtil.fetchByID('photos', ObjectId(phid))
+                    if not pht:
+                        continue
+                    pid = str(pht.get('personID'))
                     if not exists.get(pid):
                         exists[pid] = 1
                         if not addedFriends.get(pid):
