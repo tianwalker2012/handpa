@@ -114,7 +114,7 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
     # Remember to multiply arc by the radius of the earth 
     # in your favorite set of units to get length.
-    return arc
+    return arc * 6378.1
 
 #For the purpose of getting related information to the photo.
 def fillPhotoRelation(photo):
@@ -1094,8 +1094,8 @@ class UploadHandler:
             return simplejson.dumps({'removed':photoID})
 
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        storedDir = '%s/static/%s/' % (os.getcwd(),userSession)         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+userSession+'/'
@@ -1136,8 +1136,8 @@ class UploadHandler:
     def uploadAvatar(self, x, userSession):
         #photoID = x["photoID"]
         tmpDir = userSession if userSession else 'tmp'
-        storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
-        #storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
+        #storedDir = '/home/ec2-user/root/www/static/avatar/'+tmpDir+'/'
+        storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]

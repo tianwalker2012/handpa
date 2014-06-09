@@ -60,7 +60,7 @@ def cleanPhoto(photo):
 def maturedNote(note):
     if 'matchedID' in note:
         photo = MongoUtil.fetchByID('photos', ObjectId(note['matchedID']))
-        web.debug('matchID is %s, %r' % (note['matchedID'], photo))
+        #web.debug('matchID is %s, %r' % (note['matchedID'], photo))
         if photo:
             if not 'uploaded' in photo or not photo['uploaded']:
                 return False
@@ -118,7 +118,7 @@ class Notify:
                 return 'not userID'   
         remove = True
         startPage = 0
-        pageSize = 10
+        pageSize = 30
         if 'keep' in jsons:
             remove = jsons['keep']
         
@@ -140,7 +140,7 @@ class Notify:
                if remove:
                    note['remove'] = '1'
                    MongoUtil.update('notes', note)
-                   res.append(cleanNote(note))
+               res.append(cleanNote(note))
         web.debug('Total friend:'+ str(len(res)))
         return simplejson.dumps(res)        
         

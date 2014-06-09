@@ -26,7 +26,10 @@ from featherhandler import FriendShip
 from featherhandler import PhotoURL
 from infocollector import InfoCollector
 from chathandler import ChatHandler
+from photochathandler import PhotoChatHandler
 from notify import Notify
+from photowall import PhotoWall
+from photowall import PhotoWallDisplay
 render = web.template.render('templates/')
 WebContext.render = render
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
@@ -53,7 +56,10 @@ urls = (
  '/notify', 'Notify',
  '/info','InfoCollector',
  '/chat', 'ChatHandler',
- '/store', 'AppStore'
+ '/store', 'AppStore',
+ '/pchat','PhotoChatHandler',
+ '/photowall', 'PhotoWall',
+ '/photodisplay', 'PhotoWallDisplay'
 )
 
 class AppStore:
