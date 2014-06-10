@@ -69,10 +69,10 @@ $def with (params)
 	var prePos = 0;
 	var preTotal = 0;
 	var images = [
-		{"name":"Tiange", "avatar":"http://127.0.0.1:8080/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg",
-		 "comments":"coolguy", "screenURL":"http://127.0.0.1:8080/static/52f74fd0e7b5b9d829be97ba/f1f85259cc736c3118d38f328c845239.jpg"},
-		{"name":"Tiange2", "avatar":"http://127.0.0.1:8080/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg", "comments":"coolguy2", "screenURL":"http://127.0.0.1:8080/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53.jpg"},
-		{"name":"Tiange3", "avatar":"http://127.0.0.1:8080/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg", "comments":"coolguy3", "screenURL":"http://127.0.0.1:8080/static/db743a13ae819d56fc41bb244612fdee.jpg"}
+		{"name":"Tiange", "avatar":"/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg",
+		 "comments":"coolguy", "screenURL":"/static/52f74fd0e7b5b9d829be97ba/f1f85259cc736c3118d38f328c845239.jpg"},
+		{"name":"Tiange2", "avatar":"/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg", "comments":"coolguy2", "screenURL":"/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53.jpg"},
+		{"name":"Tiange3", "avatar":"/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg", "comments":"coolguy3", "screenURL":"/static/db743a13ae819d56fc41bb244612fdee.jpg"}
 	];
 	var jsonData = JSON.stringify({"cmd":"query", "flashFlag":"$params['flashFlag']", "latitude":$params['latitude'], "longitude":$params['longitude'], "disLimit":$params['disLimit']});
 	
@@ -143,7 +143,7 @@ $def with (params)
 			console.log('current flipped:'+ flipped + ", image length:" + images.length);
 			flipped = !flipped;
    			//randomImage();
- 			$$.post("http://127.0.0.1:8080/photowall",jsonData,function(respStr){
+ 			$$.post("/photowall",jsonData,function(respStr){
                   arr = JSON.parse(respStr);
                   console.log("returned result:"+ arr.length+", result:"+arr);
                   for(var pos = 0; pos < arr.length; pos ++){
