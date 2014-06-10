@@ -69,10 +69,6 @@ $def with (params)
 	var prePos = 0;
 	var preTotal = 0;
 	var images = [
-		{"name":"Tiange", "avatar":"/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg",
-		 "comments":"coolguy", "screenURL":"/static/52f74fd0e7b5b9d829be97ba/f1f85259cc736c3118d38f328c845239.jpg"},
-		{"name":"Tiange2", "avatar":"/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg", "comments":"coolguy2", "screenURL":"/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53.jpg"},
-		{"name":"Tiange3", "avatar":"/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg", "comments":"coolguy3", "screenURL":"/static/db743a13ae819d56fc41bb244612fdee.jpg"}
 	];
 	var jsonData = JSON.stringify({"cmd":"query", "flashFlag":"$params['flashFlag']", "latitude":$params['latitude'], "longitude":$params['longitude'], "disLimit":$params['disLimit']});
 	
@@ -101,6 +97,9 @@ $def with (params)
 				className = ".front-image";
 			}
 			var imageLength = images.length;
+			if(imageLength < 2){
+				return;
+			}
 			var imagePos = Math.floor(Math.random() * imageLength);
 			while(imagePos == prePos){
 				imagePos = Math.floor(Math.random() * imageLength);
@@ -142,6 +141,7 @@ $def with (params)
 		var pickRandom = function(){ 
 			console.log('current flipped:'+ flipped + ", image length:" + images.length);
 			flipped = !flipped;
+
    			//randomImage();
  			$$.post("/photowall",jsonData,function(respStr){
                   arr = JSON.parse(respStr);
@@ -151,6 +151,10 @@ $def with (params)
                       	images.push(arr[pos]);
                    }
              });
+
+ 			if(images.length == 0){
+				return;
+			}
  			if(preTotal != images.length){
             	preTotal = images.length;
               	showLatestImage();
