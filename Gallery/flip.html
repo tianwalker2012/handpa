@@ -1,4 +1,3 @@
-$def with (params)
 <!DOCTYPE HTML>
 <!--
 /*
@@ -15,17 +14,17 @@ $def with (params)
 <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, minimum-scale=1, maximum-scale=1"/>
 
 <title>Flip pages</title>
-<link href="/static/Gallery/Site.min.css" rel="stylesheet" type="text/css" />
-<link rel="stylesheet" type="text/css" href="/static/Gallery/flipcard.css?$params['rand']" />
-<link rel="stylesheet" type="text/css" href="/static/Gallery/app.css?$params['rand']" />
+<link href="Site.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="flipcard.css?1234452" />
+<link rel="stylesheet" type="text/css" href="app.css?2344544" />
 
-<script src="/static/Gallery/jquery.min.js"></script>
-	<script src="/static/Gallery/flipcard.js?$params['rand']"></script>
+<script src="jquery.min.js"></script>
+	<script src="flipcard.js"></script>
 	
-	<script src="/static/Gallery/app.js"></script>
+	<script src="app.js"></script>
 	<!-- <script src="run_prettify.js"></script> -->
     <script>
-    $$(document).ready(function(){
+    $(document).ready(function(){
 	   	console.log("document is ready");
 	   	var elem = document.body; // Make the body go full screen.
 		requestFullScreen(elem);
@@ -65,6 +64,7 @@ $def with (params)
         	}
     	}
 	}
+
 	var flipped = true; 
 	var prePos = 0;
 	var preTotal = 0;
@@ -74,29 +74,25 @@ $def with (params)
 		{"name":"Tiange2", "avatar":"http://127.0.0.1:8080/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg", "comments":"coolguy2", "screenURL":"http://127.0.0.1:8080/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53.jpg"},
 		{"name":"Tiange3", "avatar":"http://127.0.0.1:8080/static/532aa750e7b5b927a990a22e/feb014b8d80c3078b7e52fa64df41b53tb.jpg", "comments":"coolguy3", "screenURL":"http://127.0.0.1:8080/static/db743a13ae819d56fc41bb244612fdee.jpg"}
 	];
-	var jsonData = JSON.stringify({"cmd":"query", "flashFlag":"$params['flashFlag']", "latitude":$params['latitude'], "longitude":$params['longitude'], "disLimit":$params['disLimit']});
+	var jsonData = JSON.stringify({"cmd":"query", "flashFlag":"client6", "latitude":31.20325109179816, "longitude":121.6063316298873, "disLimit":10});
 	
-	function displayImage(passImage, className)
+	function displayImage(curImage, className)
 	{
-		$$(className).attr("src", passImage['screenURL']);
+		$(className).attr("src", curImage['screenURL']);
+			//console.log("The combined css:"+ cssStr);
+			//$(className).css("background", cssStr);
 		console.log('before fade out');
-
-		//$$('.test-img img').attr("src", passImage['screenURL']);
-		var curName = passImage['name'];
-		console.log('before:'+ passImage['name']);
-		$$('.icon-img').fadeOut(function(){
-			var afterName = passImage['name'];
-			console.log('after fade out:'+curName+","+afterName);
-
-			$$('.icon-img').attr('src', passImage['avatar']);
-			$$('.icon-img').fadeIn();
+		$('.icon-img').fadeOut(function(){
+			console.log('after fade out');
+			$('.icon-img').attr('src', curImage['avatar']);
+			$('.icon-img').fadeIn();
 		});
 	}
 	var randomImage = function(){
 			//var className = ".front-image";
 			//if(!flipped){
-			var className = '.back-image';
-			if($$('.card-container').hasClass("flipped-lr")){
+			className = '.back-image';
+			if($('.card-container').hasClass("flipped-lr")){
 				console.log("back is visible now");
 				className = ".front-image";
 			}
@@ -106,24 +102,27 @@ $def with (params)
 				imagePos = Math.floor(Math.random() * imageLength);
 			}
 			prePos = imagePos;
-			var img = images[imagePos];
-			console.log("show random the image pos:"+imagePos+", name:"+img['name']);
+			console.log("show random the image pos:"+imagePos);
 			//var cssStr = "url('"+ images[imagePos]['screenURL'] + "') no-repeat right top";
-			displayImage(img, className);
-			//console.log("The combined css:"+ cssStr);
+			var curImage = images[imagePos];
+			displayImage(curImage, className);
+			
 	}
-	
 
 	var showLatestImage = function(){
 			var className = ".back-image";
-			if($$('.card-container').hasClass("flipped-lr")){
-				//console.log("back is visible in last");
+			if($('.card-container').hasClass("flipped-lr")){
+				console.log("back is visible in last");
 				className = ".front-image";
 			}
 			var imagePos = images.length - 1;
 			prePos = imagePos;
 			console.log("the image pos:"+imagePos + ", imageURL:"+ images[imagePos]['screenURL']);
-			displayImage(images[imagePos], className);
+			displayImage(imgaes[imagePos], className);
+			//var cssStr = "url('"+ images[imagePos]['screenURL'] + "') no-repeat left top";
+			//$(className).attr("src", images[imagePos]['screenURL']);
+			//console.log("The combined string:"+ cssStr);
+			//$(className).css("background", cssStr);
 	}
 	/**
     function maxWindow() {
@@ -140,10 +139,10 @@ $def with (params)
     }
 	   **/
 		var pickRandom = function(){ 
-			console.log('current flipped:'+ flipped + ", image length:" + images.length);
+			console.log('current flipped:'+ flipped);
 			flipped = !flipped;
    			//randomImage();
- 			$$.post("http://127.0.0.1:8080/photowall",jsonData,function(respStr){
+ 			$.post("http://127.0.0.1:8080/photowall",jsonData,function(respStr){
                   arr = JSON.parse(respStr);
                   console.log("returned result:"+ arr.length+", result:"+arr);
                   for(var pos = 0; pos < arr.length; pos ++){
@@ -158,25 +157,25 @@ $def with (params)
                 randomImage();
             }
             
-            //console.log("back class:" + $$(".back").hasClass("notransition") + ", front class:"+ $$(".front").hasClass("notransition"));
-            //console.log("back class:"+ $$('.back').attr('class')+", front class:"+ $$('.front').attr('class') +", card:"+ $$('.card').attr('class')+", container:"+$$('.card-container').attr('class'));
+            console.log("back class:" + $(".back").hasClass("notransition") + ", front class:"+ $(".front").hasClass("notransition"));
+            console.log("back class:"+ $('.back').attr('class')+", front class:"+ $('.front').attr('class') +", card:"+ $('.card').attr('class')+", container:"+$('.card-container').attr('class'));
 
-   			$$(".card-container").flip({
+   			$(".card-container").flip({
 				//direction:flipped?"lr":"rl",
 				alwaysOneDirection:true,
 				onflipped: function(currentDirection, currentTransformDirection){
 					curImage = images[prePos];
 					if(curImage['comments']){
-						$$('.bubbledLeft').text(curImage['comments']);
-						$$('.bubbledLeft').show();
+						$('.bubbledLeft').text(curImage['comments']);
+						$('.bubbledLeft').show();
 					}else{
-						$$('.bubbledLeft').hide();
+						$('.bubbledLeft').hide();
 					}
 				}
 			});
 		}
 		console.log("before call setInterval");
-		window.setInterval(pickRandom, 2500);
+		window.setInterval(pickRandom, 2000);
 		console.log("complete call setInterval");
        //$(".card-container").flip();
        //window.console('I am ready');
@@ -185,18 +184,14 @@ $def with (params)
 </head>
 
 <body>
-   
-   <div class="floating">
-        <div class="commentArea">
-			<div class="bubbledLeft">
-				天哥爱说说说说说所说说说说所说说说说所说
-			</div>
-		</div>
-	</div>
-	<div class="head-icon">
-		<img class="icon-img" src=""/>
+    
+    <div class="bubbledLeft">
+				天哥爱说说说说说所说说说说所说说说说所
 	</div>
 
+	<div class="head-icon">
+		<img class="icon-img" src="http://127.0.0.1:8080/static/52f74fd0e7b5b9d829be97ba/f1f85259cc736c3118d38f328c845239.jpg"/>
+	</div>
 	<div class="card-container" data-timingfunction="ease-in-out">
 	<!-- <div class="card-container" data-autoflip="true" data-autoflipstart="1500ms" data-autoflipdelay="2500ms" data-direction="bt" data-speed="600ms" data-timingfunction="ease-in-out">
      -->

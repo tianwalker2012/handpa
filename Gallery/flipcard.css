@@ -1,0 +1,371 @@
+/* ======================================================= 
+ * FlipCard.css for FlipCard.js v 1.2.0
+ * By Jiping Hu
+ *
+ * Contact: http://codecanyon.net/user/jipinghu
+ *
+ * Created: Oct 2013
+ *
+ * Copyright (c) 2013, Jiping Hu. All rights reserved.
+ * Released under CodeCanyon License http://codecanyon.net/
+ *
+ * ======================================================= */
+.card-container
+{
+    position: relative;
+  	-webkit-perspective: 1000px;
+  	-moz-perspective: 1000px;
+	  -ms-perspective: 1000px; 
+	  -o-perspective: 1000px;
+	  perspective: 1000px;
+  	/*default width height*/
+  	width: 100%; 
+  	height: 100%;
+    z-index: 1;
+}
+
+.card-container .card
+{
+  	position: relative;
+  	width: 100%;
+  	height: 100%;
+    padding: 0;
+    margin: 0;
+
+  	-webkit-transition-property: -webkit-transform;
+  	-webkit-transition-duration: 500ms;
+  	-webkit-transform-style: preserve-3d;
+  	-webkit-transform-origin: 50% 50%;
+  	-webkit-transition-timing-function: ease;
+
+  	-moz-transition-property: -moz-transform;
+  	-moz-transition-duration: 500ms;
+  	-moz-transform-style: preserve-3d;
+  	-moz-transform-origin: 50% 50%;
+  	-moz-transition-timing-function: ease;
+
+  	-ms-transition-property: -ms-transform;
+  	-ms-transition-duration: 500ms;
+  	-ms-transform-style: preserve-3d;
+  	-ms-transform-origin: 50% 50%;
+  	-ms-transition-timing-function: ease;
+
+  	-o-transition-property: -o-transform;
+  	-o-transition-duration: 500ms;
+  	-o-transform-style: preserve-3d;
+  	-o-transform-origin: 50% 50%;
+  	-o-transition-timing-function: ease;
+
+  	transition-property: transform;
+  	transition-duration: 500ms;
+  	transform-style: preserve-3d;
+  	transform-origin: 50% 50%;
+  	transition-timing-function: ease;
+}
+.notransition{
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
+.card-container .card .front,
+.card-container .card .back
+{
+  	position: absolute;
+  	height: 100%;
+  	width: 100%;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+  	-webkit-backface-visibility: hidden;
+  	-moz-backface-visibility: hidden;
+  	-ms-backface-visibility: hidden;
+  	-o-backface-visibility: hidden;
+  	backface-visibility: hidden;
+}
+
+/**
+.back
+{ background:#F00;} 
+
+.front
+{ background:#00F;} 
+**/
+.floating
+{
+    /**cursor: pointer;**/
+    display: block;
+    float: left;  
+    z-index: 3;
+    position: absolute; /*newly added*/
+    left: 10%; /*newly added*/
+    top: 85%;/*newly added*/
+    
+    /**background: url('chat-bubble.png') no-repeat left top;**/
+    color: white; 
+    font: 23px/33px Helvetica, Sans-Serif; 
+    letter-spacing: -1px; 
+}
+
+
+.bubbledLeft, .bubbledRight{
+/**
+margin-top: 3px;
+padding: 3px 5px 3px 5px;
+max-width: 50%;
+clear: both;
+border: 1px solid grey;**/
+}
+
+.bubbleWrapper{
+    
+}
+
+.head-icon{
+    position: fixed;
+    top: 30%;
+    left: 20%;
+    max-height: 10%;
+    max-width: 10%;
+    display: block;
+    clear: both;
+}
+
+.icon-img{
+    border-radius: 50%;
+}
+
+.test-img{
+    position: fixed;
+    top: 70%;
+    left: 20%;
+    max-height: 10%;
+    max-width: 10%;
+    display: block;
+    clear: both;
+}
+
+.bubbledLeft{
+    padding-left: 10px;
+    padding-right: 10px;
+/**position: relative; float: left;**/
+/**margin-left: 80px; **/
+/** padding: 4px 10px 4px 15px; position within the border*/
+    position: fixed;
+    top: 92%;
+    left: 50%;
+    max-width: 50%;
+    display: block;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    background: rgb(0, 0, 0); 
+    background: rgba(0, 0, 0, 0.2);
+    clear: both;
+    /**border: 1px solid grey;**/
+}
+
+.bubbledLeft:before{
+z-index: -1;
+position: absolute;
+top: 0px;
+right: 0px;
+bottom: 0px;
+left: 0px;
+content: "";
+
+/**
+border-width: 8px 10px 8px 17px; 
+border-image: url(speech_bubble_left.png) 8 10 8 17 stretch stretch;
+-webkit-border-image: url(speech_bubble_left.png) 8 10 8 17 stretch stretch;
+-moz-border-image: url(speech_bubble_left.png) 8 10 8 17 stretch stretch;
+-o-border-image: url(speech_bubble_left.png) 8 10 8 17 stretch stretch;
+**/
+}
+
+.bubbledRight{
+float: right;
+margin-left: auto;
+text-align: right;
+
+margin-right: 36px;
+padding: 4px 15px 4px 10px; /*position within the border*/  
+}
+Now we use the :after element to add in the avatar.
+
+.bubbledRight:after{
+z-index: -1;
+position: absolute;
+right: -36px;
+width: 32px;
+bottom: 0px;
+height: 32px;
+content:"";
+
+background-image: url(right_chatter.png);
+background-size: 32px 32px;
+background-position: bottom left;
+
+border-radius: 3px;
+-webkit-border-radius: 3px; 
+-moz-border-radius: 3px;  
+-o-border-radius: 3px;  
+-ms-border-radius: 3px; 
+}
+
+
+.floating h2
+{
+  display: block;
+  font-size: 1.5em;
+  -webkit-margin-before: 0.83em;
+  -webkit-margin-after: 0.83em;
+  -webkit-margin-start: 0px;
+  -webkit-margin-end: 0px;
+  font-weight: bold;
+}
+
+
+
+.floating h2 span { 
+   color: white; 
+   font: 15px/25px Helvetica, Sans-Serif; 
+   letter-spacing: -1px;  
+   /**  
+   background: rgb(0, 0, 0); 
+   background: rgba(0, 0, 0, 0.7);
+   **/
+   padding: 14px; 
+}
+
+.card-container .card .back
+{
+    /*visibility: hidden;*/
+    display: none;
+}
+.card-container .card .back,
+.card-container .card .back-y
+{
+    -webkit-transform: rotateY( -180deg );
+    -moz-transform: rotateY( -180deg );
+    -ms-transform: rotateY( -180deg );
+    -o-transform: rotateY( -180deg );
+    transform: rotateY( -180deg );
+}
+.card-container .card .back-x
+{
+  	-webkit-transform: rotateX( -180deg );
+  	-moz-transform: rotateX( -180deg );
+  	-ms-transform: rotateX( -180deg );
+  	-o-transform: rotateX( -180deg );
+  	transform: rotateX( -180deg );
+}
+
+.card-container.flipped-lr .card {
+	  -webkit-transform: rotateY( 180deg );
+  	-moz-transform: rotateY( 180deg );
+  	-ms-transform: rotateY( 180deg );
+  	-o-transform: rotateY( 180deg );
+  	transform: rotateY( 180deg );
+}
+.card-container.flipped-rl .card {
+	  -webkit-transform: rotateY( -180deg );
+  	-moz-transform: rotateY( -180deg );
+  	-ms-transform: rotateY( -180deg );
+  	-o-transform: rotateY( -180deg );
+  	transform: rotateY( -180deg );
+}
+.card-container.flipped-tb .card {
+  	-webkit-transform: rotateX( -180deg );
+  	-moz-transform: rotateX( -180deg );
+  	-ms-transform: rotateX( -180deg );
+  	-o-transform: rotateX( -180deg );
+  	transform: rotateX( -180deg );
+}
+.card-container.flipped-bt .card {
+  	-webkit-transform: rotateX( 180deg );
+  	-moz-transform: rotateX( 180deg );
+  	-ms-transform: rotateX( 180deg );
+  	-o-transform: rotateX( 180deg );
+  	transform: rotateX( 180deg );
+}
+/**ie10**/
+.card-container .ie10 {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
+.card-container .ie10 .front,
+.card-container .ie10 .back
+{
+    transition-property: transform;
+    transition-duration: 500ms;
+    transform-style: preserve-3d;
+    transform-origin: 50% 50%;
+    transition-timing-function: ease;
+}
+.flipped-lr .ie10,
+.flipped-rl .ie10,
+.flipped-tb .ie10,
+.flipped-bt .ie10
+{
+    transform: none !important;
+}
+
+/**initial state for front**/
+.card-container .ie10 .front-y
+{
+    transform: perspective(1000px) rotateY(0deg);
+}
+.card-container .ie10 .front-x
+{
+    transform: perspective(1000px) rotateX(0deg);
+}
+/*.card-container .ie10 .back,*/
+.card-container .ie10 .back-y
+{
+    transform: perspective(1000px) rotateY( -180deg );
+}
+.card-container .ie10 .back-y-r
+{
+    transform: perspective(1000px) rotateY( 180deg );
+}
+.card-container .ie10 .back-x
+{
+    transform: perspective(1000px) rotateX( -180deg );
+}
+.card-container .ie10 .back-x-r
+{
+    transform: perspective(1000px) rotateX( 180deg );
+}
+
+/*front-y back-y*/
+.flipped-lr .ie10 .front {
+    transform: perspective(1000px) rotateY( 180deg ); 
+}
+.flipped-lr .ie10 .back {
+    transform: perspective(1000px) rotateY( 0deg );
+}
+/*front-y back-y-r*/
+.flipped-rl .ie10 .front {
+    transform: perspective(1000px) rotateY( -180deg ); 
+}
+.flipped-rl .ie10 .back {
+    transform: perspective(1000px) rotateY( 0deg );
+}
+/*front-x back-x*/
+.flipped-tb .ie10 .front {
+    transform: perspective(1000px) rotateX( 180deg ); 
+}
+.flipped-tb .ie10 .back {
+    transform: perspective(1000px) rotateX( 0deg ); 
+}
+/*front-x back-x-r*/
+.flipped-bt .ie10 .front {
+    transform: perspective(1000px) rotateX( -180deg ); 
+}
+.flipped-bt .ie10 .back {
+    transform: perspective(1000px) rotateX( 0deg );
+}
