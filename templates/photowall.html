@@ -138,6 +138,13 @@ $def with (params)
         	}
     }
 	   **/
+	    var modfiyImgURL = function(imageURL){
+	    	var pos = imageURL.lastIndexOf('/static');
+	    	if(pos > -1){
+	    		return imageURL.substring(pos+1);
+	    	}
+	    	return imageURL;
+	    }
 		var pickRandom = function(){ 
 			console.log('current flipped:'+ flipped + ", image length:" + images.length);
 			flipped = !flipped;
@@ -147,8 +154,16 @@ $def with (params)
                   arr = JSON.parse(respStr);
                   console.log("returned result:"+ arr.length+", result:"+arr);
                   for(var pos = 0; pos < arr.length; pos ++){
-                      	console.log("insert:"+ arr[pos]);
-                      	images.push(arr[pos]);
+                  		console.log("insert:"+ arr[pos]);
+                  		var img = arr[pos];
+                  		img['screenURL'] = modfiyImgURL(arr[pos]['screenURL']); 
+                      	$$("<img/>").load(function() 
+                      		{ 
+                      			console.log("image loaded correctly "+img['name'] + ","+ img['screenURL']); 
+                      			//arr[pos]['loaded'] = true;
+                      		}).error(function(){ console.log("error loading image"); }).attr("src", img['screenURL']);
+                      	images.push(img);
+                      	//images.push(arr[pos]);
                    }
              });
 
@@ -190,6 +205,7 @@ $def with (params)
 
 <body>
    
+   <!--
    <div class="floating">
         <div class="commentArea">
 			<div class="bubbledLeft">
@@ -197,8 +213,13 @@ $def with (params)
 			</div>
 		</div>
 	</div>
+	-->
 	<div class="head-icon">
 		<img class="icon-img" src=""/>
+	</div>
+
+	<div class="qr-region">
+		<img class="qr-img" src="/static/Gallery/featherQR.png"/>
 	</div>
 
 	<div class="card-container" data-timingfunction="ease-in-out">

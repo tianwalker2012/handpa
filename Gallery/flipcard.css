@@ -131,6 +131,17 @@ border: 1px solid grey;**/
     display: block;
     clear: both;
 }
+.qr-region{
+    position: fixed;
+    top: 30%;
+    left: 80%;
+    max-height: 10%;
+    max-width: 10%;
+    display: block;
+    clear: both;
+}
+
+
 
 .icon-img{
     border-radius: 50%;
