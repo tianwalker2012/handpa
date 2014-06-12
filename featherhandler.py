@@ -797,6 +797,13 @@ class PhotoHandler:
                 storedID = MongoUtil.save('photos', ph)
                 ph['photoID'] = str(storedID)
                 ph['createdTime'] = datetime.strptime(ph['createdTime'], '%Y-%m-%d %H:%M:%S.%f')
+                dateNow = datetime.now(chinaTime)+timedelta(8)
+                utc=pytz.UTC
+
+                #nowA = utc.localize(dateNow) 
+                photoA = utc.localize(ph['createdTime'])
+                if photoA > dateNow:
+                    ph['createdTime'] = dateNow
                 #ph['createdTime'] = datetime.now()
                 #baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/
                 ph['screenURL'] = 'http://%s/photourl/%s' % (web.ctx.env.get('HTTP_HOST'), str(storedID))

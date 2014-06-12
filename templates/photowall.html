@@ -70,6 +70,7 @@ $def with (params)
 	var preTotal = 0;
 	var images = [
 	];
+	var pendingLatest = false;
 	var jsonData = JSON.stringify({"cmd":"query", "flashFlag":"$params['flashFlag']", "latitude":$params['latitude'], "longitude":$params['longitude'], "disLimit":$params['disLimit']});
 	
 	function displayImage(passImage, className)
@@ -108,7 +109,9 @@ $def with (params)
 			var img = images[imagePos];
 			console.log("show random the image pos:"+imagePos+", name:"+img['name']);
 			//var cssStr = "url('"+ images[imagePos]['screenURL'] + "') no-repeat right top";
-			displayImage(img, className);
+			if(isImageOK(img['image'])){
+				displayImage(img, className);
+			}
 			//console.log("The combined css:"+ cssStr);
 	}
 	
@@ -119,10 +122,18 @@ $def with (params)
 				//console.log("back is visible in last");
 				className = ".front-image";
 			}
+
 			var imagePos = images.length - 1;
 			prePos = imagePos;
 			console.log("the image pos:"+imagePos + ", imageURL:"+ images[imagePos]['screenURL']);
-			displayImage(images[imagePos], className);
+			if(isImageOK(images[imagePos]['image'])){
+				displayImage(images[imagePos], className);
+				pendingLatest = false;
+			}else{
+				console.log('image not ok');
+				pendingLatest = true;
+				randomImage();
+			}	
 	}
 	/**
     function maxWindow() {
@@ -145,6 +156,19 @@ $def with (params)
 	    	}
 	    	return imageURL;
 	    }
+
+	    var isImageOK = function(img) {
+    		if (!img.complete) {
+        		return false;
+    		}
+
+		    if (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0) {
+        		return false;
+    		}	
+    		// No ouher way of checking: assume it’s ok.
+    		return true;
+		}
+
 		var pickRandom = function(){ 
 			console.log('current flipped:'+ flipped + ", image length:" + images.length);
 			flipped = !flipped;
@@ -154,16 +178,23 @@ $def with (params)
                   arr = JSON.parse(respStr);
                   console.log("returned result:"+ arr.length+", result:"+arr);
                   for(var pos = 0; pos < arr.length; pos ++){
-                  		console.log("insert:"+ arr[pos]);
+                  		//console.log("insert:"+ arr[pos]);
                   		var img = arr[pos];
                   		img['screenURL'] = modfiyImgURL(arr[pos]['screenURL']); 
+                      	img['image'] = new Image();
+    					img['image'].onload = function() {
+        					console.log(img['screenURL']  + ' - done!');
+    					}
+    					img['image'].src = img['screenURL'];
+                  		/**
                       	$$("<img/>").load(function() 
                       		{ 
                       			console.log("image loaded correctly "+img['name'] + ","+ img['screenURL']); 
                       			//arr[pos]['loaded'] = true;
                       		}).error(function(){ console.log("error loading image"); }).attr("src", img['screenURL']);
                       	images.push(img);
-                      	//images.push(arr[pos]);
+                      	**/
+                      	images.push(img);
                    }
              });
 
@@ -174,7 +205,12 @@ $def with (params)
             	preTotal = images.length;
               	showLatestImage();
          	}else{
-                randomImage();
+         		if(pendingLatest){
+         			console.log("will display the latest");
+         			showLatestImage();
+         		}else{
+                	randomImage();
+            	}
             }
             
             //console.log("back class:" + $$(".back").hasClass("notransition") + ", front class:"+ $$(".front").hasClass("notransition"));
