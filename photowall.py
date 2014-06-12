@@ -125,7 +125,8 @@ class PhotoWall:
         if flashFlag:
             flag = MongoUtil.fetch('PhotoFlash', {'flashflag':flashFlag})
             if not flag:
-                MongoUtil.save('PhotoFlash', {'flashflag':flashFlag, 'fetchedTime':datetime.now(chinaTime)+timedelta(hours = 8)})
+                #flag = {'flashflag':flashFlag, 'fetchedTime':datetime.now(chinaTime)+timedelta(hours = 8)}
+                MongoUtil.save('PhotoFlash', flag)
             else:
                 startDate = flag.get('fetchedTime')
         #,  "createdTime":{'$gt':startDate}
@@ -145,6 +146,9 @@ class PhotoWall:
         if flag and photos.count():
             flag['fetchedTime'] = datetime.now(chinaTime)+timedelta(hours = 8)
             MongoUtil.update('PhotoFlash', flag)
+        elif not flag:
+            flag = {'flashflag':flashFlag, 'fetchedTime':datetime.now(chinaTime)+timedelta(hours = 8)}
+            MongoUtil.save(flag)
         web.debug('res %i,photoSize:%i' % (len(res), photos.count()))
         return simplejson.dumps(res)
         
