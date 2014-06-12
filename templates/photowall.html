@@ -70,10 +70,11 @@ $def with (params)
 	var preTotal = 0;
 	var images = [
 	];
+	var normalCount = 0;
 	var pendingLatest = false;
 	var jsonData = JSON.stringify({"cmd":"query", "flashFlag":"$params['flashFlag']", "latitude":$params['latitude'], "longitude":$params['longitude'], "disLimit":$params['disLimit']});
 	
-	function displayImage(passImage, className)
+	function displayImage(passImage, className, isDirect)
 	{
 		$$(className).attr("src", passImage['screenURL']);
 		console.log('before fade out');
@@ -88,10 +89,29 @@ $def with (params)
 			$$('.icon-img').attr('src', passImage['avatar']);
 			$$('.icon-img').fadeIn();
 		});
+
+		$$(".card-container").flip({
+				//direction:flipped?"lr":"rl",
+				alwaysOneDirection:true,
+				speed: (isDirect?'500ms':'1000ms'),
+				onflipped: function(currentDirection, currentTransformDirection){
+					curImage = images[prePos];
+					if(curImage['comments']){
+						$$('.bubbledLeft').text(curImage['comments']);
+						$$('.bubbledLeft').show();
+					}else{
+						$$('.bubbledLeft').hide();
+					}
+				}
+		});
 	}
 	var randomImage = function(){
 			//var className = ".front-image";
 			//if(!flipped){
+			normalCount ++;
+			if((normalCount % 3) != 0){
+				return;
+			}
 			var className = '.back-image';
 			if($$('.card-container').hasClass("flipped-lr")){
 				console.log("back is visible now");
@@ -110,7 +130,7 @@ $def with (params)
 			console.log("show random the image pos:"+imagePos+", name:"+img['name']);
 			//var cssStr = "url('"+ images[imagePos]['screenURL'] + "') no-repeat right top";
 			if(isImageOK(img['image'])){
-				displayImage(img, className);
+				displayImage(img, className, false);
 			}
 			//console.log("The combined css:"+ cssStr);
 	}
@@ -127,8 +147,9 @@ $def with (params)
 			prePos = imagePos;
 			console.log("the image pos:"+imagePos + ", imageURL:"+ images[imagePos]['screenURL']);
 			if(isImageOK(images[imagePos]['image'])){
-				displayImage(images[imagePos], className);
+				displayImage(images[imagePos], className, true);
 				pendingLatest = false;
+				normalCount = 0;
 			}else{
 				console.log('image not ok');
 				pendingLatest = true;
@@ -215,20 +236,6 @@ $def with (params)
             
             //console.log("back class:" + $$(".back").hasClass("notransition") + ", front class:"+ $$(".front").hasClass("notransition"));
             //console.log("back class:"+ $$('.back').attr('class')+", front class:"+ $$('.front').attr('class') +", card:"+ $$('.card').attr('class')+", container:"+$$('.card-container').attr('class'));
-
-   			$$(".card-container").flip({
-				//direction:flipped?"lr":"rl",
-				alwaysOneDirection:true,
-				onflipped: function(currentDirection, currentTransformDirection){
-					curImage = images[prePos];
-					if(curImage['comments']){
-						$$('.bubbledLeft').text(curImage['comments']);
-						$$('.bubbledLeft').show();
-					}else{
-						$$('.bubbledLeft').hide();
-					}
-				}
-			});
 		}
 		console.log("before call setInterval");
 		window.setInterval(pickRandom, 2500);

@@ -124,16 +124,16 @@ border: 1px solid grey;**/
 
 .head-icon{
     position: fixed;
-    top: 30%;
+    top: 48%;
     left: 10%;
-    max-height: 10%;
-    max-width: 10%;
+    height: 10%;
+    width: 10%;
     display: block;
     clear: both;
 }
 .qr-region{
     position: fixed;
-    top: 30%;
+    top: 40%;
     left: 80%;
     max-height: 10%;
     max-width: 10%;
