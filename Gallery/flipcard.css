@@ -24,6 +24,8 @@
     z-index: 1;
 }
 
+
+
 .card-container .card
 {
   	position: relative;
@@ -131,6 +133,30 @@ border: 1px solid grey;**/
     display: block;
     clear: both;
 }
+
+.introduction-up{
+    position: fixed;
+    top: 5%;
+    left: 82%;
+    display: block;
+    clear: both;
+}
+
+.introduction-down{
+    position: fixed;
+    top: 68%;
+    left: 82%;
+    display: block;
+    clear: both;
+}
+
+.text-1{
+  color: #808080;
+  font: 75px/45px Helvetica, Sans-Serif; 
+  margin-top: 20px;
+  font-weight: bold;
+}
+
 .qr-region{
     position: fixed;
     top: 40%;

@@ -202,6 +202,7 @@ $def with (params)
                   		//console.log("insert:"+ arr[pos]);
                   		var img = arr[pos];
                   		img['screenURL'] = modfiyImgURL(arr[pos]['screenURL']); 
+                  		img['avatar'] = modfiyImgURL(arr[pos]['avatar']);
                       	img['image'] = new Image();
     					img['image'].onload = function() {
         					console.log(img['screenURL']  + ' - done!');
@@ -257,6 +258,19 @@ $def with (params)
 		</div>
 	</div>
 	-->
+    <div class="introduction-up">
+    	<div class="text-1">下载</div>
+    	<div class="text-1">羽毛</div>
+    	<div class="text-1">相机</div>
+    </div>
+ 
+    <div class="introduction-down">
+    	<div class="text-1">加入</div>
+    	<div class="text-1">现场</div>
+    	<div class="text-1">屏幕</div>
+    </div>
+
+
 	<div class="head-icon">
 		<img class="icon-img" src=""/>
 	</div>
