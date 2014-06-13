@@ -133,8 +133,8 @@ class PhotoWall:
         conds = {'$nor':[{'deleted':True}], "uploaded":True, 'longtitude':{'$gt':0.0}}
         if startDate:
             conds['createdTime'] = {'$gt':startDate}
-        photos = MongoUtil.fetchPage('photos',conds ,0,20,[('createdTime',-1)])
-        res = []        
+        photos = MongoUtil.fetchPage('photos',conds ,0,100,[('createdTime',-1)])
+        res = []      
         for pt in photos:
             lat1 = pt.get('latitude')
             lg1 = pt.get('longtitude')
