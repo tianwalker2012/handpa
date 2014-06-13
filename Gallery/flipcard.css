@@ -136,8 +136,8 @@ border: 1px solid grey;**/
 
 .introduction-up{
     position: fixed;
-    top: 5%;
-    left: 82%;
+    top: 10%;
+    left: 87%;
     display: block;
     clear: both;
 }
@@ -145,9 +145,15 @@ border: 1px solid grey;**/
 .introduction-down{
     position: fixed;
     top: 68%;
-    left: 82%;
+    left: 87%;
     display: block;
     clear: both;
+}
+
+.introduction-down ,.introduction-up{
+  color: #808080;
+  font: 20px/20px Helvetica, Sans-Serif; 
+  font-weight: bold;
 }
 
 .text-1{
