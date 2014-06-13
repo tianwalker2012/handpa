@@ -118,14 +118,18 @@ $def with (params)
 				className = ".front-image";
 			}
 			var imageLength = images.length;
-			if(imageLength < 2){
+			if(imageLength < 1){
 				return;
 			}
-			var imagePos = Math.floor(Math.random() * imageLength);
-			while(imagePos == prePos){
-				imagePos = Math.floor(Math.random() * imageLength);
+			prePos --;
+			if(prePos < 0){
+				prePos = images.length - 1;
 			}
-			prePos = imagePos;
+			//var imagePos = Math.floor(Math.random() * imageLength);
+			//while(imagePos == prePos){
+			//	imagePos = Math.floor(Math.random() * imageLength);
+			//}
+			imagePos = prePos;
 			var img = images[imagePos];
 			console.log("show random the image pos:"+imagePos+", name:"+img['name']);
 			//var cssStr = "url('"+ images[imagePos]['screenURL'] + "') no-repeat right top";
@@ -142,7 +146,6 @@ $def with (params)
 				//console.log("back is visible in last");
 				className = ".front-image";
 			}
-
 			var imagePos = images.length - 1;
 			prePos = imagePos;
 			console.log("the image pos:"+imagePos + ", imageURL:"+ images[imagePos]['screenURL']);
@@ -258,6 +261,11 @@ $def with (params)
 		</div>
 	</div>
 	-->
+    <div class="wifi-info">
+       现场WIFI:UP <br/> <br/>
+       WIFI密码:88888888
+    </div>
+
     <div class="introduction-up">
     	下<br/>载<br/>羽<br/>毛<br/>相<br/>机<br/>
     </div>

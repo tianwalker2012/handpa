@@ -134,6 +134,18 @@ border: 1px solid grey;**/
     clear: both;
 }
 
+.wifi-info{
+    position: fixed;
+    top: 80%;
+    left: 1%;
+    color: #808080;
+    font: 25px/25px Helvetica, Sans-Serif; 
+    font-weight: bold;
+    display: block;
+    clear: both;
+
+}
+
 .introduction-up{
     position: fixed;
     top: 10%;
