@@ -13,7 +13,14 @@ import sys
 import thread
 from mongoUtil import MongoUtil
 
-def sendPush(token, textInfo, dictInfo,sandBox):
+def saveNoteAndPush(ps, note, message):
+    token = ps.get('pushToken')
+    MongoUtil.save('notes', note)
+    if token:
+        sendPush(token, message, {'noteID':str(note['_id'])}, ps.get('prodFlag'))
+
+
+def sendPush(token, textInfo, dictInfo,sandBox, soundName='shot_new.caf'):
     print 'sandBox is:%s' % sandBox
     
     #'prod_push_cer.pem', 'prod_push_private_plain.pem'
@@ -26,7 +33,7 @@ def sendPush(token, textInfo, dictInfo,sandBox):
     else:
         apns = APNs(use_sandbox=False, cert_file='prod_push_cer.pem', key_file='prod_push_private_plain.pem')
     
-    payload = Payload(alert=textInfo, sound="shot_new.caf", badge=1, custom = dictInfo)
+    payload = Payload(alert=textInfo, sound=soundName, badge=1, custom = dictInfo)
     print 'before send push'
     
     def sendAsync(arg1, arg2):

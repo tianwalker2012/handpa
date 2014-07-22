@@ -573,24 +573,28 @@ class PersonHandler:
         MongoUtil.update('persons', person)
         return '{}'
     
-    def queryFriend(self, userSession):
+    def queryFriend(self, userSession, queryPid):
         """This is method to query all the people based on how many photo are combined by each other"""        
         #persons = MongoUtil.fetchSome('friendship', {'owner':ObjectId(userSession)})
         #for ps in persons:
         res = []
-        addedFriends = {}
-        exists = {}
-        pf = MongoUtil.fetch('friends',{'personID':userSession})
-        if pf:
-            friends = pf.get('friends')
-            web.debug('got friend')
-            if friends:
-                for pid in friends:
-                    person = MongoUtil.fetchByID('persons', ObjectId(pid))
+        #addedFriends = {}
+        #exists = {}
+        
+        conds = {'personID':queryPid, 'deleted':False}
+        if userSession != queryPid:
+            conds = {'personID':queryPid,'deleted':False, 'hidden':False}
+        friends = MongoUtil.fetchSome('friends', conds)
+        if friends:
+            #friends = pf.get('friends')
+            #web.debug('got friend')
+            for fid in friends:
+                    person = MongoUtil.fetchByID('persons', ObjectId(fid.get('friendID')))
                     if person:
-                        addedFriends[pid] = True
+                        #addedFriends[pid] = True
                         res.append(cleanPerson(person))
         
+        """
         photos = MongoUtil.fetchPage('photos', {'personID':ObjectId(userSession),'$nor':[{'deleted':True}], 'photoRelations.0': {'$exists': True}}, 0, 2000, [('createdTime', -1)])
         matchedUsers = []
         web.debug('total photos:%i' % photos.count())
@@ -616,7 +620,7 @@ class PersonHandler:
                 #person['photoCount'] = exists[pid]
                 res.append(cleanPerson(person))
                 
-        
+        """
         return simplejson.dumps(res)
                         
     def uploadMobile(self, mobiles, userSession):
@@ -662,7 +666,17 @@ class PersonHandler:
         elif cmd == 'personID':
             return self.queryByID(jsons['personIDs'])
         elif cmd == 'friend':
-            return self.queryFriend(userSession)
+            fid = jsons.get('queryID')
+            return self.queryFriend(userSession, fid)
+        elif cmd == 'addFriend':
+            fid = jsons.get('personID')
+            return self.addFriend(userSession, fid)
+        elif cmd == 'blockFriend':
+            fid = jsons.get('personID')
+            return self.blockFriend(userSession, fid)
+        elif cmd == 'acceptFriend':
+            fid = jsons.get('personID')
+            return self.acceptFriend(userSession, fid)
         elif cmd == 'upload':
             return self.uploadPerson(jsons['persons'], userSession)
         elif cmd == 'update':
@@ -1066,6 +1080,28 @@ def buildMutualFriend(frd1, frd2):
     else:
         MongoUtil.save('friends', {'personID':str(frd2['_id']), 'friends':[str(frd1['_id'])]})
 
+#Send notification when user update it's avatar
+def sendAvatarNotes(joinedPerson):
+    #prod = web.ctx.env.get('HTTP_X_PROD')
+    web.debug('send avatar update')
+    psFriend = MongoUtil.fetch('friends', {'personID':str(joinedPerson.get('_id'))})
+    if psFriend:
+        friends = psFriend.get('friends')
+        web.debug('total friend is:%i' % len(friends))
+        for fid in friends:
+            ps = MongoUtil.fetchByID('persons', ObjectId(fid))
+            token = ps.get('pushToken')
+            note = {'personID':fid, 'type':'avatar', 'otherID':str(joinedPerson['_id']), 'createdTime':datetime.now(chinaTime)+timedelta(8)};
+            MongoUtil.save('notes', note)
+            if token:
+                lang = ps.get('lang')
+                message = localInfo(lang, '%s 更新了头像') % ps.get('name')
+                sendPush(token, message, {'noteID':str(note['_id'])}, ps.get('prodFlag'))
+        
+    #mobile = joinedPerson.get('mobile')
+    #persons = MongoUtil.fetchWithField('mobiles', {'mobiles':mobile}, {'personID':1})
+    
+
 def sendJoinNotes(joinedPerson):
     #prod = web.ctx.env.get('HTTP_X_PROD')
     web.debug('send join')
@@ -1147,18 +1183,25 @@ class UploadHandler:
         #storedDir = '%s/static/avatar/%s/' % (os.getcwd(),tmpDir)        
         makeIfNone(storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'+tmpDir+'/'
+        #web.debug("myFile dict:%r" % x['myfile'])
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
+        
         postFix = filePath.split('.')[-1]
-        hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
+        hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime))).hexdigest() + '.jpg'
         fout = open(storedDir+hashedName, 'w')
         fout.write(x.myfile.file.read())
         fout.close()
+        imageFileName = storedDir+hashedName;
+        ImageUtil.resize(imageFileName, 90, 'tb')
+        thumbName = ImageUtil.changeName(hashedName, 'tb')
         #web.debug("photoID:"+ photoID +","+x['myfile'].filename) # This is the filename
         if userSession:
             person = MongoUtil.fetchByID('persons', ObjectId(userSession))
             person['avatar'] = baseURL + hashedName
+            person['avatarFull'] = baseURL + thumbName
             web.debug("upload for avatar:%s" % person['avatar'])
             MongoUtil.update('persons', person)
+            sendAvatarNotes(person)
         return simplejson.dumps({'avatar':baseURL+hashedName})
     
     def GET(self):

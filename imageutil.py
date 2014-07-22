@@ -8,7 +8,17 @@ import PIL
 from PIL import Image
 import os
 import sys
+import web
 class ImageUtil:
+    
+    @classmethod
+    def changeName(self, filename, affix):
+        fileParts = filename.split('.')
+        middle = fileParts[:-1]
+        postFix = fileParts[-1]
+        fullPath = '%s%s.%s' % (middle,affix,postFix)
+        return fullPath
+
     @classmethod
     def resize(self, filename, basewidth, affix):
             img = Image.open(filename)
@@ -22,7 +32,7 @@ class ImageUtil:
             middle = fileParts[-2]
             postFix = fileParts[-1]
             fullPath = '%s/%s%s.%s' % ('/'.join(filePaths[:-1]),middle,affix,postFix) 
-            #print 'fullPath:%s' % fullPath
+            web.debug('fileParts %s, fileName %s, fullPath:%s' % (fileParts,filename, fullPath))
             img.save(fullPath)
             return fullPath
 

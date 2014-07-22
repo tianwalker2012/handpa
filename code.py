@@ -30,6 +30,9 @@ from photochathandler import PhotoChatHandler
 from notify import Notify
 from photowall import PhotoWall
 from photowall import PhotoWallDisplay
+from touchhandler import TouchHandler
+from mobilecapture import MobileCapture
+
 render = web.template.render('templates/')
 WebContext.render = render
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
@@ -59,7 +62,10 @@ urls = (
  '/store', 'AppStore',
  '/pchat','PhotoChatHandler',
  '/photowall', 'PhotoWall',
- '/photodisplay', 'PhotoWallDisplay'
+ '/photodisplay', 'PhotoWallDisplay',
+ '/touch', 'TouchHandler',
+ '/mobilecapture', 'MobileCapture',
+ '/nativeupload','uploader'
 )
 
 class AppStore:
@@ -224,13 +230,15 @@ class uploader:
  def POST(self):
   x = web.input(myfile={})
   storedDir = '/Users/apple/Documents/handpa/static/'
-  filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
-  postFix = filePath.split('.')[-1]
-  hashedName = hashlib.md5(filePath).hexdigest() + '.' + postFix
+  #filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
+    
+  
+  #postFix = filePath.split('.')[-1]
+  hashedName = 'uploadimage.jpg' #hashlib.md5(filePath).hexdigest() + '.' + postFix
   fout = open(storedDir+hashedName, 'w')
   fout.write(x.myfile.file.read())
   fout.close()
-  web.debug(x['myfile'].filename) # This is the filename
+  #web.debug(x['myfile'].filename) # This is the filename
   #web.debug(x['myfile'].value) # This is the file contents
   #web.debug(x['myfile'].file.read())  Or use a file(-like) object
   raise web.seeother('/static/'+hashedName)
