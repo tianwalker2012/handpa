@@ -93,6 +93,11 @@ class MongoUtil:
         values.pop('_id',None)
         cols.update(conds,{"$set":values})
         values['_id'] = cid
+   
+    @classmethod
+    def updateByConds(self,colName,conds,values):
+        cols = db[colName]
+        cols.update(conds,{"$set":values})
 
     @classmethod
     def save(self, colName, values):

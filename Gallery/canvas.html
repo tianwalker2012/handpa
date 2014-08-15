@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+ <head>
+ <meta http-equiv = "Content-type" content = "text/html; charset = utf-8">
+ <title >Sample HTML5 File</title>
+ <link href="game.css?3" rel="stylesheet" type="text/css" />
+ <script src="/static/Gallery/jquery.min.js"></script>
+
+ <script type = "text/javascript" charset = "utf-8">
+ // This function will be called once the page loads completely
+ var counter = 0;
+ //var globalContext;
+ //var globalCanvas;
+
+ var game={
+ // Start initializing objects, preloading assets and display start screen
+ 	init: function(){
+ 	// Hide all game layers and display the start screen
+ 	$('#gamelayer').hide();
+ 	//$('#gamestartscreen').show();
+ 	//Get handler for game canvas and context
+ 	game.canvas =$('#gameCanvas')[0];
+ 	game.context =game.canvas.getContext('2d');
+ 	},
+ 	levels:{
+ 	// Level data
+ 		data:[
+ 		{ // First level
+ 		foreground:'desert-foreground',
+ 		background:'clouds-background',
+ 		entities:[]
+ 		},
+ 		{ // Second level
+ 		foreground:'desert-foreground',
+ 		background:'clouds-background',
+ 		entities:[]
+ 		}]
+ 	}
+ 	}
+
+ function clearCanvas(canvas){
+ 	canvas.width = canvas.width;
+ }
+
+
+
+ function drawingLoop(){
+ //1. call the drawingLoop method once after 20 milliseconds
+ 	console.log('drawLoop get called');
+ 	var gameLoop = setTimeout(drawingLoop,2000);
+ //2. Clear the canvas
+ //3. Iterate through all the items
+ //4. And draw them
+ //document.getElementById('gameCanvas');
+ 	counter ++;
+ 	context = game.context;
+ 	//var ctx = document.getElementById('gameCanvas').getContext('2d');
+ 	//globalCanvas.width = globalCanvas.width;
+ 	clearCanvas(game.canvas);
+ 	context.strokeRect(10, 10, 10, 10);
+ 	context.font = '10 pt Arial';
+ 	context.fillStyle = "white";
+ 	context.rect(330, 60, 50, 100);
+ 	context.fill();
+ 	context.fillStyle = "rgb(100, 100, 60)";
+	context.fillText('Counter:'+counter,330,60);
+
+}
+ function experiment(){
+ 	//context.fillRect(200, 10, 100, 100);
+ 	//context.fillRect(10,10, 100,200);
+ 	var context = game.context;
+ 	context.strokeRect(10, 10, 10, 10);
+ 	context.font = '10 pt Arial';
+	context.fillText('This is in 10 pt Arial. ..',330,60);
+	// Drawing stroked text
+	context.font = '16 pt Arial';
+	context.strokeText('This is stroked in 16 pt Arial...',330,80);
+
+	context.fillStyle = "red";
+	// Draw a red filled rectangle
+	context.fillRect (310,160,100,50);
+	// Set stroke color to green
+	context.strokeStyle = "green";
+	// Draw a green stroked rectangle
+	context.strokeRect (310,240,100,50);
+	// Set fill color to red using rgb()
+	context.fillStyle = "rgb(255,0,0)";
+	context.fillStyle = "rgba(255, 255, 0, 0.5)"
+	// Draw a red filled rectangle
+	context.fillRect (420,160,100,50);
+
+	context.translate(250, 370);
+	//Rotate about the new origin by 60 degrees
+	context.rotate(Math.PI/3);
+	context.drawImage(pw,0,0,20,20,-30,-25,60,60);
+	//Restore to original state by rotating and translating back
+	context.rotate(-Math.PI/3);
+	context.translate(-240, -370);
+
+ 	context.translate(300, 370);
+	//Rotate about the new origin
+	context.rotate(3*Math.PI/4);
+	context.drawImage(pw,0,0,20,20,-30,-25,60,60);
+	//Restore to original state by rotating and translating back
+	context.rotate(-3*Math.PI/4);
+	context.translate(-300, -370);
+
+	context.translate(200, 200);
+	context.rotate(5*Math.PI/10);
+	context.drawImage(pw, 0, 0, 150, 150);
+	context.translate(-200, -200);
+	context.rotate(-5*Math.PI/10);
+	context.fill();
+ }
+ function resizeGame()
+ {
+ 	//var cvs = document.getElementById('gameCanvas');
+ 	var cvs = game.canvas;
+ 	var gameArea = document.getElementById('gameArea');
+ 	cvs.width = gameArea.offsetWidth;
+ 	cvs.height = gameArea.offsetHeight;
+ 	console.log('resize called, before:'+ cvs.width+", height:"+cvs.height+
+ 		", area:"+gameArea.offsetWidth+", height:"+gameArea.offsetHeight);
+ }
+
+function debugOutput(textInfo)
+{
+	$('#gameDebug').html('Loaded '+textInfo);
+}
+ function pageLoaded(){
+ 	//alert('Hello World!');
+
+ 	window.addEventListener('resize', resizeGame, false);
+	window.addEventListener('orientationchange', resizeGame, false);
+ 	console.log('page loaded');
+ 	debugOutput('cool loaded');
+ 	//globalCanvas = document.getElementById('gameCanvas');
+ 	//globalContext = globalCanvas.getContext('2d');
+ 	game.init();
+ 	var gameArea = document.getElementById('gameArea');
+ 	drawingLoop();
+ 	resizeGame();
+ 	console.log('context detail:'+ context);
+ 	var pw = document.getElementById('icon_pw');
+
+ 	//context.drawImage(pw, 100, 100, 20, 20);
+ 	//context.drawImage(pw, 100, 140);
+ 	//I knew how to draw image on the convas now. 
+ 	//Which is very intersting. 
+ 	//context.drawImage(pw, 0, 0, 20, 20, 200, 200, 50, 50);
+	
+ 	console.log('convas loaded');
+ 	//(soundFileExtn) {
+ 	//var sound = new Audio();
+ 	// Load sound file with the detected extension
+ 	//sound.src = "music.mp3";
+ 	//sound.play();
+ }
+ </script>
+ </head>
+ <body onload = "pageLoaded();">
+ <!--
+ <audio controls = "controls">
+ 	<source src = "music.mp3" type = "audio/mpeg" />
+ </audio>
+ -->
+  <div id="gameArea">
+   <canvas id = "gameCanvas" style = "border:black 1px solid;">
+ 	Your browser does not support HTML5 Canvas. Please shift to another browser.
+  </canvas>
+  </div>
+  <div id = "gameDebug">
+
+  </div>
+ </body>
+</html>

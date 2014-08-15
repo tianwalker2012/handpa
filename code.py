@@ -32,7 +32,10 @@ from photowall import PhotoWall
 from photowall import PhotoWallDisplay
 from touchhandler import TouchHandler
 from mobilecapture import MobileCapture
-
+from p3d import IDCreator
+from p3d import PhotoUploader
+from p3d import P3DShow
+from columbia import ScoreSupporter
 render = web.template.render('templates/')
 WebContext.render = render
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
@@ -65,7 +68,11 @@ urls = (
  '/photodisplay', 'PhotoWallDisplay',
  '/touch', 'TouchHandler',
  '/mobilecapture', 'MobileCapture',
- '/nativeupload','uploader'
+ '/nativeupload','uploader',
+ '/p3d/id/(.+)','IDCreator',
+ '/p3d/upload', 'PhotoUploader',
+ '/p3d/show3d', 'P3DShow',
+ '/columbia/(.+)', 'ScoreSupporter'
 )
 
 class AppStore:

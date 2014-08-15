@@ -1,0 +1,22 @@
+#gameArea {
+  position: absolute;
+  left:     0%;
+  top:      0%;
+  width:100%;
+  height:100%;
+}
+
+#gameDebug{
+	position: absolue;
+	left:50%;
+	top:80%;
+	width:100%;
+	height: 20%;
+	background-color: #808080;
+	cursor:pointer;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+}

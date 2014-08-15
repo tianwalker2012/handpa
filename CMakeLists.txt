@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project( Subtract )
+find_package( OpenCV REQUIRED )
+add_executable( subtract subtract.cpp )
+target_link_libraries( subtract ${OpenCV_LIBS} )
