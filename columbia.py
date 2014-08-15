@@ -35,7 +35,9 @@ class ScoreSupporter:
             pts = MongoUtil.fetchPage('columbia',{}, 0, 1)
             histData = MongoUtil.fetch('histgram', {})
             histGram = histData.get("data")
-            return "var totalPerson=%i" % pts.count()+";var hist="+simplejson.dumps(histGram)+";"
+            tc = pts.count() if pts else 0
+            histGram = histGram if histGram else {}
+            return "var totalPerson=" + tc +";var hist="+simplejson.dumps(histGram)+";"
         if cmd == 'upload':
             params = web.input();
             #passTime = params.passTime
