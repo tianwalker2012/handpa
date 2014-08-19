@@ -24,6 +24,7 @@ class ImageUtil:
             img = Image.open(filename)
             wpercent = (basewidth/float(img.size[0]))
             hsize = int((float(img.size[1])*float(wpercent)))
+            web.debug('image size:%i, org:%i, %s' % (hsize, img.size[1], filename))
             img = img.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
             filePaths = filename.replace('\\','/').split('/')
             filePath = filePaths[-1]

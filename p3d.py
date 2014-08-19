@@ -78,15 +78,15 @@ class PhotoUploader:
         if cmd == 'del':
             photoID = params.photoID
             MongoUtil.remove('StoredPhoto', {'_id':ObjectId(photoID)})
-
+            #Need to delete the uploaded photo too
         elif cmd == 'update':
             photoIDs = params.photoID.split(',')
-            sequences = params.sequence.split(',')
+            #sequences = params.sequence.split(',')
             for i in range(0, len(photoIDs)):
                 photoID = photoIDs[i]
-                sequence = sequences[i]
+                #sequence = sequences[i]
                 web.debug('photoID:'+photoID)
-                MongoUtil.updateByConds('StoredPhoto', {'_id':ObjectId(photoID)}, {'sequence':sequence})
+                MongoUtil.updateByConds('StoredPhoto', {'_id':ObjectId(photoID)}, {'sequence':i})
         return '{}'
 
     def POST(self):

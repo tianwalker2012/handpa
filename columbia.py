@@ -57,7 +57,7 @@ class ScoreSupporter:
             MongoUtil.save('columbia', jsonData)
             if ctime:
                 histData = MongoUtil.fetch('histgram', {})
-                histGram = histData.get("data")
+                histGram = None;#histData.get("data")
                 if not histData:
                     histGram = {}
                     histData = {"data":histGram}
