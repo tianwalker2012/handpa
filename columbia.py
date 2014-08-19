@@ -69,8 +69,10 @@ class ScoreSupporter:
                     histGram = {}
                     histData["data"] = histGram
                 val = histGram.get(str(ctime))
+                
                 if val:
-                    ++val
+                    val += 1;
+                    web.debug("value is:%i, time:%s" % (val, str(ctime)))
                     histGram[str(ctime)] = val
                 else:
                     histGram[str(ctime)] = 1
