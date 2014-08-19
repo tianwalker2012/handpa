@@ -62,6 +62,8 @@ class ScoreSupporter:
                     histGram = {}
                     histData = {"data":histGram}
                     MongoUtil.save('histgram',histData)
+                else:
+                    histGram = histData.get("data")
                 
                 if not histGram:
                     histGram = {}
