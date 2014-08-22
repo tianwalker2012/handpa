@@ -134,8 +134,8 @@ class PhotoUploader:
         photoID = x.get("photoID")
         sequence = x["sequence"]
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
-        storedDir = '%s/static/%s/' % (os.getcwd(),taskID)         
+        storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
+        #storedDir = '%s/static/%s/' % (os.getcwd(),taskID)         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+taskID+'/'
