@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="utf-8">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="target-densitydpi=device-dpi, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0 user-scalable=no">
+    <title>Pleasantuser - 360rotate</title>
+    <meta name="author" content="Pleasantuser.com">
+    <meta name="description" content="360rotate Pleasantuser.com">
+    
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" src="js/rotate.js"></script>
+	<script type="text/javascript" src="dopelessRotate/scripts/dopelessRotate.js"></script>
+    <link rel="stylesheet" href="dopelessRotate/css/style.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="style.css" type="text/css" media="screen" />
+</head>
+<body>
+
+<div class="rotatebox">
+	<div class="dopelessrotate">
+		<img id="rotateimage" src="images/d5/0001.png" width="500" height="500">
+		
+		<div class="specs_spot">
+			<a class='sethotspot' href='1' title='Digital SLR' posix='50' posiy='52'>
+				Light that passes through the lens is reflected by the mirror, and the image displayed on the focusing screen positioned at the same distance from the mirror as the focal plane, is refracted by the pentaprism to be viewed in the viewfinder. When the shutter button is pressed, the mirror flips up and the light directly reaches the image sensor without being refracted. It is possible to take a diverse range of photos by interchanging the lens.
+			</a>
+			<a class='sethotspot' href='5' title='Interchangeable' posix='50' posiy='36'>Interchangeable lenses for interchangeable-lens digital cameras comprise individual lens elements, a motor, a diaphragm and various other components designed to deliver light to the camera's image sensor. The configuration of the lens elements and selection of optimal materials in accordance with the lens's focal length and intended use determines the best possible images by effectively correcting for chromatic aberration, spherical aberration and distortion. Canon is working to make possible even higher levels of imaging performance by adopting new technologies for aspherical lenses and UD lenses.</a>
+			<a class='sethotspot' href='6' title='Digital Compact' posix='50' posiy='46'>A digital compact camera is made up of optics such as the lens and aperture, and electronics such as the image processor, the image sensor and the LCD display. Light that passes through the lens is converted into a digital signal by the image sensor (CCD sensor or CMOS sensor) that is equivalent to film in a silver halide camera, and this undergoes a variety of image processing in the imaging processor to produce a beautiful image. This is then recorded on the memory card.</a>
+			<a class='sethotspot' href='8' title='Digital Camcorders' posix='50' posiy='56'>Light that enters through the lens is converted into digital data by the image sensor (CCD sensor or CMOS sensor). This is made into high definition video by the image processor, compressed by the codec engine, and stored in the memory. Audio is converted into an electric signal by the microphone, and similarly stored in the memory. In addition, because consumer digital camcorders are often used while held in the hand, they are equipped with high-performance image stabilizers.</a>
+			<a class='sethotspot' href='13' title='Digital Cinema' posix='50' posiy='67'>Digital cinema cameras are equipped with a large-size CMOS sensor that converts light entering through the lens into digital data. <br />Using dedicated image processors designed for video capture, these cameras produce high-resolution images with rich gradation and vivid color reproduction. When used in combination with the more than 60 interchangeable lenses that make up Canon's EF-series and EF Cinema-series lineups, the cinema cameras make possible high image quality across a wide range of expressive possibilities. In addition, the camera's cooling fan dissipates the heat generated from the CMOS sensor during long-duration shoots.</a>
+			<a class='sethotspot' href='15' title='Broadcasting' posix='50' posiy='34'>Digital cinema cameras are equipped with a large-size CMOS sensor that converts light entering through the lens into digital data.<br />Using dedicated image processors designed for video capture, these cameras produce high-resolution images with rich gradation and vivid color reproduction. When used in combination with the more than 60 interchangeable lenses that make up Canon's EF-series and EF Cinema-series lineups, the cinema cameras make possible high image quality across a wide range of expressive possibilities. In addition, the camera's cooling fan dissipates the heat generated from the CMOS sensor during long-duration shoots.</a>
+		</div>
+		
+		<div class="comments_spot">
+			<a class='sethotspot' href='16' title='To Communicate and Connect' posix='50' posiy='53'>Canon aims to become a company admired and respected the world over. This high-definition quality video introduces Canon's global business activities centering on imaging technology and various other activities, which include research and development to production, sales, marketing, environmental conservation, and social contributions.</a>
+			<a class='sethotspot' href='18' title='How a Digital Camera is Made' posix='50' posiy='43'>An introduction to how digital cameras work that also highlights Canon's unique manufacturing expertise and latest environmental measures. Years of know-how, combined with leading-edge technologies and manufacturing processes, support Canon's position as the leader in high-resolution, high-quality digital cameras.</a>
+			<a class='sethotspot' href='19' title='A Heritage of Caring' posix='50' posiy='62'>Contributing to society through business. It is this desire, passed down from the company's founders to the present. This video illustrates Canon's CSR activities that capitalize on its characteristics of advanced technological strengths, global business deployment and diverse, specialized human resources, based on this philosophy.</a>
+			<a class='sethotspot' href='22' title='A Brush with History' posix='50' posiy='48'>The goal of Tsuzuri Project goes beyond simply creating high-resolution facsimiles of valuable cultural assets. Its true objective lies in the effect these works have on those who view them.</a>
+		</div>
+	</div>
+	
+	<div class="text_box">
+		<div class="text_info">
+			<p>Canon aims to become a company admired and respected the world over. This high-definition quality video introduces Canon's global business activities centering on imaging technology and various other activities, which include research and development to production, sales, marketing, environmental conservation, and social contributions.</p>
+		</div>
+	</div>
+</div>
+
+
+
+<script type='text/javascript'>
+var ImageRoot = {};
+ImageRoot.imagelist = ['http://127.0.0.1:8080/static/f04bbe729de29e37fe71feca78e9dcce.jpg',
+	'http://127.0.0.1:8080/static/f0913ae59ee92557db27012fc60a3591.jpg',
+	'http://127.0.0.1:8080/static/f1c068818d7d20b33b97b121154b60a9.jpg'];
+ImageRoot.zoomlist = ['http://127.0.0.1:8080/static/f04bbe729de29e37fe71feca78e9dcce.jpg',
+	'http://127.0.0.1:8080/static/f0913ae59ee92557db27012fc60a3591.jpg',
+	'http://127.0.0.1:8080/static/f1c068818d7d20b33b97b121154b60a9.jpg'];
+$(document).ready(function() {
+	$('#rotateimage').tsRotate({
+		//'zoom':true,
+		//'zoomfolder':'zoomimages',
+		'hotspots':true,
+		'autorotate':true,
+		'autorotatespeed':30,
+		'rotateloop':false,
+		'wheelRotate':true,
+		'rightclass':'gright',
+		'playstopclass':'playstop',
+		'leftclass':'gleft',
+		'disablelogo':true
+	});
+	
+});
+</script>
+
+</body>
+</html>

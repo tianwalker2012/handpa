@@ -30,9 +30,47 @@ def makeIfNone(dirName):
     if not os.path.exists(dirName):
         os.makedirs(dirName)
 
+def cleanUser(user):
+    strID = str(user['_id'])
+    strDate = str(user['createdTime'])
+    user.pop('_id', None)
+    user['personID'] = strID
+    user['createdTime'] = strDate
+    return user
+
+def fillTask(photoTask):
+    photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':str(photoTask['_id'])},[('sequence', 1)])
+    phs = []
+    for ph in photos:
+        phs.append(cleanStoredPhoto(ph))
+    taskID = str(photoTask['_id'])
+    photoTask.pop('_id', None)
+    photoTask['createdTime'] = str(photoTask['createdTime'])
+    photoTask['photos'] = phs;
+    photoTask['taskID'] = taskID
+    return photoTask
+     
+
+class Account:
+    def GET(self, cmd):
+        return self.POST(cmd)
+    def POST(self, cmd):
+        params = web.input()
+        web.debug('params:%r' % params.get('personID'))
+        if cmd == 'create':
+            user = {"createdTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            MongoUtil.save('P3dUser', user)
+            return simplejson.dumps(cleanUser(user))
+        elif cmd == 'query':
+            tasks = MongoUtil.fetchSome('PhotoTask', {'personID':params.personID},[('createdTime', 1)])
+            res = []            
+            for tk in tasks:
+                res.append(fillTask(tk))
+            return simplejson.dumps(res)
+
 class P3DShow:
     def GET(self):
-        return self.POST();
+        return self.POST()
     def POST(self):
         params = web.input()
         photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.taskID},[('sequence', 1)])
@@ -45,7 +83,8 @@ class IDCreator:
         return self.POST(cmd)
     def POST(self, cmd):
         if cmd == 'create':
-            store = {"createdTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            params = web.input()
+            store = {"personID":params.personID, "createdTime":datetime.now(chinaTime)+timedelta(hours=9)}
             MongoUtil.save('PhotoTask', store)
             res = {"id":str(store.get('_id'))}
             return simplejson.dumps(res)
@@ -113,7 +152,7 @@ class PhotoUploader:
         storedPhoto = None
         if photoID:
             storedPhoto = MongoUtil.fetchByID('StoredPhoto', ObjectId(photoID))
-            storedPhoto.remoteURL = remoteURL
+            storedPhoto['remoteURL'] = remoteURL
             MongoUtil.update('StoredPhoto',storedPhoto)
         else:
             storedPhoto = {'taskID':taskID, 'sequence':int(sequence), 'remoteURL':remoteURL}
