@@ -62,7 +62,14 @@ class Account:
             MongoUtil.save('P3dUser', user)
             return simplejson.dumps(cleanUser(user))
         elif cmd == 'query':
-            tasks = MongoUtil.fetchSome('PhotoTask', {'personID':params.personID},[('createdTime', 1)])
+            #tasks = None
+            queryCond = {}
+            start = int(params.start) if params.get('start') else 0
+            limit = int(params.limit) if params.get('limit') else 20
+            if params.get('personID'):
+                queryCond = {'personID':params.personID}
+            web.debug('cond:%r,start:%i,limit:%i' % (queryCond, start, limit)) 
+            tasks = MongoUtil.fetchPage('PhotoTask', queryCond, start, limit, [('createdTime', 1)])
             res = []            
             for tk in tasks:
                 res.append(fillTask(tk))

@@ -37,6 +37,8 @@ from p3d import PhotoUploader
 from p3d import P3DShow
 from p3d import Account
 from columbia import ScoreSupporter
+from columbia import BirdData
+from columbia import RawUploader
 render = web.template.render('templates/')
 WebContext.render = render
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
@@ -73,8 +75,10 @@ urls = (
  '/p3d/id/(.+)','IDCreator',
  '/p3d/upload', 'PhotoUploader',
  '/p3d/show3d', 'P3DShow',
+ '/raw/upload', 'RawUploader',
  '/p3d/account/(.+)', 'Account',
- '/columbia/(.+)', 'ScoreSupporter'
+ '/columbia/(.+)', 'ScoreSupporter',
+ '/bird', 'BirdData'
 )
 
 class AppStore:

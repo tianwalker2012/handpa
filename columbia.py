@@ -26,6 +26,20 @@ import pytz
 
 chinaTime = timezone('Asia/Shanghai')
 
+def makeIfNone(dirName):
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)
+
+class BirdData:
+    def GET(self):
+        return self.POST();
+    def POST(self):
+        web.debug(web.data())
+        uploaded = simplejson.loads(web.data())
+        MongoUtil.create('TrainedBird', uploaded)
+        web.debug('id is:%s', str(uploaded.get('_id')))
+        return 'success'
+        
 class ScoreSupporter:
     def GET(self, cmd):
         return self.POST(cmd)
@@ -88,5 +102,45 @@ class ScoreSupporter:
                         total  += histGram.get(tm)
                 
                 return 100 * beating/total
-            
+
+class RawUploader:
+    def GET(self):
+        return '{}'
+
+    def POST(self):
+        #x = web.input(myfile={})
+        data = web.data()[23:].decode('base64')
+        #web.debug('data:%r' % data)
+        
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        #storedDir = '/home/ec2-user/root/www/static/raw/'
+        storedDir = '%s/static/%s/' % (os.getcwd(),'raw')         
+        makeIfNone(storedDir)
+        web.debug('final stored dir:%s' % storedDir)
+        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/raw/'
+        #filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
+        
+        postFix = 'jpg'#filePath.split('.')[-1]
+        hashedName = hashlib.md5('raw' + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
+        imageFileName = storedDir+hashedName;
+        fout = open(imageFileName, 'w')
+        fout.write(data)
+        fout.close()
+        #ImageUtil.resize(imageFileName, 60, 'tb')
+        #storedPhoto['screenURL'] = baseURL+hashedName
+        remoteURL = baseURL + hashedName
+        #storedPhoto = None
+        """        
+        if photoID:
+            storedPhoto = MongoUtil.fetchByID('StoredPhoto', ObjectId(photoID))
+            storedPhoto['remoteURL'] = remoteURL
+            MongoUtil.update('StoredPhoto',storedPhoto)
+        else:
+            storedPhoto = {'taskID':taskID, 'sequence':int(sequence), 'remoteURL':remoteURL}
+            MongoUtil.save('StoredPhoto', storedPhoto)
+        """
+        
+        #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
+        
+        return remoteURL#simplejson.dumps(cleanStoredPhoto(storedPhoto))         
             
