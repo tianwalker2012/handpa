@@ -69,7 +69,7 @@ class Account:
             if params.get('personID'):
                 queryCond = {'personID':params.personID}
             web.debug('cond:%r,start:%i,limit:%i' % (queryCond, start, limit)) 
-            tasks = MongoUtil.fetchPage('PhotoTask', queryCond, start, limit, [('createdTime', 1)])
+            tasks = MongoUtil.fetchPage('PhotoTask', queryCond, start, limit, [('createdTime', -1)])
             res = []            
             for tk in tasks:
                 res.append(fillTask(tk))
