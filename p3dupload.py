@@ -29,7 +29,7 @@ if __name__ == "__main__":
     searchDir = sys.argv[1]
     #if len(sys.argv):
     print searchDir
-    tasks = ["53fdc9a321ae7a478025476c","53fdc9b221ae7a478025476d","53fdc9bf21ae7a478025476e"]
+    tasks =["53fde04f21ae7a4a516e0abd"] #["53fdc9a321ae7a478025476c","53fdc9b221ae7a478025476d","53fdc9bf21ae7a478025476e"]
     pos = 0
     curTask = None
     sequence = 0    

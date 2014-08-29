@@ -38,10 +38,18 @@ def cleanUser(user):
     user['createdTime'] = strDate
     return user
 
+def cleanInfoPoint(infoPoint):
+    infoPoint['infoID'] = str(infoPoint.get('_id'))
+    infoPoint.pop('_id', None)
+    return infoPoint
+
 def fillTask(photoTask):
     photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':str(photoTask['_id'])},[('sequence', 1)])
     phs = []
     for ph in photos:
+        infoPts = MongoUtil.fetchSome('InfoPoint', {'photoID':str(ph['_id'])})
+        if infoPts:        
+            ph['infos'] = [cleanInfoPoint(infoPt) for infoPt in infoPts]
         phs.append(cleanStoredPhoto(ph))
     taskID = str(photoTask['_id'])
     photoTask.pop('_id', None)
@@ -49,7 +57,42 @@ def fillTask(photoTask):
     photoTask['photos'] = phs;
     photoTask['taskID'] = taskID
     return photoTask
-     
+def fetchPhotoInfo(photoID):
+    infoPts = MongoUtil.fetchSome('InfoPoint', {'photoID':photoID})
+    web.debug('info for:%s=%i' % (photoID, infoPts.count()))
+    return [info for info in infoPts]
+    
+
+class InfoPoint:
+    def GET(self, cmd):
+        return self.POST(cmd);
+    def POST(self, cmd):
+        params = web.input()
+        for key in params:
+            web.debug('param %s,%s' % (key, params[key]))
+        if cmd == 'create':
+            data = {'x':params.x, 
+                    'y':params.y,
+                    'photoID':params.photoID,
+                    'title':params.title,
+                    'type':params.type,
+                    'comment':params.comment}
+            
+            MongoUtil.create('InfoPoint', data)
+            return simplejson.dumps({'infoID':str(data.get('_id'))})
+        elif cmd == 'update':
+            data = {'x':params.x, 
+                    'y':params.y,
+                    'photoID':params.photoID,
+                    'title':params.title,
+                    'type':params.type,
+                    'comment':params.comment}
+            data['_id'] = ObjectId(params.infoID)
+            MongoUtil.update('InfoPoint', data)
+            return '{}'
+        elif cmd == 'remove':
+            MongoUtil.remove('InfoPoint', {'_id':ObjectId(params.infoID)})
+            return '{}'
 
 class Account:
     def GET(self, cmd):
@@ -81,10 +124,23 @@ class P3DShow:
     def POST(self):
         params = web.input()
         photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.taskID},[('sequence', 1)])
-        imgUrls = [pt.get('remoteURL') for pt in photos];        
+        pts = []
+        def process(pht):
+            pts.append(pht)
+            return pht.get('remoteURL')
+        imgUrls = [process(pt) for pt in photos];        
         #for pt in photos:
+        infos = []
+        i = 0
+        for pt in pts:
+            pinfos = fetchPhotoInfo(str(pt.get('_id')))
+            for info in pinfos:
+                web.debug('get info out')
+                info['pos'] = i
+                infos.append(info)
+            i += 1
         render = web.template.render('templates', globals={'simplejson':simplejson})
-        return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls})
+        return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls,'infos':infos})
 class IDCreator:
     def GET(self, cmd):
         return self.POST(cmd)
