@@ -57,6 +57,7 @@ def fillTask(photoTask):
     photoTask['photos'] = phs;
     photoTask['taskID'] = taskID
     return photoTask
+
 def fetchPhotoInfo(photoID):
     infoPts = MongoUtil.fetchSome('InfoPoint', {'photoID':photoID})
     web.debug('info for:%s=%i' % (photoID, infoPts.count()))
@@ -117,7 +118,6 @@ class Account:
             for tk in tasks:
                 res.append(fillTask(tk))
             return simplejson.dumps(res)
-
 class P3DShow:
     def GET(self):
         return self.POST()
@@ -141,6 +141,7 @@ class P3DShow:
             i += 1
         render = web.template.render('templates', globals={'simplejson':simplejson})
         return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls,'infos':infos})
+
 class IDCreator:
     def GET(self, cmd):
         return self.POST(cmd)
@@ -157,13 +158,7 @@ class IDCreator:
             if params.id:
                 photoTask = MongoUtil.fetchByID('PhotoTask', ObjectId(params.id))
                 if photoTask:
-                    photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.id},[('sequence', 1)])
-                    phs = []
-                    for ph in photos:
-                        phs.append(cleanStoredPhoto(ph))
-                    photoTask.pop('_id', None)
-                    photoTask['photos'] = phs;
-                    photoTask['createdTime'] = str(photoTask['createdTime'])
+                    fillTask(photoTask)
                 return simplejson.dumps(photoTask)
 
 def cleanStoredPhoto(storedPhoto):
@@ -172,6 +167,40 @@ def cleanStoredPhoto(storedPhoto):
     storedPhoto.pop('_id', None)
     return storedPhoto
     
+
+class PhotoUploader:
+    def GET(self):
+        return '{}'
+    def POST(self):
+        x = web.input(myfile={})
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        storedDir = '/home/ec2-user/root/www/static/blog/'
+        #storedDir = '%s/static/%s/' % (os.getcwd(),taskID)         
+        makeIfNone(storedDir)
+        web.debug('final stored dir:%s' % storedDir)
+        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/blog/'
+        filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
+        postFix = filePath.split('.')[-1]
+        hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
+        imageFileName = storedDir+hashedName;
+        fout = open(imageFileName, 'w')
+        fout.write(x.myfile.file.read())
+        fout.close()
+        ImageUtil.resize(imageFileName, 60, 'tb')
+        #storedPhoto['screenURL'] = baseURL+hashedName
+        remoteURL = baseURL + hashedName
+        storedPhoto = None
+        if photoID:
+            storedPhoto = MongoUtil.fetchByID('StoredPhoto', ObjectId(photoID))
+            storedPhoto['remoteURL'] = remoteURL
+            MongoUtil.update('StoredPhoto',storedPhoto)
+        else:
+            storedPhoto = {'taskID':taskID, 'sequence':int(sequence), 'remoteURL':remoteURL}
+            MongoUtil.save('StoredPhoto', storedPhoto)
+        
+        #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
+        
+        return simplejson.dumps(cleanStoredPhoto(storedPhoto))
     
 class PhotoUploader:
     def GET(self):
