@@ -118,6 +118,18 @@ class Account:
             for tk in tasks:
                 res.append(fillTask(tk))
             return simplejson.dumps(res)
+        elif cmd == 'clean':
+            tasks = MongoUtil.fetchAll('PhotoTask')
+            count = 0
+            for tk in tasks:
+                photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':str(tk['_id'])})
+                web.debug('photo count:%i, id:%s' % (photos.count(), str(tk['_id'])))
+                if photos.count() == 0:
+                    MongoUtil.remove('PhotoTask', {'_id':tk['_id']})
+                    count += 1
+            return '{"count":%i}' % count
+                
+            
 class P3DShow:
     def GET(self):
         return self.POST()
