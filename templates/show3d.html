@@ -9,8 +9,8 @@ $def with (params)
     <meta name="description" content="360rotate Pleasantuser.com">
     
     <script type="text/javascript" src="/static/p3d/js/jquery-1.10.2.min.js"></script>
-	<script type="text/javascript" src="/static/p3d/js/rotate.js"></script>
-	<script type="text/javascript" src="/static/p3d/dopelessRotate/scripts/dopelessRotate.js?5"></script>
+	<script type="text/javascript" src="/static/p3d/js/rotate.js?1"></script>
+	<script type="text/javascript" src="/static/p3d/dopelessRotate/scripts/dopelessRotate.js?6"></script>
     <link rel="stylesheet" href="/static/p3d/dopelessRotate/css/style.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="/static/p3d/style.css" type="text/css" media="screen" />
 </head>
@@ -53,6 +53,7 @@ $def with (params)
 var ImageRoot = {};
 ImageRoot.imagelist = $:simplejson.dumps(params.get('imagelist'));
 ImageRoot.zoomlist = $:simplejson.dumps(params.get('zoomlist'));
+ImageRoot.maximumPin = 20;
 $$(document).ready(function() {
 	$$('#rotateimage').tsRotate({
 		//'zoom':true,
@@ -65,6 +66,8 @@ $$(document).ready(function() {
 		'nophp' : true,
         'nophpimglist' : ImageRoot.imagelist,
         'nophpzoomlist' : ImageRoot.zoomlist,
+		'hotspotadd':true,
+        'hotspotmanage':true,
 		'disablelogo':true
 	});
 });
