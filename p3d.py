@@ -161,6 +161,9 @@ class IDCreator:
         if cmd == 'create':
             params = web.input()
             store = {"personID":params.personID, "createdTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            name = params.get('name')
+            if name:
+                store['name'] = name
             MongoUtil.save('PhotoTask', store)
             res = {"id":str(store.get('_id'))}
             return simplejson.dumps(res)
@@ -172,6 +175,12 @@ class IDCreator:
                 if photoTask:
                     fillTask(photoTask)
                 return simplejson.dumps(photoTask)
+        elif cmd == 'update':
+            params = web.input()
+            if params.get('taskID'):
+                MongoUtil.update('PhotoTask',{'_id':ObjectId(params.get('taskID'))}, {"name":params['name']})
+
+            
 
 def cleanStoredPhoto(storedPhoto):
     pid = str(storedPhoto.get('_id'))
