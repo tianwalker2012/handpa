@@ -179,7 +179,7 @@ class IDCreator:
             params = web.input()
             if params.get('taskID'):
                 MongoUtil.update('PhotoTask',{'_id':ObjectId(params.get('taskID'))}, {"name":params['name']})
-
+            return '{}'
             
 
 def cleanStoredPhoto(storedPhoto):
