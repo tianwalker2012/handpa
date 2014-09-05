@@ -178,7 +178,7 @@ class IDCreator:
         elif cmd == 'update':
             params = web.input()
             if params.get('taskID'):
-                MongoUtil.update('PhotoTask',{'_id':ObjectId(params.get('taskID'))}, {"name":params['name']})
+                MongoUtil.update('PhotoTask',{'_id':ObjectId(params.get('taskID')), "name":params['name']})
             return '{}'
             
 
