@@ -109,7 +109,7 @@ class Account:
             #tasks = None
             queryCond = {}
             start = int(params.start) if params.get('start') else 0
-            limit = int(params.limit) if params.get('limit') else 20
+            limit = int(params.limit) if params.get('limit') else 200
             if params.get('personID'):
                 queryCond = {'personID':params.personID}
             web.debug('cond:%r,start:%i,limit:%i' % (queryCond, start, limit)) 
@@ -179,6 +179,11 @@ class IDCreator:
             params = web.input()
             if params.get('taskID'):
                 MongoUtil.update('PhotoTask',{'_id':ObjectId(params.get('taskID')), "name":params['name']})
+            return '{}'
+        elif cmd == 'delete':
+            params = web.input()
+            if params.get('taskID'):
+                MongoUtil.remove('PhotoTask', {'_id':ObjectId(params.get('taskID'))})
             return '{}'
             
 
