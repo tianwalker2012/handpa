@@ -113,8 +113,8 @@ class RawUploader:
         #web.debug('data:%r' % data)
         
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        #storedDir = '/home/ec2-user/root/www/static/raw/'
-        storedDir = '%s/static/%s/' % (os.getcwd(),'raw')         
+        storedDir = '/home/ec2-user/root/www/static/raw/'
+        #storedDir = '%s/static/%s/' % (os.getcwd(),'raw')         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/raw/'
