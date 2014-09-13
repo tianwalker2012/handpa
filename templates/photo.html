@@ -617,10 +617,12 @@ $def with (params)
 			}
 		});
 		if(oldPhoto){
+       $$(".scene")[0].style['background-color'] = "rgba(30,30,30,0.4)";
       if(visitCount > 1){
         showScene("Wow，恭喜成为预备宇航员，<br/> 2014，大悲乐队携手自由联合。哥伦比亚计划带你飞向太空", "晒一下", function(evt){
           document.title = "我已通过宇航员培训，你也来试试";
           shareScreen();
+          $$(".scene")[0].style['background-color'] = "rgba(30,30,30,0.8)";
         }, "rgb(255, 73, 73)");
         $$('.buttonBottomRegion').fadeIn();
       }else{
@@ -628,6 +630,7 @@ $def with (params)
 				hideOldPhoto();
 				$$("#upload").click();
 				hideScene();
+        $$(".scene")[0].style['background-color'] = "rgba(30,30,30,0.8)";
 				Config.status = shotingStatus;
 			}, "rgb(252,73,73)");
     }
