@@ -48,7 +48,7 @@ class Helmet:
         web.debug('visit count:%r' % cookie.visitCount)
         vcount = int(cookie.visitCount)
         vcount += 1
-        web.setcookie('visitCount',vcount, 360000)
+        web.setcookie('visitCount',vcount, 360000,path='/')
         if vcount == 1:
             MongoUtil.save("PhotoUsage", {"useCount":1})
         render = web.template.render('templates')
