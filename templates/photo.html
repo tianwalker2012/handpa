@@ -373,10 +373,15 @@ $def with (params)
     function showScene(text, buttonTitle, clickFunction, buttonColor){
     	$$('.scene').fadeIn();
     	$$('.scene-text')[0].innerHTML = text;
+      if(! buttonTitle){
+        $$('.scene-btn').hide();
+      }else{
+        $$('.scene-btn').show();
     	$$('.scene-btn')[0].innerHTML = buttonTitle;
     	$$('.scene-btn')[0].style["background-color"] = "rgb(255,73,73)" //buttonColor;
     	Config.sceneFunction = clickFunction;
     	$$('.div-bottom').hide();
+      }
     }
 
     function hideScene(){
@@ -715,6 +720,7 @@ $def with (params)
 			//alert('share clicked');
 			debug("share clicked");
 			startLoading();
+      showScene("正在保存....",0,0,0);
 			createImage = true;
 			update = true;
 		});
