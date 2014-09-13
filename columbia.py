@@ -39,6 +39,20 @@ class BirdData:
         MongoUtil.create('TrainedBird', uploaded)
         web.debug('id is:%s', str(uploaded.get('_id')))
         return 'success'
+class Helmet:
+    def GET(self):
+        return self.POST();
+
+    def POST(self):
+        cookie = web.cookies(visitCount=0)
+        web.debug('visit count:%r' % cookie.visitCount)
+        vcount = int(cookie.visitCount)
+        vcount += 1
+        web.setcookie('visitCount',vcount, 3600)
+        if vcount == 1:
+            MongoUtil.save("PhotoUsage", {"useCount":1})
+        render = web.template.render('templates')
+        return render.photo({"visitCount":vcount})
         
 class ScoreSupporter:
     def GET(self, cmd):

@@ -40,6 +40,7 @@ from p3d import InfoPoint
 from columbia import ScoreSupporter
 from columbia import BirdData
 from columbia import RawUploader
+from columbia import Helmet
 render = web.template.render('templates/')
 WebContext.render = render
 #db = web.database(dbn='mysql', user='handpa', pw='handpa', db='handpa')
@@ -80,6 +81,7 @@ urls = (
  '/raw/upload', 'RawUploader',
  '/p3d/account/(.+)', 'Account',
  '/columbia/(.+)', 'ScoreSupporter',
+ '/photo', 'Helmet',
  '/bird', 'BirdData'
 )
 
