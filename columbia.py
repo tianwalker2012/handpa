@@ -52,7 +52,14 @@ class Helmet:
         if vcount == 1:
             MongoUtil.save("PhotoUsage", {"useCount":1})
         render = web.template.render('templates')
-        return render.photo({"visitCount":vcount})
+        imageURL = web.input().get('url')
+        iconURL = None
+        if imageURL:
+            pos = imageURL.rfind('.jpg')
+            if pos > 0:
+                iconURL = imageURL[:pos] + "tb" + imageURL[pos:]
+        web.debug("icon URL%s" % iconURL)
+        return render.photo({"visitCount":vcount, "icon":iconURL})
         
 class ScoreSupporter:
     def GET(self, cmd):
@@ -141,6 +148,7 @@ class RawUploader:
         fout.write(data)
         fout.close()
         #ImageUtil.resize(imageFileName, 60, 'tb')
+        ImageUtil.resizeAndCrop(imageFileName, [300, 300], 'tb')
         #storedPhoto['screenURL'] = baseURL+hashedName
         remoteURL = baseURL + hashedName
         #storedPhoto = None

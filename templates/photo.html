@@ -1,145 +1,112 @@
 $def with (params)
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<title>哥伦比亚带你的照片上太空</title>
+  $ iconurl = params.get('icon') if params.get('icon') else '/static/games/ch17/images/icon.jpg'
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>哥伦比亚带你的照片上太空</title>
+    <link href="/static/games/assets/demoStyles.css" rel="stylesheet" type="text/css" />
+    <link href="/static/games/assets/pace.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/static/games/lib/easeljs-0.7.1.min.js"></script>
+    <script type="text/javascript" src="/static/games/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/games/js/pace.min.js"></script>
+    <!--<meta name="viewport" content="width=320, user-scalable=no"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name=apple-mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-status-bar-style content=black>
+    <link rel="icon" type="image/png" href="/static/games/ch17/images/icon.png" />
+    <link rel="shortcut icon" href="/static/games/images/ch17/icon.png">
+    <link rel="apple-touch-icon image_src" href="/static/games/ch17/images/icon.png">
+    <div id='wx_pic' style='margin:0 auto;display:none;'>
+        <img src='$iconurl' />
+    </div>
+    <style>
+    form {
+    height: 100%;
+    width: 60px;
+    
+    
+    margin: 0 auto;
+    /**
+    background: green;
+    position: absolute;
+    **/
+    z-index: 1000;
+    }
 
-	<link href="/static/games/assets/demoStyles.css" rel="stylesheet" type="text/css" />
-	<link href="/static/games/assets/pace.css" rel="stylesheet" type="text/css" />
-	<!-- Note: All core EaselJS classes are listed here: -->
-	<!--
-	<script type="text/javascript" src="../src/createjs/events/Event.js"></script>
-	<script type="text/javascript" src="../src/createjs/events/EventDispatcher.js"></script>
-	<script type="text/javascript" src="../src/createjs/utils/IndexOf.js"></script>
-	<script type="text/javascript" src="../src/easeljs/utils/UID.js"></script>
-	<script type="text/javascript" src="../src/easeljs/utils/Ticker.js"></script>
-	<script type="text/javascript" src="../src/easeljs/geom/Matrix2D.js"></script>
-	<script type="text/javascript" src="../src/easeljs/geom/Point.js"></script>
-	<script type="text/javascript" src="../src/easeljs/geom/Rectangle.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/Shadow.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/SpriteSheet.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/Graphics.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/DisplayObject.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/Container.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/Stage.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/Bitmap.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/Sprite.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/BitmapAnimation.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/BitmapText.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/Shape.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/Text.js"></script>
-	<script type="text/javascript" src="../src/easeljs/display/DOMElement.js"></script>
-	<script type="text/javascript" src="../src/easeljs/events/MouseEvent.js"></script>
-	<script type="text/javascript" src="../src/easeljs/filters/Filter.js"></script>
-	<script type="text/javascript" src="../src/easeljs/ui/ButtonHelper.js"></script>
-	<script type="text/javascript" src="../src/easeljs/ui/Touch.js"></script>
-	<script type="text/javascript" src="../src/easeljs/utils/SpriteSheetUtils.js"></script>
-	<script type="text/javascript" src="../src/easeljs/utils/SpriteSheetBuilder.js"></script>
-	-->
-	<script type="text/javascript" src="/static/games/lib/easeljs-0.7.1.min.js"></script>
-	<script type="text/javascript" src="/static/games/jquery.min.js"></script>
-	<script type="text/javascript" src="/static/games/js/pace.min.js"></script>
+    .div-bottom {
+      position: absolute;
+      bottom:0%;
+      left:0%;
+      height: 60px;
+      width: 100%;
+    }
 
-	<!-- We also provide hosted minified versions of all CreateJS libraries.
-	  http://code.createjs.com -->
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name=apple-mobile-web-app-capable content=yes>
-  <meta name=apple-mobile-web-app-status-bar-style content=black>
-  <link rel="icon" type="image/png" href="/static/games/ch17/images/icon.png" />
-  <link rel="shortcut icon" href="/static/games/ch17/images/icon.png">
-  <link rel="apple-touch-icon image_src" href="/static/games/ch17/images/icon.png">
-  <div id='wx_pic' style='margin:0 auto;display:none;'>
-        <img src='/static/games/ch17/images/icon.png'/>
-  </div>
+    .cover {
+      position: absolute;
+      background-color: rgba(40,40,40,0.1);
+      top:0px;
+      left:0px;
+      width: 100%;
+      height: 100%;
+    }
 
-  <style>
-		form {
-		height: 100%;
-		width: 60px;
-		
-		
-		margin: 0 auto;
-		/**
-		background: green;
-		position: absolute;
-		**/
-		z-index: 1000;
-		}
+    .scene {
+      position: absolute;
+      background-color: rgba(30,30,30,0.8);
+      top:0px;
+      left:0px;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+    }
 
-		.div-bottom {
-			position: absolute;
-			bottom:0%;
-			left:0%;
-			height: 60px;
-			width: 100%;
-		}
-
-		.cover {
-			position: absolute;
-			background-color: rgba(40,40,40,0.1);
-			top:0px;
-			left:0px;
-			width: 100%;
-			height: 100%;
-		}
-
-		.scene {
-			position: absolute;
-			background-color: rgba(30,30,30,0.8);
-			top:0px;
-			left:0px;
-			width: 100%;
-			height: 100%;
-			z-index: 100;
-		}
-
-		.scene-text{
-			padding: 30px;
-			font-size:140%;
+    .scene-text{
+      padding: 30px;
+      font-size:140%;
       color:#fff;
-        	font-weight: bold;
-        	font-weight: 30pt;
-        	font-family: arial;
-        	text-align: center;
-		}
-		.scene-btn-region{
-			position:absolute;
-			left:0px;
-			top:70%;
-			width: 100%;
-			height: 44px;
-		}
-		.scene-btn{
+          font-weight: bold;
+          font-weight: 30pt;
+          font-family: arial;
+          text-align: center;
+    }
+    .scene-btn-region{
+      position:absolute;
+      left:0px;
+      top:70%;
+      width: 100%;
+      height: 44px;
+    }
+    .scene-btn{
       width:120px;
       margin: 0 auto;
       /*
-			position:relative;
-			width: 120px;
-			height: 44px;
-			margin: 0 auto;
-			
-			margin-right: auto;
-			margin-top: 70%;
-			**/
-		}
+      position:relative;
+      width: 120px;
+      height: 44px;
+      margin: 0 auto;
+      
+      margin-right: auto;
+      margin-top: 70%;
+      **/
+    }
 
-		.introduce{
-        	position: absolute;
-        	width: 100%;
-        	height: 100%;
-        	top: 60%;
-        	left: 0px;
-        	/**
-        	padding-top: 10%;
-        	padding-left: 25px;
-        	padding-right: 25px;
-        	**/
-         	text-align: center;
-         	color:#fff;
-         	font-size: 130%;
-      	}
-      	.shareoverlay {
+    .introduce{
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          top: 60%;
+          left: 0px;
+          /**
+          padding-top: 10%;
+          padding-left: 25px;
+          padding-right: 25px;
+          **/
+          text-align: center;
+          color:#fff;
+          font-size: 130%;
+        }
+        .shareoverlay {
         position: absolute;
         top:0px;
         left:0px;
@@ -149,32 +116,32 @@ $def with (params)
         background: #000;
         opacity: 0.8;
         display: none;
-      	}
+        }
 
-      	.finger {
+        .finger {
         position: absolute;
         top:0%;
         right:0%;
         color:#ffdd33;
         font-family:arial;
-      	}
-      	.textbody{
+        }
+        .textbody{
         color:#fff;
         /**font-size:140%;**/
         font-color:#fff;
         font-family:arial;
-      	}
+        }
 
-      	.progress{
-      		position:absolute;
-      		top:45%;
-      		left:10%;
-      		height: 30px;
-      		background-color:rgb(30, 200, 10);
-      		width:10%; 
-      	}
+        .progress{
+          position:absolute;
+          top:45%;
+          left:10%;
+          height: 30px;
+          background-color:rgb(30, 200, 10);
+          width:10%; 
+        }
       /**
-		  .buttonRound{
+      .buttonRound{
           -moz-border-radius: 5px;
           -webkit-border-radius: 5px;
           -khtml-border-radius: 5px;
@@ -187,109 +154,109 @@ $def with (params)
           padding-left: 10px;
           min-width: 80px;
           font: bold arial,serif;
-      	}
+        }
         **/
-      	.zoomin{
-      		position: absolute;
-      		top:20px;
-      		left:10px;
-      		width:50px;
-      		height:50px;
-      		background-image: url('/static/games/assets/zoomin.png');
-      		background-position: 0px 0px;
-      		background-repeat: no-repeat;
-      	}
-      	
-      	.zoomout{
-      		position: absolute;
-      		top:20px;
-      		left:80px;
-      		width:50px;
-      		height:50px;
-      		background-image: url('/static/games/assets/zoomout.png');
-      		background-position: 0px 0px;
-      		background-repeat: no-repeat;
-      	}
+        .zoomin{
+          position: absolute;
+          top:20px;
+          left:10px;
+          width:50px;
+          height:50px;
+          background-image: url('/static/games/assets/zoomin.png');
+          background-position: 0px 0px;
+          background-repeat: no-repeat;
+        }
+        
+        .zoomout{
+          position: absolute;
+          top:20px;
+          left:80px;
+          width:50px;
+          height:50px;
+          background-image: url('/static/games/assets/zoomout.png');
+          background-position: 0px 0px;
+          background-repeat: no-repeat;
+        }
 
-      	.rotate{
-      		position: absolute;
-      		top:20px;
-      		left:150px;
-      		width:50px;
-      		height:50px;
-      		background-image: url('/static/games/assets/rotate.png?5');
-      		background-position: 0px 0px;
-      		background-repeat: no-repeat;
-      	}
+        .rotate{
+          position: absolute;
+          top:20px;
+          left:150px;
+          width:50px;
+          height:50px;
+          background-image: url('/static/games/assets/rotate.png?5');
+          background-position: 0px 0px;
+          background-repeat: no-repeat;
+        }
 
 
-      	.confirm{
-      		position: absolute;
-      		top:0px;
-      		left:5px;
-      		width:55px;
-      		background-color:rgb(252,73,73);
-      		cursor: crosshair;
-      		font-size:130%;
-        	font-weight: bold;
-        	color:white;
-        	z-index: 0;
-      	}
-      	.share{
-      		position: absolute;
-      		top:0px;
-      		right:5px;
-      		width:60px;
-      		background-color:rgb(73,203,252);
-      		cursor: crosshair;
-      		font-size:130%;
-        	font-weight: bold;
-        	color:white;
-        	z-index: 0;
-      	}
+        .confirm{
+          position: absolute;
+          top:0px;
+          left:5px;
+          width:55px;
+          background-color:rgb(252,73,73);
+          cursor: crosshair;
+          font-size:130%;
+          font-weight: bold;
+          color:white;
+          z-index: 0;
+        }
+        .share{
+          position: absolute;
+          top:0px;
+          right:5px;
+          width:60px;
+          background-color:rgb(73,203,252);
+          cursor: crosshair;
+          font-size:130%;
+          font-weight: bold;
+          color:white;
+          z-index: 0;
+        }
 
-      	.camera{
-      		margin:0 auto;
-      		width:60px;
-      		background-color:rgb(252,203,73);
-      		cursor: crosshair;
-      		font-size:130%;
-        	font-weight: bold;
-        	color:white;
-        	z-index: 0;
-      	}
+        .camera{
+          margin:0 auto;
+          width:60px;
+          background-color:rgb(252,203,73);
+          cursor: crosshair;
+          font-size:130%;
+          font-weight: bold;
+          color:white;
+          z-index: 0;
+        }
 
-      	#debug{
-      		position: absolute;
-      		top: 0px;
-      		right: 0px;
-      	}
-      	#upload {
-      		
-      	opacity: 0;
-    		-moz-opacity: 0;
-    		
-    		/**
-    		margin:0 auto;
-    		
-    		background-color:red;
-    		**/
-    		width:0px;
-      		height: 0px;
-    		z-index: 100;
-      	}
+        #debug{
+          position: absolute;
+          top: 0px;
+          right: 0px;
+        }
+        #upload {
+          
+        opacity: 0;
+        -moz-opacity: 0;
+        
+        /**
+        margin:0 auto;
+        
+        background-color:red;
+        **/
+        width:0px;
+          height: 0px;
+        z-index: 100;
+        }
 
-      	#overlay { 
-			z-index:1000; 
-			position:absolute; 
-			top:0; 
-			bottom:0; 
-			left:0; 
-			width:100%; 
-			background:#000; 
-			opacity:0.3; 
-			-moz-opacity:0.3; 
-		} 
+        #overlay { 
+      z-index:1000; 
+      position:absolute; 
+      top:0; 
+      bottom:0; 
+      left:0; 
+      width:100%; 
+      background:#000; 
+      opacity:0.3; 
+      -moz-opacity:0.3; 
+    } 
 
      .button{
         font-size:130%;
@@ -328,145 +295,199 @@ $def with (params)
         position: absolute;
         right:20px;
        }
-	</style>
+  </style>
   </head>
-	<script>
-	
-	var initialStatus = 0;
-	var shotingStatus = 1;
-	var shottedStatus = 2;
+  <body>
+    <body onload="init();">
 
-	var canvas, stage;
+  <div id="loader"></div>
+  <div class="canvasHolder">
+    <canvas id="testCanvas" width="320" height="568"></canvas>
+  </div>
+  <div class="zoomin"></div>
+  <div class="zoomout"></div>
+  <div class="rotate"></div>
+  <div class="div-bottom">
+  <div style="background-color:rgb(53,232,183)" class='confirm button buttonRound'>预览</div>
+  <div style="background-color:rgb(73,203,252)" class='share button buttonRound'>分享给朋友</div>
+  <div style="background-color:rgb(255,73,73)" class='camera button buttonRound'>拍摄</div>
+  <form>
+      <!-- <input type="file" multiple /> -->
+      
+        <input id='upload' type="file" accept="image/*" capture="camera">
+  </form>
+  </div>
+  <div class="scene">
+    <div class="scene-text">
+      哥伦比亚带你游太空
+    </div>
+    <div class="scene-btn-region">
+      <div class="scene-btn button buttonRound">
+       开始
+      </div>
+       <div style="display:none;background-color:rgb(255,73,73)" class="finalShow button buttonRound buttonRight">
+        晒一下
+      </div> 
+
+      <div style="display:none;background-color:rgb(98,109,255)" class="download button buttonRound buttonLeft">
+      下载照片
+      </div> 
+    </div>
+     <div class='buttonBottomRegion'>
+         <div id='begin' style="background-color:rgb(255,109,98)" class='button buttonRound buttonLeft'>返回</div>
+         <div id='follow' style="background-color:rgb(64,180,89)" class='button buttonRound buttonRight'>关注我们，一起飞！</div>
+      </div>
+  </div>
+  <div class="cover loading">
+  </div>
+   <div class='shareoverlay'>
+    <div class='finger'>
+      <img src='/static/games/ch17/images/finger.png'/>
+      <div>点击分享</div>
+    </div>
+    </div>
+  <div id="debug"></div>
+ <script>
+  
+  var initialStatus = 0;
+  var shotingStatus = 1;
+  var shottedStatus = 2;
+
+  var canvas, stage;
     var visitCount = $params.get('visitCount');
-	var mouseTarget;	// the display object currently under the mouse, or being dragged
-	var dragStarted;	// indicates whether we are currently in a drag operation
-	var offset;
-	var update = true;
-	var Config = {};
-	Config.pixelRatio = window.devicePixelRatio || 1;
-	Config.effects = 0;
-	Config.personContainer = 0;
-	Config.status = initialStatus;
-	var createImage = false;
-	var currentZoomRatio = 1.0;
-	var minZoomRatio = 0.2;
-	var maxZoomRatio = 3.0;
+  var mouseTarget;  // the display object currently under the mouse, or being dragged
+  var dragStarted;  // indicates whether we are currently in a drag operation
+  var offset;
+  var update = true;
+  var Config = {};
+  Config.pixelRatio = window.devicePixelRatio || 1;
+  Config.effects = 0;
+  Config.personContainer = 0;
+  Config.status = initialStatus;
+  var createImage = false;
+  var currentZoomRatio = 1.0;
+  var minZoomRatio = 0.2;
+  var maxZoomRatio = 3.0;
     var infoCount = 0;
     Config.helmet = 0;
 
 
     function getURLParameter(name) {
- 		 return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
-	}
-	function getCurrentURL(){
-		var qPos = window.location.href.indexOf("?");
-		if(qPos > -1){
-			return window.location.href.substring(0, qPos);
-		}
-		return window.location.href;
-	}
+     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+  }
+  function getCurrentURL(){
+    var qPos = window.location.href.indexOf("?");
+    if(qPos > -1){
+      return window.location.href.substring(0, qPos);
+    }
+    return window.location.href;
+  }
     var oldPhoto = getURLParameter("url");
     function startLoading(){
-    	$$(".cover").fadeIn();
-    	Pace.start();
+      $$(".cover").fadeIn();
+      Pace.start();
     }
 
     function showScene(text, buttonTitle, clickFunction, layerColor){
-    	$$('.scene').fadeIn();
-    	$$('.scene-text')[0].innerHTML = text;
+      $$('.scene').fadeIn();
+      $$('.scene-text')[0].innerHTML = text;
       if(! buttonTitle){
         $$('.scene-btn').hide();
       }else{
         $$('.scene-btn').show();
-    	$$('.scene-btn')[0].innerHTML = buttonTitle;
-    	$$('.scene-btn')[0].style["background-color"] = "rgb(255,73,73)" //buttonColor;
-    	Config.sceneFunction = clickFunction;
-    	$$('.div-bottom').hide();
+      $$('.scene-btn')[0].innerHTML = buttonTitle;
+      $$('.scene-btn')[0].style["background-color"] = "rgb(255,73,73)" //buttonColor;
+      Config.sceneFunction = clickFunction;
+      $$('.div-bottom').hide();
       }
     }
 
     function hideScene(){
-    	$$('.scene').fadeOut();
-    	$$('.div-bottom').fadeIn();
-    	if(Config.status == initialStatus){
-    		$$('.share').hide();
-    		$$('.confirm').hide();
-    	}else if(Config.status == shottedStatus){
-    		$$('.share')[0].innerHTML = "保存";
-    		$$('.share').show();
-    		$$('.confirm').show();
-    		$$('.camera')[0].innerHTML = "重拍";
-    	}
+      $$('.scene').fadeOut();
+      $$('.div-bottom').fadeIn();
+      $$('.finalShow').hide();
+      $$('.download').hide();
+      $$('#begin').hide();
+      $$('#follow').hide();
+      if(Config.status == initialStatus){
+        $$('.share').hide();
+        $$('.confirm').hide();
+      }else if(Config.status == shottedStatus){
+        $$('.share')[0].innerHTML = "保存";
+        $$('.share').show();
+        $$('.confirm').show();
+        $$('.camera')[0].innerHTML = "重拍";
+      }
     }
     function stopLoading(){
-    	$$(".cover").fadeOut();
-    	Pace.stop();
+      $$(".cover").fadeOut();
+      Pace.stop();
     }
-	function debug(info){
-		/**
-		
-		infoCount += 1;
-		if(infoCount > 4){
-			$$("#debug")[0].innerHTML = "";
-			infoCount=0;
-		}
-		$$("#debug")[0].innerHTML = info+"<br/>"+$$("#debug")[0].innerHTML;
-		**/
-	}
-
-	
-	function uploadImage(cvs, success, progress)
-	{
-	
-	var xhr = new XMLHttpRequest();
-	if (xhr.upload) {
-		// Update progress
-		xhr.upload.addEventListener('progress', function(event) {
-			var percent = parseInt(event.loaded / event.total * 100);
-			debug('uploading');
-			//progressElement.style.width = percent+'%';
-			if(progress){
-				progress(percent);
-			}
-		}, false);
+  function debug(info){
+    /**
+    
+    infoCount += 1;
+    if(infoCount > 4){
+      $$("#debug")[0].innerHTML = "";
+      infoCount=0;
     }
-						// File uploaded / failed
-	xhr.onreadystatechange = function(event) {
-				debug('ajax status:'+xhr.readyState+",status:"+xhr.status+", success:"+success);
-				if (xhr.readyState == 4) {
-					if (xhr.status == 200) {
-						if(success){
-							success(xhr.responseText);
-						}
-						debug(xhr.responseText);
-					} else {
-									//imageElement.parentNode.removeChild(imageElement);
-					}
-				}
-	}
-		// Start upload
-	xhr.open('post', '/raw/upload', true);
-	xhr.send(cvs.toDataURL('image/jpeg'));
-	}
-	function createSelectFrame(canvas, stage)
-	{
-		var star = new createjs.Shape();
-		// the mask's position will be relative to the parent of its target:
-		star.width = 300;
-		star.height = star.width;
-		star.x = (canvas.width - star.width)/2.0-20;
-		star.y = 204;
-		
-		// only the drawPolyStar call is needed for the mask to work:
-		//star.graphics.beginStroke("#FFA080").setStrokeStyle(5).drawRect(0,0,star.width,star.height).closePath();
-		//drawCircle
-		star.graphics.beginStroke("#FFA080").setStrokeStyle(15).drawCircle(star.width/2.0,star.width/2.0,star.width/2.0).closePath();
-		Config.selectFrame = star;
-		stage.addChild(star);
-		console.log('Complete the frame movement');
-	}
+    $$("#debug")[0].innerHTML = info+"<br/>"+$$("#debug")[0].innerHTML;
+    **/
+  }
 
-	function enhanceContext(context, innertHeight, innerWidth) {
+  
+  function uploadImage(cvs, success, progress)
+  {
+  
+  var xhr = new XMLHttpRequest();
+  if (xhr.upload) {
+    // Update progress
+    xhr.upload.addEventListener('progress', function(event) {
+      var percent = parseInt(event.loaded / event.total * 100);
+      debug('uploading');
+      //progressElement.style.width = percent+'%';
+      if(progress){
+        progress(percent);
+      }
+    }, false);
+    }
+            // File uploaded / failed
+  xhr.onreadystatechange = function(event) {
+        debug('ajax status:'+xhr.readyState+",status:"+xhr.status+", success:"+success);
+        if (xhr.readyState == 4) {
+          if (xhr.status == 200) {
+            if(success){
+              success(xhr.responseText);
+            }
+            debug(xhr.responseText);
+          } else {
+                  //imageElement.parentNode.removeChild(imageElement);
+          }
+        }
+  }
+    // Start upload
+  xhr.open('post', '/raw/upload', true);
+  xhr.send(cvs.toDataURL('image/jpeg'));
+  }
+  function createSelectFrame(canvas, stage)
+  {
+    var star = new createjs.Shape();
+    // the mask's position will be relative to the parent of its target:
+    star.width = 300;
+    star.height = star.width;
+    star.x = (canvas.width - star.width)/2.0-20;
+    star.y = 204;
+    
+    // only the drawPolyStar call is needed for the mask to work:
+    //star.graphics.beginStroke("#FFA080").setStrokeStyle(5).drawRect(0,0,star.width,star.height).closePath();
+    //drawCircle
+    star.graphics.beginStroke("#FFA080").setStrokeStyle(15).drawCircle(star.width/2.0,star.width/2.0,star.width/2.0).closePath();
+    Config.selectFrame = star;
+    stage.addChild(star);
+    console.log('Complete the frame movement');
+  }
+
+  function enhanceContext(context, innertHeight, innerWidth) {
           innertHeight = innertHeight;
           var canvas = document.getElementById('testCanvas');
           var ratio = Config.pixelRatio;
@@ -481,130 +502,130 @@ $def with (params)
           context.scale(ratio, ratio);
           update = true;
      } 
-	$$(window).resize(function() {
+  $$(window).resize(function() {
         enhanceContext(Config.ctx, window.innerHeight, window.innerWidth);
         console.log('resize inner height:'+window.innerHeight+", Q height:"+window.innerWidth);
       });
 
 
-	Config.updateHead = function(img){
-			//console.log('image upload successfully');
-			//alert('image uploaded');
-			if(Config.headImage){
-				Config.stage.removeChild(Config.headImage);
-			}
-			Config.headImage = new createjs.Bitmap(img);
-			Config.stage.addChild(Config.headImage);
-			var imageRatio = img.height/img.width;
-			Config.headImage.width = img.width;//img.width>canvas.width?canvas.width:img.width;
-			Config.headImage.height = img.height; //Config.headImage.width * imageRatio;
-			Config.headImage.regX = img.width/2.0;
-			Config.headImage.regY = img.height/2.0;
-			Config.headImage.x = img.width/2.0 + (canvas.width - img.width)/2.0;
-			Config.headImage.y = img.height/2.0 + 0;
-			//headImage.rotation = 90;
-			Config.headImage.on("mousedown", function(evt) {
-				//alert('touch start');
-				console.log('mouse down');
-				//this.parent.addChild(this);
-				var orgEvent = evt.nativeEvent;
-				if(!orgEvent.touches || orgEvent.touches.length == 1){
-					this.offset = {x:this.x-evt.stageX, y:this.y-evt.stageY};
-					Config.headImage.preDist = 0;
-				}else if(orgEvent.touches.length == 2){
-					var e = orgEvent;
-					Config.headImage.preDist = Math.sqrt(
-    				(e.touches[0].pageX-e.touches[1].pageX) * (e.touches[0].pageX-e.touches[1].pageX) +
-    				(e.touches[0].pageY-e.touches[1].pageY) * (e.touches[0].pageY-e.touches[1].pageY));
-    				debug("org dist:"+Config.headImage.preDist+"x,x"+e.touches[0].pageX+","+e.touches[1].pageX);
-				}
-				//this.cursor = "pointer";
-			});
-			//the pressmove event is dispatched when the mouse moves after a mousedown on the target until the mouse is released.
-			Config.headImage.on("pressmove", function(evt) {
-				//alert('touch move');
-				var e = evt.nativeEvent;
-				//debug("move org touch count:"+e.touches.length+","+Config.headImage.preDist);
-				if(!e.touches || e.touches.length == 1){
-					this.x = evt.stageX+ this.offset.x;
-					this.y = evt.stageY+ this.offset.y;
-				}else if(e.touches.length == 2){
-					var curDist = Math.sqrt(
-    				(e.touches[0].pageX-e.touches[1].pageX) * (e.touches[0].pageX-e.touches[1].pageX) +
-    				(e.touches[0].pageY-e.touches[1].pageY) * (e.touches[0].pageY-e.touches[1].pageY));
-    				if(!Config.headImage.preDist){
-    					Config.headImage.preDist = curDist;
-    				}
-    				var ratio = curDist/Config.headImage.preDist;
-    				Config.headImage.preDist = curDist;
-    				debug("ratio:" + ratio + ",scale:"+Config.headImage.scaleX);
-    				var scale = ratio - 1.0;
-    				var curScale = Config.headImage.scaleX + scale;
-    				if(curScale > maxZoomRatio){
-    					curScale = maxZoomRatio;
-    				}else if(curScale < minZoomRatio){
-    					curScale = minZoomRatio;
-    				}
-    				Config.headImage.scaleX = curScale;
-    				Config.headImage.scaleY = curScale;
-				}	
-				// indicate that the stage should be updated on the next tick:
-				update = true;
-			});
+  Config.updateHead = function(img){
+      //console.log('image upload successfully');
+      //alert('image uploaded');
+      if(Config.headImage){
+        Config.stage.removeChild(Config.headImage);
+      }
+      Config.headImage = new createjs.Bitmap(img);
+      Config.stage.addChild(Config.headImage);
+      var imageRatio = img.height/img.width;
+      Config.headImage.width = img.width;//img.width>canvas.width?canvas.width:img.width;
+      Config.headImage.height = img.height; //Config.headImage.width * imageRatio;
+      Config.headImage.regX = img.width/2.0;
+      Config.headImage.regY = img.height/2.0;
+      Config.headImage.x = img.width/2.0 + (canvas.width - img.width)/2.0;
+      Config.headImage.y = img.height/2.0 + 0;
+      //headImage.rotation = 90;
+      Config.headImage.on("mousedown", function(evt) {
+        //alert('touch start');
+        console.log('mouse down');
+        //this.parent.addChild(this);
+        var orgEvent = evt.nativeEvent;
+        if(!orgEvent.touches || orgEvent.touches.length == 1){
+          this.offset = {x:this.x-evt.stageX, y:this.y-evt.stageY};
+          Config.headImage.preDist = 0;
+        }else if(orgEvent.touches.length == 2){
+          var e = orgEvent;
+          Config.headImage.preDist = Math.sqrt(
+            (e.touches[0].pageX-e.touches[1].pageX) * (e.touches[0].pageX-e.touches[1].pageX) +
+            (e.touches[0].pageY-e.touches[1].pageY) * (e.touches[0].pageY-e.touches[1].pageY));
+            debug("org dist:"+Config.headImage.preDist+"x,x"+e.touches[0].pageX+","+e.touches[1].pageX);
+        }
+        //this.cursor = "pointer";
+      });
+      //the pressmove event is dispatched when the mouse moves after a mousedown on the target until the mouse is released.
+      Config.headImage.on("pressmove", function(evt) {
+        //alert('touch move');
+        var e = evt.nativeEvent;
+        //debug("move org touch count:"+e.touches.length+","+Config.headImage.preDist);
+        if(!e.touches || e.touches.length == 1){
+          this.x = evt.stageX+ this.offset.x;
+          this.y = evt.stageY+ this.offset.y;
+        }else if(e.touches.length == 2){
+          var curDist = Math.sqrt(
+            (e.touches[0].pageX-e.touches[1].pageX) * (e.touches[0].pageX-e.touches[1].pageX) +
+            (e.touches[0].pageY-e.touches[1].pageY) * (e.touches[0].pageY-e.touches[1].pageY));
+            if(!Config.headImage.preDist){
+              Config.headImage.preDist = curDist;
+            }
+            var ratio = curDist/Config.headImage.preDist;
+            Config.headImage.preDist = curDist;
+            debug("ratio:" + ratio + ",scale:"+Config.headImage.scaleX);
+            var scale = ratio - 1.0;
+            var curScale = Config.headImage.scaleX + scale;
+            if(curScale > maxZoomRatio){
+              curScale = maxZoomRatio;
+            }else if(curScale < minZoomRatio){
+              curScale = minZoomRatio;
+            }
+            Config.headImage.scaleX = curScale;
+            Config.headImage.scaleY = curScale;
+        } 
+        // indicate that the stage should be updated on the next tick:
+        update = true;
+      });
 
-			/**
-			Config.headImage.on('gestureend', function(e) {
-				debug("gestureend started");
-   				 if (e.scale < 1.0) {
-        				// User moved fingers closer together
-        				debug("pinch ratio:"+e.scale);
-    			} else if (e.scale > 1.0) {
-        				// User moved fingers further apart
-        				debug("pich ratio:"+e.scale);
-    			}
-			}, false);
+      /**
+      Config.headImage.on('gestureend', function(e) {
+        debug("gestureend started");
+           if (e.scale < 1.0) {
+                // User moved fingers closer together
+                debug("pinch ratio:"+e.scale);
+          } else if (e.scale > 1.0) {
+                // User moved fingers further apart
+                debug("pich ratio:"+e.scale);
+          }
+      }, false);
 **/
-			Config.stage.addChild(Config.selectFrame);
-			update = true;
-	};
+      Config.stage.addChild(Config.selectFrame);
+      update = true;
+  };
 
-	function setMask(mk){
-		$$(".confirm")[0].innerHTML =mk?"复原":"预览";
-		Config.headImage.mask = mk;
-		if(mk){
-			Config.stage.addChild(Config.helmet);
-			//Config.stage.removeChild(Config.selectFrame);
-		}else{
-			Config.stage.removeChild(Config.helmet);
-		}
-	};
+  function setMask(mk){
+    $$(".confirm")[0].innerHTML =mk?"复原":"预览";
+    Config.headImage.mask = mk;
+    if(mk){
+      Config.stage.addChild(Config.helmet);
+      //Config.stage.removeChild(Config.selectFrame);
+    }else{
+      Config.stage.removeChild(Config.helmet);
+    }
+  };
 
-	function hideOldPhoto(){
-		if(Config.oldImage){
-			Config.stage.removeChild(Config.oldImage);
-			update = true;
-			Config.oldImage = 0;
-		}
-	}
-	function init() {
-		if (window.top != window) {
-			document.getElementById("header").style.display = "none";
-		}
-		//document.getElementById("loader").className = "loader";
-		// create stage and point it to the canvas:
-		canvas = document.getElementById("testCanvas");
-		stage = new createjs.Stage(canvas);
-		Config.stage = stage
-		Config.ctx = canvas.getContext("2d");
-		debug(getCurrentURL());
-		debug(getURLParameter("url"));
-		startLoading();
-		// enable touch interactions if supported on the current device:
-		createjs.Touch.enable(stage);
-		// enabled mouse over / out events
-		stage.enableMouseOver(10);
-		stage.mouseMoveOutside = true; // keep tracking the mouse even when it leaves the canvas
-		$$('#begin').on("mousedown", function(evt){
+  function hideOldPhoto(){
+    if(Config.oldImage){
+      Config.stage.removeChild(Config.oldImage);
+      update = true;
+      Config.oldImage = 0;
+    }
+  }
+  function init() {
+    if (window.top != window) {
+      document.getElementById("header").style.display = "none";
+    }
+    //document.getElementById("loader").className = "loader";
+    // create stage and point it to the canvas:
+    canvas = document.getElementById("testCanvas");
+    stage = new createjs.Stage(canvas);
+    Config.stage = stage
+    Config.ctx = canvas.getContext("2d");
+    debug(getCurrentURL());
+    debug(getURLParameter("url"));
+    startLoading();
+    // enable touch interactions if supported on the current device:
+    createjs.Touch.enable(stage);
+    // enabled mouse over / out events
+    stage.enableMouseOver(10);
+    stage.mouseMoveOutside = true; // keep tracking the mouse even when it leaves the canvas
+    $$('#begin').on("mousedown", function(evt){
       Config.status = initialStatus;
       hideScene();
       hideOldPhoto();
@@ -613,280 +634,290 @@ $def with (params)
       document.location.href = 'http://mp.weixin.qq.com/s?__biz=MjM5Njc5Njg1Mw==&mid=200691257&idx=1&sn=b7195c7c440fd3ff37d685b6c7440e9b&scene=100';
     });
     $$('.scene-btn').on("mousedown", function(evt){
-			if(Config.sceneFunction){
-				Config.sceneFunction(evt);
-			}
-		});
-		if(oldPhoto){
+      if(Config.sceneFunction){
+        Config.sceneFunction(evt);
+      }
+    });
+    if(oldPhoto){
        $$(".scene")[0].style['background-color'] = "rgba(30,30,30,0.4)";
       if(visitCount > 1){
-        showScene("Wow，恭喜成为预备宇航员，<br/> 2014，大悲乐队携手自由联合。哥伦比亚计划带你飞向太空", "晒一下", function(evt){
-          document.title = "我已通过宇航员培训，你也来试试";
+
+        $$('.finalShow').show().on('mousedown', function(evt){
+           shareScreen();
+          $$(".scene")[0].style['background-color'] = "rgba(30,30,30,0.8)";
+        });
+        $$('.download').show().on('mousedown', function(evt){
+            document.location.href = oldPhoto;
+        });
+
+        document.title = "我已通过宇航员速成培训，你也来试试";
+        showScene("Wow，恭喜成为预备宇航员，<br/> 2014，大悲乐队携手自由联合。哥伦比亚计划带你飞向太空。发送照片至大悲乐队公共微信，我们将带着你的照片飞向太空！", "晒一下", function(evt){
           shareScreen();
           $$(".scene")[0].style['background-color'] = "rgba(30,30,30,0.8)";
         }, "rgb(255, 73, 73)");
+        $$('.scene-btn').hide();
         $$('.buttonBottomRegion').fadeIn();
       }else{
-			showScene("你的朋友已通过宇航员培训，你也来试试, 宇航员速成培训第一步:首先拍摄一张照片","拍摄", function(evt){
-				hideOldPhoto();
-				$$("#upload").click();
-				hideScene();
+      showScene("你的朋友已通过宇航员培训，你也来试试, 宇航员速成培训第一步:首先拍摄一张照片","拍摄", function(evt){
+        hideOldPhoto();
+        $$("#upload").click();
+        hideScene();
         $$(".scene")[0].style['background-color'] = "rgba(30,30,30,0.8)";
-				Config.status = shotingStatus;
-			}, "rgb(252,73,73)");
+        Config.status = shotingStatus;
+      }, "rgb(252,73,73)");
     }
-		}else{
-			showScene("宇航员速成培训第一步:先拍摄一张照片","拍摄", function(evt){
-				hideOldPhoto();
-				$$("#upload").click();
-				hideScene();
-				Config.status = shotingStatus;
-			}, "rgb(252,73,73)");
-		}
-		$$(".camera").on("mousedown", function(evt){
-			//alert('trigger upload');
-			debug("camera clicked");
-			hideOldPhoto();
-			$$("#upload").click();
-		});
-		$$(".zoomin").on("mousedown", function(evt){
-			//console.log('zoomin clicked');
-			debug("zoomin clicked");
-			//stopLoading();
-			if(!Config.headImage){
-				return;
-			}
-			currentZoomRatio += 0.1;
-			if(currentZoomRatio > maxZoomRatio){
-				currentZoomRatio = maxZoomRatio;
-			}
-			Config.headImage.scaleX = currentZoomRatio;
-			Config.headImage.scaleY = currentZoomRatio;
-			update = true;
-		});
+    }else{
+      showScene("宇航员速成培训第一步:先拍摄一张照片","拍摄", function(evt){
+        hideOldPhoto();
+        $$("#upload").click();
+        hideScene();
+        Config.status = shotingStatus;
+      }, "rgb(252,73,73)");
+    }
+    $$(".camera").on("mousedown", function(evt){
+      //alert('trigger upload');
+      debug("camera clicked");
+      hideOldPhoto();
+      $$("#upload").click();
+    });
+    $$(".zoomin").on("mousedown", function(evt){
+      //console.log('zoomin clicked');
+      debug("zoomin clicked");
+      //stopLoading();
+      if(!Config.headImage){
+        return;
+      }
+      currentZoomRatio += 0.1;
+      if(currentZoomRatio > maxZoomRatio){
+        currentZoomRatio = maxZoomRatio;
+      }
+      Config.headImage.scaleX = currentZoomRatio;
+      Config.headImage.scaleY = currentZoomRatio;
+      update = true;
+    });
 
-		$$(".rotate").on("mousedown", function(evt){
-			if(!Config.headImage){
-				//return;
-			}
-			//currentR += 0.1;
-			//if(currentZoomRatio > maxZoomRatio){
-			//	currentZoomRatio = maxZoomRatio;
-			//}
-			//Config.headImage.x = -Config.headImage.width/2.0;
-			//Config.headImage.y = -Config.headImage.height/2.0;
-			var oldX = Config.headImage.x;
-			var oldY = Config.headImage.y;
-			Config.headImage.rotation = Config.headImage.rotation + 90;
-			debug("oldX/oldY:"+oldX+"/"+oldY+",x/y:"+Config.headImage.x+","+Config.headImage.y);
+    $$(".rotate").on("mousedown", function(evt){
+      if(!Config.headImage){
+        //return;
+      }
+      //currentR += 0.1;
+      //if(currentZoomRatio > maxZoomRatio){
+      //  currentZoomRatio = maxZoomRatio;
+      //}
+      //Config.headImage.x = -Config.headImage.width/2.0;
+      //Config.headImage.y = -Config.headImage.height/2.0;
+      var oldX = Config.headImage.x;
+      var oldY = Config.headImage.y;
+      Config.headImage.rotation = Config.headImage.rotation + 90;
+      debug("oldX/oldY:"+oldX+"/"+oldY+",x/y:"+Config.headImage.x+","+Config.headImage.y);
 
-			//Config.headImage.scaleY = currentZoomRatio;
-			update = true;
-		});
-		$$(".zoomout").on("mousedown", function(evt){
-			//console.log('zoomout clicked');
-			debug("zoom out clicked");
-			if(!Config.headImage){
-				return;
-			}
-			//startLoading();
-			currentZoomRatio -= 0.1;
-			if(currentZoomRatio < minZoomRatio){
-				currentZoomRatio = minZoomRatio;
-			}
-			Config.headImage.scaleX = currentZoomRatio;
-			Config.headImage.scaleY = currentZoomRatio;
-			update = true;
-		});
+      //Config.headImage.scaleY = currentZoomRatio;
+      update = true;
+    });
+    $$(".zoomout").on("mousedown", function(evt){
+      //console.log('zoomout clicked');
+      debug("zoom out clicked");
+      if(!Config.headImage){
+        return;
+      }
+      //startLoading();
+      currentZoomRatio -= 0.1;
+      if(currentZoomRatio < minZoomRatio){
+        currentZoomRatio = minZoomRatio;
+      }
+      Config.headImage.scaleX = currentZoomRatio;
+      Config.headImage.scaleY = currentZoomRatio;
+      update = true;
+    });
 
 
-		$$(".confirm").on("mousedown", function(evt){
-			//alert('confirmed');
-			debug('confirm adjust');
-			hideOldPhoto();
-			if(!Config.headImage){
-				return;
-			}
-			if(Config.headImage.mask){
-				//Config.headImage.mask = 0;
-				//$$(".confirm")[0].innerHTML = "预览";
-				setMask(0);
-			}else{
-				//Config.headImage.mask = Config.selectFrame;
-				//$$(".confirm")[0].innerHTML = "复原";
-				setMask(Config.selectFrame);
-			}
-			//startLoading();
-			update = true;
-		});
+    $$(".confirm").on("mousedown", function(evt){
+      //alert('confirmed');
+      debug('confirm adjust');
+      hideOldPhoto();
+      if(!Config.headImage){
+        return;
+      }
+      if(Config.headImage.mask){
+        //Config.headImage.mask = 0;
+        //$$(".confirm")[0].innerHTML = "预览";
+        setMask(0);
+      }else{
+        //Config.headImage.mask = Config.selectFrame;
+        //$$(".confirm")[0].innerHTML = "复原";
+        setMask(Config.selectFrame);
+      }
+      //startLoading();
+      update = true;
+    });
 
-		$$(".share").on("mousedown", function(evt){
-			//alert('share clicked');
-			debug("share clicked");
-			startLoading();
+    $$(".share").on("mousedown", function(evt){
+      //alert('share clicked');
+      debug("share clicked");
+      startLoading();
       showScene("正在保存....",0,0,0);
-			createImage = true;
-			update = true;
-		});
-		// load the source image:
-		//var image = new Image();
-		//image.src = "assets/daisy.png";
-		//image.onload = handleImageLoad;
+      createImage = true;
+      update = true;
+    });
+    // load the source image:
+    //var image = new Image();
+    //image.src = "assets/daisy.png";
+    //image.onload = handleImageLoad;
 
-		var himg = new Image();
-		himg.src = "/static/games/assets/helmet.png";
-		himg.onload = function(event){
-			var image = event.target;
-			Config.personContainer = new createjs.Container();
-			stage.addChild(Config.personContainer);
-			var container = new createjs.Container();
-			Config.container = container;
-			stage.addChild(container);
-			// create and populate the screen with random daisies:
-			document.getElementById("loader").className = "";
-			createjs.Ticker.addEventListener("tick", tick);
-			Config.helmet = new createjs.Bitmap(image);
-			Config.container.addChild(Config.helmet);
-			Config.helmet.x = (canvas.width - image.width)/2.0;
-			Config.helmet.y = 0;
-			Config.container.removeChild(Config.helmet);
-			createSelectFrame(canvas, stage);
+    var himg = new Image();
+    himg.src = "/static/games/assets/helmet.png";
+    himg.onload = function(event){
+      var image = event.target;
+      Config.personContainer = new createjs.Container();
+      stage.addChild(Config.personContainer);
+      var container = new createjs.Container();
+      Config.container = container;
+      stage.addChild(container);
+      // create and populate the screen with random daisies:
+      document.getElementById("loader").className = "";
+      createjs.Ticker.addEventListener("tick", tick);
+      Config.helmet = new createjs.Bitmap(image);
+      Config.container.addChild(Config.helmet);
+      Config.helmet.x = (canvas.width - image.width)/2.0;
+      Config.helmet.y = 0;
+      Config.container.removeChild(Config.helmet);
+      createSelectFrame(canvas, stage);
 
-			if(oldPhoto){
-				var oldImg = new Image();
-				oldImg.src = oldPhoto;
-				oldImg.onload = function(event){
-					Config.oldImage = new createjs.Bitmap(event.target);
-					Config.oldImage.x = (canvas.width - image.width)/2.0;
-					Config.oldImage.y = 0;
-					stage.addChild(Config.oldImage);
-					Config.oldImage.on("mousedown", function(evt){
-						stage.removeChild(Config.oldImage);
-						document.location.href = oldPhoto;
-						Config.oldImage = 0;
-						update = true;
-					});
-					//Config.oldImage.on("mousedown", function(evt){
-					//});
-					/**
-					var element = document.createElement('div');
-      				element.id = "overlay";
-      				document.body.appendChild(element);
+      if(oldPhoto){
+        var oldImg = new Image();
+        oldImg.src = oldPhoto;
+        oldImg.onload = function(event){
+          Config.oldImage = new createjs.Bitmap(event.target);
+          Config.oldImage.x = (canvas.width - image.width)/2.0;
+          Config.oldImage.y = 0;
+          stage.addChild(Config.oldImage);
+          Config.oldImage.on("mousedown", function(evt){
+            stage.removeChild(Config.oldImage);
+            document.location.href = oldPhoto;
+            Config.oldImage = 0;
+            update = true;
+          });
+          //Config.oldImage.on("mousedown", function(evt){
+          //});
+          /**
+          var element = document.createElement('div');
+              element.id = "overlay";
+              document.body.appendChild(element);
 
-      				$$(element).on("mousedown", function(evt){
-      					debug("remove overlay");
-      					stage.removeChild(Config.oldImage);
-      					$$(element).fadeOut();
-      					update = true;
-      				});
-					**/
-      				update = true;
-				};
-			}
-			update = true;
-			stopLoading();
-		};
+              $$(element).on("mousedown", function(evt){
+                debug("remove overlay");
+                stage.removeChild(Config.oldImage);
+                $$(element).fadeOut();
+                update = true;
+              });
+          **/
+              update = true;
+        };
+      }
+      update = true;
+      stopLoading();
+    };
 
 
-		enhanceContext(Config.ctx, window.innerHeight, window.innerWidth);
-		
-		$$('#upload').on('change', function(event){
-    			//console.log("change get called");
-				// Read files
-				debug("upload cliked");
-				//startLoading();
-				var files = event.target.files;
-				if(files.length > 0){
-					showScene("宇航员速成计划第二步：调整照片位置，缩放照片大小，把头的位置放到圆圈中央，点击预览查看效果","开始调整",function(evt){
-						//alert("second step");
-						Config.status = shottedStatus;
-						hideScene();
-					}, "rgb(255, 73, 73)");
-				}
-				//alert("file count:"+files.length+',type:'+files[0].type);
-	// Iterate through files
-				for (var i = 0; i < files.length; i++) {	
+    enhanceContext(Config.ctx, window.innerHeight, window.innerWidth);
+    
+    $$('#upload').on('change', function(event){
+          //console.log("change get called");
+        // Read files
+        debug("upload cliked");
+        //startLoading();
+        var files = event.target.files;
+        if(files.length > 0){
+          showScene("宇航员速成计划第二步：调整照片位置，缩放照片大小，把头的位置放到圆圈中央，点击预览可查看效果","开始调整",function(evt){
+            //alert("second step");
+            Config.status = shottedStatus;
+            hideScene();
+          }, "rgb(255, 73, 73)");
+        }
+        //alert("file count:"+files.length+',type:'+files[0].type);
+  // Iterate through files
+        for (var i = 0; i < files.length; i++) {  
 
-		// Ensure it's an image
-					if (files[i].type.match(/image.*/)) {
+    // Ensure it's an image
+          if (files[i].type.match(/image.*/)) {
 
-			// Load image
-						//alert("before upload image:");
-						var reader = new FileReader();
-						reader.onload = function (readerEvent) {
-						debug("selected the image");
-						var image = new Image();
-						image.onload = function (imageEvent) {
-							var width = image.width;
-							var height = image.height;
-							debug("image loaded width/height:"+width + "/" + height);
-							Config.head = image;
-							Config.updateHead(image);
-							//stopLoading();
+      // Load image
+            //alert("before upload image:");
+            var reader = new FileReader();
+            reader.onload = function (readerEvent) {
+            debug("selected the image");
+            var image = new Image();
+            image.onload = function (imageEvent) {
+              var width = image.width;
+              var height = image.height;
+              debug("image loaded width/height:"+width + "/" + height);
+              Config.head = image;
+              Config.updateHead(image);
+              //stopLoading();
 
-						}
+            }
 
-						image.src = readerEvent.target.result;
+            image.src = readerEvent.target.result;
 
-						}
-						//debug("before read data URL");
-						reader.readAsDataURL(files[i]);
-						//debug("complete image read");
-					}
+            }
+            //debug("before read data URL");
+            reader.readAsDataURL(files[i]);
+            //debug("complete image read");
+          }
 
-				}
-	// Clear files
-				event.target.value = '';
-			});
-	}
+        }
+  // Clear files
+        event.target.value = '';
+      });
+  }
 
-	function stop() {
-		createjs.Ticker.removeEventListener("tick", tick);
-	}
+  function stop() {
+    createjs.Ticker.removeEventListener("tick", tick);
+  }
 
-	function showFlower(){
-		for(var i = 0; i < 100; i++){
-			bitmap = new createjs.Bitmap(image);
-			container.addChild(bitmap);
-			bitmap.x = canvas.width * Math.random()|0;
-			bitmap.y = canvas.height * Math.random()|0;
-			bitmap.rotation = 360 * Math.random()|0;
-			bitmap.regX = bitmap.image.width/2|0;
-			bitmap.regY = bitmap.image.height/2|0;
-			bitmap.scaleX = bitmap.scaleY = bitmap.scale = Math.random()*0.4+0.6;
-			bitmap.name = "bmp_"+i;
-			bitmap.cursor = "pointer";
-			
-			// using "on" binds the listener to the scope of the currentTarget by default
-			// in this case that means it executes in the scope of the button.
-			bitmap.on("mousedown", function(evt) {
-				//alert('touch start');
-				this.parent.addChild(this);
-				this.offset = {x:this.x-evt.stageX, y:this.y-evt.stageY};
-			});
+  function showFlower(){
+    for(var i = 0; i < 100; i++){
+      bitmap = new createjs.Bitmap(image);
+      container.addChild(bitmap);
+      bitmap.x = canvas.width * Math.random()|0;
+      bitmap.y = canvas.height * Math.random()|0;
+      bitmap.rotation = 360 * Math.random()|0;
+      bitmap.regX = bitmap.image.width/2|0;
+      bitmap.regY = bitmap.image.height/2|0;
+      bitmap.scaleX = bitmap.scaleY = bitmap.scale = Math.random()*0.4+0.6;
+      bitmap.name = "bmp_"+i;
+      bitmap.cursor = "pointer";
+      
+      // using "on" binds the listener to the scope of the currentTarget by default
+      // in this case that means it executes in the scope of the button.
+      bitmap.on("mousedown", function(evt) {
+        //alert('touch start');
+        this.parent.addChild(this);
+        this.offset = {x:this.x-evt.stageX, y:this.y-evt.stageY};
+      });
 
-			
-			// the pressmove event is dispatched when the mouse moves after a mousedown on the target until the mouse is released.
-			bitmap.on("pressmove", function(evt) {
-				//alert('touch move');
-				this.x = evt.stageX+ this.offset.x;
-				this.y = evt.stageY+ this.offset.y;
-				// indicate that the stage should be updated on the next tick:
-				update = true;
-			});
-			
-			bitmap.on("rollover", function(evt) {
-				this.scaleX = this.scaleY = this.scale*1.2;
-				update = true;
-			});
-			
-			bitmap.on("rollout", function(evt) {
-				this.scaleX = this.scaleY = this.scale;
-				update = true;
-			});
+      
+      // the pressmove event is dispatched when the mouse moves after a mousedown on the target until the mouse is released.
+      bitmap.on("pressmove", function(evt) {
+        //alert('touch move');
+        this.x = evt.stageX+ this.offset.x;
+        this.y = evt.stageY+ this.offset.y;
+        // indicate that the stage should be updated on the next tick:
+        update = true;
+      });
+      
+      bitmap.on("rollover", function(evt) {
+        this.scaleX = this.scaleY = this.scale*1.2;
+        update = true;
+      });
+      
+      bitmap.on("rollout", function(evt) {
+        this.scaleX = this.scaleY = this.scale;
+        update = true;
+      });
 
-		}
-	}
+    }
+  }
   function shareScreen()
   {
       $$('.shareoverlay').fadeIn();
@@ -896,82 +927,37 @@ $def with (params)
       });
   }
 
-	function tick(event) {
-		// this set makes it so the stage only re-renders when an event handler indicates a change has happened.
-		if (update) {
-			update = false; // only update once
-			stage.update(event);
-		}
-		if(createImage){
-			if(!Config.headImage){
-				stopLoading();
-				createImage = false;
-				return;
-			}
-			console.log("start create images");
-			createImage = false;
-			//Config.headImage.mask = Config.selectFrame;
-			setMask(Config.selectFrame);
-			stage.update(event);
-			uploadImage(canvas, function(url){
-				
-				document.location.href = getCurrentURL()+"?url="+encodeURIComponent(url);
-				debug("final document url:"+document.location.href);
-				stopLoading();
-				//stopLoading();
-			}, function(pt){
-				console.log('percent'+pt);
-				//console.log('update success');
-				//document.title = "哥伦比亚带你的照片上太空"
-				
-			});
-		}
-	}
-	</script>
-
-</head>
-
-<body onload="init();">
-
-	<div id="loader"></div>
-	<div class="canvasHolder">
-		<canvas id="testCanvas" width="320" height="568"></canvas>
-	</div>
-	<div class="zoomin"></div>
-	<div class="zoomout"></div>
-	<div class="rotate"></div>
-	<div class="div-bottom">
-	<div style="background-color:rgb(53,232,183)" class='confirm button buttonRound'>预览</div>
-	<div style="background-color:rgb(73,203,252)" class='share button buttonRound'>分享给朋友</div>
-	<div style="background-color:rgb(255,73,73)" class='camera button buttonRound'>拍摄</div>
-	<form>
-			<!-- <input type="file" multiple /> -->
-			
-		    <input id='upload' type="file" accept="image/*" capture="camera">
-	</form>
-	</div>
-	<div class="scene">
-		<div class="scene-text">
-			哥伦比亚带你游太空
-		</div>
-		<div class="scene-btn-region">
-		  <div class="scene-btn button buttonRound">
-			 开始
-		  </div>
-    </div>
-     <div class='buttonBottomRegion'>
-         <div id='begin' style="background-color:rgb(255,109,98)" class='button buttonRound buttonLeft'>返回</div>
-         <div id='follow' style="background-color:rgb(64,180,89)" class='button buttonRound buttonRight'>关注我们，一起飞！</div>
-      </div>
-	</div>
-	<div class="cover loading">
-	</div>
-	 <div class='shareoverlay'>
-    <div class='finger'>
-      <img src='/static/games/ch17/images/finger.png'/>
-      <div>点击分享</div>
-    </div>
-    </div>
-	<div id="debug"></div>
-</body>
+  function tick(event) {
+    // this set makes it so the stage only re-renders when an event handler indicates a change has happened.
+    if (update) {
+      update = false; // only update once
+      stage.update(event);
+    }
+    if(createImage){
+      if(!Config.headImage){
+        stopLoading();
+        createImage = false;
+        return;
+      }
+      console.log("start create images");
+      createImage = false;
+      //Config.headImage.mask = Config.selectFrame;
+      setMask(Config.selectFrame);
+      stage.update(event);
+      uploadImage(canvas, function(url){
+        
+        document.location.href = getCurrentURL()+"?url="+encodeURIComponent(url);
+        debug("final document url:"+document.location.href);
+        stopLoading();
+        //stopLoading();
+      }, function(pt){
+        console.log('percent'+pt);
+        //console.log('update success');
+        //document.title = "哥伦比亚带你的照片上太空"
+        
+      });
+    }
+  }
+  </script>
+  </body>
 </html>
