@@ -48,11 +48,11 @@ class Helmet:
         web.debug('visit count:%r' % cookie.visitCount)
         vcount = int(cookie.visitCount)
         vcount += 1
-        web.setcookie('visitCount',vcount, 3600)
+        web.setcookie('visitCount',vcount, 360000)
         if vcount == 1:
             MongoUtil.save("PhotoUsage", {"useCount":1})
         render = web.template.render('templates')
-        return "count %i" % vcount #render.photo({"visitCount":vcount})
+        return render.photo({"visitCount":vcount})
         
 class ScoreSupporter:
     def GET(self, cmd):
