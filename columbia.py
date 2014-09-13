@@ -52,7 +52,7 @@ class Helmet:
         if vcount == 1:
             MongoUtil.save("PhotoUsage", {"useCount":1})
         render = web.template.render('templates')
-        return render.photo({"visitCount":vcount})
+        return "count %i" % vcount #render.photo({"visitCount":vcount})
         
 class ScoreSupporter:
     def GET(self, cmd):
