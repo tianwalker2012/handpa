@@ -130,7 +130,9 @@ class RawUploader:
 
     def POST(self):
         #x = web.input(myfile={})
-        data = web.data()[23:].decode('base64')
+        #web.debug('data:%s', web.data()[:100]);
+        pos = web.data()[:50].find('base64,');
+        data = web.data()[pos+7:].decode('base64')
         #web.debug('data:%r' % data)
         
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'

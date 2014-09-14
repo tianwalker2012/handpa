@@ -647,7 +647,8 @@ $def with (params)
           $$(".scene")[0].style['background-color'] = "rgba(30,30,30,0.8)";
         });
         $$('.download').show().on('mousedown', function(evt){
-            document.location.href = oldPhoto;
+            //document.location.href = oldPhoto;
+            $$(".scene").fadeOut();
         });
 
         document.title = "我已通过宇航员速成培训，你也来试试";
