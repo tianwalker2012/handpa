@@ -594,9 +594,11 @@ $def with (params)
     Config.headImage.mask = mk;
     if(mk){
       Config.stage.addChild(Config.helmet);
+      Config.stage.addChild(Config.subTitle);
       //Config.stage.removeChild(Config.selectFrame);
     }else{
       Config.stage.removeChild(Config.helmet);
+      Config.stage.removeChild(Config.subTitle);
     }
   };
 
@@ -766,7 +768,15 @@ $def with (params)
     //image.onload = handleImageLoad;
 
     var himg = new Image();
-    himg.src = "/static/games/assets/helmet.png?2";
+    himg.src = "/static/games/assets/helmet.gif";
+    var subTitle = new Image();
+    subTitle.src = "/static/games/assets/subtitle.png";
+    subTitle.onload = function(event){
+      var img = event.target;
+      Config.subTitle = new createjs.Bitmap(img);
+      Config.subTitle.y = canvas.height - img.height;
+      Config.subTitle.x = (canvas.width - img.width)/2.0;
+    };
     himg.onload = function(event){
       var image = event.target;
       Config.personContainer = new createjs.Container();
