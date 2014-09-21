@@ -45,14 +45,25 @@ class Helmet:
 
     def POST(self):
         cookie = web.cookies(visitCount=0)
-        web.debug('visit count:%r' % cookie.visitCount)
+        personID = web.cookies(personID=None).personID
+        web.debug('visit count:%r, %s' % (cookie.visitCount, personID))
         vcount = int(cookie.visitCount)
         vcount += 1
         web.setcookie('visitCount',vcount, 360000,path='/')
-        if vcount == 1:
+        record = None
+        if not personID:
+            record = {'vcount':1}
+            MongoUtil.save('ColumbiaPhoto', record)
+            personID = str(record.get('_id'))
+            web.debug('stored photo id:%s', str(personID))
+        else:
+            record = MongoUtil.fetchByID('ColumbiaPhoto', {'_id':ObjectId(personID)})
+            
+        if vcount > 1:
             MongoUtil.save("PhotoUsage", {"useCount":1})
         render = web.template.render('templates')
         imageURL = web.input().get('url')
+        
         iconURL = None
         if imageURL:
             pos = imageURL.rfind('.jpg')
@@ -136,8 +147,8 @@ class RawUploader:
         #web.debug('data:%r' % data)
         
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '/home/ec2-user/root/www/static/raw/'
-        #storedDir = '%s/static/%s/' % (os.getcwd(),'raw')         
+        #storedDir = '/home/ec2-user/root/www/static/raw/'
+        storedDir = '%s/static/%s/' % (os.getcwd(),'raw')         
         makeIfNone(storedDir)
         web.debug('final stored dir:%s' % storedDir)
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/raw/'

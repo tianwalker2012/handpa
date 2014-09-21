@@ -193,40 +193,6 @@ def cleanStoredPhoto(storedPhoto):
     storedPhoto.pop('_id', None)
     return storedPhoto
     
-
-class PhotoUploader:
-    def GET(self):
-        return '{}'
-    def POST(self):
-        x = web.input(myfile={})
-        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '/home/ec2-user/root/www/static/blog/'
-        #storedDir = '%s/static/%s/' % (os.getcwd(),taskID)         
-        makeIfNone(storedDir)
-        web.debug('final stored dir:%s' % storedDir)
-        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/blog/'
-        filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
-        postFix = filePath.split('.')[-1]
-        hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
-        imageFileName = storedDir+hashedName;
-        fout = open(imageFileName, 'w')
-        fout.write(x.myfile.file.read())
-        fout.close()
-        ImageUtil.resize(imageFileName, 60, 'tb')
-        #storedPhoto['screenURL'] = baseURL+hashedName
-        remoteURL = baseURL + hashedName
-        storedPhoto = None
-        if photoID:
-            storedPhoto = MongoUtil.fetchByID('StoredPhoto', ObjectId(photoID))
-            storedPhoto['remoteURL'] = remoteURL
-            MongoUtil.update('StoredPhoto',storedPhoto)
-        else:
-            storedPhoto = {'taskID':taskID, 'sequence':int(sequence), 'remoteURL':remoteURL}
-            MongoUtil.save('StoredPhoto', storedPhoto)
-        
-        #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
-        
-        return simplejson.dumps(cleanStoredPhoto(storedPhoto))
     
 class PhotoUploader:
     def GET(self):
@@ -250,12 +216,13 @@ class PhotoUploader:
         x = web.input(myfile={})
         taskID = x["taskID"]
         photoID = x.get("photoID")
-        sequence = x["sequence"]
+        sequence = x.get("sequence")
+        isOriginal = x.get("isOriginal")
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
         storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
         #storedDir = '%s/static/%s/' % (os.getcwd(),taskID)         
         makeIfNone(storedDir)
-        web.debug('final stored dir:%s' % storedDir)
+        web.debug('final stored dir:%s, %s' % (storedDir,isOriginal))
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+taskID+'/'
         filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
         postFix = filePath.split('.')[-1]
@@ -270,10 +237,15 @@ class PhotoUploader:
         storedPhoto = None
         if photoID:
             storedPhoto = MongoUtil.fetchByID('StoredPhoto', ObjectId(photoID))
+            oldRemoteURL = storedPhoto['remoteURL']
             storedPhoto['remoteURL'] = remoteURL
+            if isOriginal and int(isOriginal) == 1:
+                storedPhoto['originalURL'] = remoteURL
+            elif not storedPhoto.get('originalURL'):
+                storedPhoto['originalURL'] = oldRemoteURL
             MongoUtil.update('StoredPhoto',storedPhoto)
         else:
-            storedPhoto = {'taskID':taskID, 'sequence':int(sequence), 'remoteURL':remoteURL}
+            storedPhoto = {'taskID':taskID, 'sequence':int(sequence), 'remoteURL':remoteURL, 'originalURL':remoteURL}
             MongoUtil.save('StoredPhoto', storedPhoto)
         
         #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
