@@ -37,6 +37,7 @@ from p3d import PhotoUploader
 from p3d import P3DShow
 from p3d import Account
 from p3d import InfoPoint
+from p3d import RawPhotoUpload
 from columbia import ScoreSupporter
 from columbia import BirdData
 from columbia import RawUploader
@@ -79,6 +80,7 @@ urls = (
  '/p3d/upload', 'PhotoUploader',
  '/p3d/show3d', 'P3DShow',
  '/raw/upload', 'RawUploader',
+ '/p3d/raw', 'RawPhotoUpload',
  '/p3d/account/(.+)', 'Account',
  '/columbia/(.+)', 'ScoreSupporter',
  '/photo', 'Helmet',

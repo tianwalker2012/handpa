@@ -107,13 +107,15 @@ class Account:
             return simplejson.dumps(cleanUser(user))
         elif cmd == 'query':
             #tasks = None
-            queryCond = {}
+            queryCond = {'$nor':[{'isPrivate':True}]}
             start = int(params.start) if params.get('start') else 0
-            limit = int(params.limit) if params.get('limit') else 200
+            limit = int(params.limit) if params.get('limit') else 10
             if params.get('personID'):
                 queryCond = {'personID':params.personID}
+                start = 0
+                limit = 200
             web.debug('cond:%r,start:%i,limit:%i' % (queryCond, start, limit)) 
-            tasks = MongoUtil.fetchPage('PhotoTask', queryCond, start, limit, [('createdTime', -1)])
+            tasks = MongoUtil.fetchWithLimit('PhotoTask', queryCond, start, limit, [('createdTime', -1)])
             res = []            
             for tk in tasks:
                 res.append(fillTask(tk))
@@ -175,25 +177,48 @@ class IDCreator:
                 if photoTask:
                     fillTask(photoTask)
                 return simplejson.dumps(photoTask)
+
         elif cmd == 'update':
             params = web.input()
             if params.get('taskID'):
-                MongoUtil.update('PhotoTask',{'_id':ObjectId(params.get('taskID')), "name":params['name']})
+                web.debug('params:%r' % params)
+                MongoUtil.update('PhotoTask',{'_id':ObjectId(params.get('taskID')), "name":params['name'], "isPrivate":params['isPrivate']})
             return '{}'
         elif cmd == 'delete':
             params = web.input()
             if params.get('taskID'):
                 MongoUtil.remove('PhotoTask', {'_id':ObjectId(params.get('taskID'))})
             return '{}'
-            
-
+        return '{}'
 def cleanStoredPhoto(storedPhoto):
     pid = str(storedPhoto.get('_id'))
     storedPhoto['photoID'] = pid
     storedPhoto.pop('_id', None)
     return storedPhoto
-    
-    
+
+class RawPhotoUpload:
+    def POST(self):
+        x = web.input(file={})
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        #storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
+        taskID = "167791"
+        storedDir = '%s/static/%s/' % (os.getcwd(),taskID)         
+        makeIfNone(storedDir)
+        #web.debug('final stored dir:%s, %s' % (storedDir,isOriginal))
+        baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+taskID+'/'
+        filePath = x['file'].filename.replace('\\','/').split('/')[-1]
+        postFix = filePath.split('.')[-1]
+        hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
+        imageFileName = storedDir+hashedName;
+        fout = open(imageFileName, 'w')
+        fout.write(x.file.file.read())
+        fout.close()
+        remoteURL = baseURL + hashedName
+        
+        #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
+        result = {"url":remoteURL}
+        return simplejson.dumps(result)
+
 class PhotoUploader:
     def GET(self):
         params = web.input();

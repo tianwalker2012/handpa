@@ -57,7 +57,15 @@ class MongoUtil:
             return cols.find(conds).skip(startPage * pageSize).limit(pageSize).sort(sorts)
         else:
             return cols.find(conds).skip(startPage * pageSize).limit(pageSize)
-                
+         
+         
+    @classmethod 
+    def fetchWithLimit(self, colName, conds, startPos, limit, sorts = None):
+        cols = db[colName]
+        if sorts:        
+            return cols.find(conds).skip(startPos).limit(limit).sort(sorts)
+        else:
+            return cols.find(conds).skip(startPos).limit(limit)
 
     @classmethod
     def removeAll(self, colName):
