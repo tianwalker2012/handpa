@@ -109,7 +109,7 @@ class Account:
             #tasks = None
             queryCond = {'$nor':[{'isPrivate':True}]}
             start = int(params.start) if params.get('start') else 0
-            limit = int(params.limit) if params.get('limit') else 10
+            limit = int(params.limit) if params.get('limit') else 1000
             if params.get('personID'):
                 queryCond = {'personID':params.personID}
                 start = 0
