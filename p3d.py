@@ -63,6 +63,28 @@ def fetchPhotoInfo(photoID):
     web.debug('info for:%s=%i' % (photoID, infoPts.count()))
     return [info for info in infoPts]
     
+class WebUploader:
+    def GET(self):
+        return self.POST()
+    def POST(self):
+        render = web.template.render('templates')
+        #cookie = web.cookies(visitCount=0)
+        personID = web.cookies(personID=None).personID
+        web.debug('exist personID:%s' % personID)
+        if not personID:
+            user = {"createdTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            MongoUtil.save('P3dUser', user)
+            web.setcookie('personID',str(user.get('_id')), 360000,path='/')
+            personID = str(user.get('_id'))
+        
+        #imageURL = web.input().get('url')
+        #iconURL = None
+        #if imageURL:
+        #    pos = imageURL.rfind('.jpg')
+        #    if pos > 0:
+        #        iconURL = imageURL[:pos] + "tb" + imageURL[pos:]
+        web.debug("will render web uploader")
+        return render.photoupload({"visitCount":0, "icon":None,"personID":personID})
 
 class InfoPoint:
     def GET(self, cmd):
@@ -199,9 +221,11 @@ def cleanStoredPhoto(storedPhoto):
 class RawPhotoUpload:
     def POST(self):
         x = web.input(file={})
+        params = web.input()
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
         #storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
-        taskID = "167791"
+        taskID = params.get('taskID')
+        #sequenceID = params.get('seq')
         storedDir = '%s/static/%s/' % (os.getcwd(),taskID)         
         makeIfNone(storedDir)
         #web.debug('final stored dir:%s, %s' % (storedDir,isOriginal))
@@ -218,6 +242,60 @@ class RawPhotoUpload:
         #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
         result = {"url":remoteURL}
         return simplejson.dumps(result)
+
+class WebUpload:
+    def GET(self):
+        return '{}'
+
+    def POST(self):
+        x = web.input()
+        taskID = x["taskID"]
+        photoID = x.get("photoID")
+        sequence = x.get("sequence")
+        isOriginal = x.get("isOriginal")
+        #x = web.input(myfile={})
+        #web.debug('data:%s', web.data()[:100]);
+        pos = web.data()[:50].find('base64,');
+        data = web.data()[pos+7:].decode('base64')
+        storedDir = '/home/ec2-user/root/www/static/'
+        if not os.path.exists(storedDir):
+            storedDir = '%s/static/%s/' % (os.getcwd(),taskID)  
+        else:
+            storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'   
+        makeIfNone(storedDir)
+        web.debug('final stored dir:%s' % storedDir)
+        baseURL = 'http://%s/static/%s/' % (web.ctx.env.get('HTTP_HOST'), taskID)
+        #filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
+        
+        postFix = 'jpg'#filePath.split('.')[-1]
+        hashedName = hashlib.md5('raw' + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
+        imageFileName = storedDir+hashedName;
+        fout = open(imageFileName, 'w')
+        fout.write(data)
+        fout.close()
+        #ImageUtil.resize(imageFileName, 60, 'tb')
+        ImageUtil.resize(imageFileName, 60, 'tb')
+        #storedPhoto['screenURL'] = baseURL+hashedName
+        remoteURL = baseURL + hashedName
+        storedPhoto = None
+        if photoID:
+            storedPhoto = MongoUtil.fetchByID('StoredPhoto', ObjectId(photoID))
+            oldRemoteURL = storedPhoto['remoteURL']
+            storedPhoto['remoteURL'] = remoteURL
+            if isOriginal and int(isOriginal) == 1:
+                storedPhoto['originalURL'] = remoteURL
+            elif not storedPhoto.get('originalURL'):
+                storedPhoto['originalURL'] = oldRemoteURL
+            MongoUtil.update('StoredPhoto',storedPhoto)
+        else:
+            storedPhoto = {'taskID':taskID, 'sequence':int(sequence), 'remoteURL':remoteURL, 'originalURL':remoteURL}
+            MongoUtil.save('StoredPhoto', storedPhoto)
+        
+        #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
+        
+        return simplejson.dumps(cleanStoredPhoto(storedPhoto))        
+
+
 
 class PhotoUploader:
     def GET(self):
@@ -244,8 +322,13 @@ class PhotoUploader:
         sequence = x.get("sequence")
         isOriginal = x.get("isOriginal")
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
-        storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
-        #storedDir = '%s/static/%s/' % (os.getcwd(),taskID)         
+        #storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
+        storeDir = '/home/ec2-user/root/www/static/'
+        if not os.path.exists(storeDir):
+            storeDir = '%s/static/%s/' % (os.getcwd(),taskID)  
+        else:
+            storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
+
         makeIfNone(storedDir)
         web.debug('final stored dir:%s, %s' % (storedDir,isOriginal))
         baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/'+taskID+'/'
