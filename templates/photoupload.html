@@ -108,7 +108,7 @@ $def with (params)
       height: 44px;
     }
     .scene-btn{
-      width:120px;
+      width:100px;
       margin: 0 auto;
       /*
       position:relative;
@@ -125,7 +125,7 @@ $def with (params)
       position: absolute;
       top:0px;
       right:0px;
-      width:120px;
+      width:80px;
       /*
       margin: 0 auto;
       position:relative;
@@ -376,7 +376,7 @@ $def with (params)
       </div>
 
       <div class="scene-btn-1 button buttonRound" style="display:none">
-       开始新作品
+       新作品
       </div>
 
        <div style="display:none;background-color:rgb(255,73,73)" class="finalShow button buttonRound buttonRight">
@@ -1140,7 +1140,7 @@ $def with (params)
         showUploaded(imgURL);
         Config.stage.removeChild(Config.headImage);
         update = true;
-        showScene2("上传成功","上传下一张", function(evt){
+        showScene2("上传成功","下一张", function(evt){
           /**
           if(currentTaskID){
             generateTaskID(function(taskID){
@@ -1152,7 +1152,7 @@ $def with (params)
           $$("#upload").click();
           hideScene();
           Config.status = shotingStatus;
-        },"开始新作品", "rgb(252,73,73)");
+        },"新作品", "rgb(252,73,73)");
         //stopLoading();
       }, function(pt){
         console.log('percent'+pt);
