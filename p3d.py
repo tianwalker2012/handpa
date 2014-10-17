@@ -153,13 +153,41 @@ class Account:
                     count += 1
             return '{"count":%i}' % count
                 
-            
-class P3DShow:
+class P3DShowQuery:
     def GET(self):
         return self.POST()
     def POST(self):
         params = web.input()
-        photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.taskID},[('sequence', 1)])
+        photos = []
+        if params.get('taskID'):
+            photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.taskID},[('sequence', 1)])
+        pts = []
+        def process(pht):
+            pts.append(pht)
+            return pht.get('remoteURL')
+        imgUrls = [process(pt) for pt in photos];        
+        #for pt in photos:
+        infos = []
+        i = 0
+        for pt in pts:
+            pinfos = fetchPhotoInfo(str(pt.get('_id')))
+            for info in pinfos:
+                web.debug('get info out')
+                info['pos'] = i
+                infos.append(info)
+            i += 1
+        #render = web.template.render('templates', globals={'simplejson':simplejson})
+        #return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls,'infos':infos})
+        return simplejson.dumps({"imagelist":imgUrls, "infos":infos})
+class P3DShow:
+    def GET(self):
+        return self.POST()
+        
+    def POST(self):
+        params = web.input()
+        photos = [] 
+        if params.get('taskID'):
+            photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.taskID},[('sequence', 1)])
         pts = []
         def process(pht):
             pts.append(pht)
@@ -300,7 +328,7 @@ class WebUpload:
 class PhotoUploader:
     def GET(self):
         params = web.input();
-        cmd = params.cmd
+        cmd = params.get('cmd')
         if cmd == 'del':
             photoID = params.photoID
             MongoUtil.remove('StoredPhoto', {'_id':ObjectId(photoID)})
@@ -323,9 +351,9 @@ class PhotoUploader:
         isOriginal = x.get("isOriginal")
         #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
         #storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
-        storeDir = '/home/ec2-user/root/www/static/'
-        if not os.path.exists(storeDir):
-            storeDir = '%s/static/%s/' % (os.getcwd(),taskID)  
+        storedDir = '/home/ec2-user/root/www/static/'
+        if not os.path.exists(storedDir):
+            storedDir = '%s/static/%s/' % (os.getcwd(),taskID)  
         else:
             storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
 

@@ -54,8 +54,8 @@ class Helmet:
         if not personID:
             record = {'vcount':1}
             MongoUtil.save('ColumbiaPhoto', record)
-            personID = str(record.get('_id'))
-            web.debug('stored photo id:%s', str(personID))
+            #personID = str(record.get('_id'))
+            #web.debug('stored photo id:%s', str(personID))
         else:
             record = MongoUtil.fetchByID('ColumbiaPhoto', {'_id':ObjectId(personID)})
             

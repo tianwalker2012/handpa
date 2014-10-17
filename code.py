@@ -40,6 +40,7 @@ from p3d import InfoPoint
 from p3d import RawPhotoUpload
 from p3d import WebUploader
 from p3d import WebUpload
+from p3d import P3DShowQuery
 from columbia import ScoreSupporter
 from columbia import BirdData
 from columbia import RawUploader
@@ -81,6 +82,7 @@ urls = (
  '/p3d/info/(.+)', 'InfoPoint',
  '/p3d/upload', 'PhotoUploader',
  '/p3d/show3d', 'P3DShow',
+ '/p3d/showquery', 'P3DShowQuery',
  '/p3d/photoupload', 'WebUploader',
  '/p3d/webupload','WebUpload',
  '/raw/upload', 'RawUploader',
