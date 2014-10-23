@@ -41,6 +41,8 @@ from p3d import RawPhotoUpload
 from p3d import WebUploader
 from p3d import WebUpload
 from p3d import P3DShowQuery
+from p3d import P3DRegister
+from p3d import P3DPerson
 from columbia import ScoreSupporter
 from columbia import BirdData
 from columbia import RawUploader
@@ -88,6 +90,8 @@ urls = (
  '/raw/upload', 'RawUploader',
  '/p3d/raw', 'RawPhotoUpload',
  '/p3d/account/(.+)', 'Account',
+ '/p3d/register', 'P3DRegister',
+ '/p3d/person/(.+)', 'P3DPerson',
  '/columbia/(.+)', 'ScoreSupporter',
  '/photo', 'Helmet',
  '/bird', 'BirdData'

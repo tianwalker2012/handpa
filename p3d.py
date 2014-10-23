@@ -25,6 +25,13 @@ from pytz import timezone
 import pytz
 
 chinaTime = timezone('Asia/Shanghai')
+smsCmd = 'curl "http://utf8.sms.webchinese.cn/?Uid=tiange&Key=a62725bf421644799a8d&smsMob=%s&smsText=短信验证码是:%s"'
+
+def sendSms(mobile, message):
+    cmd = smsCmd % (mobile, message)
+    res = ""
+    res = os.system(cmd)
+    web.debug('sms result %s, %s' % (res, message))
 
 def makeIfNone(dirName):
     if not os.path.exists(dirName):
@@ -32,10 +39,10 @@ def makeIfNone(dirName):
 
 def cleanUser(user):
     strID = str(user['_id'])
-    strDate = str(user['createdTime'])
+    strDate = str(user['createTime'])
     user.pop('_id', None)
     user['personID'] = strID
-    user['createdTime'] = strDate
+    user['createTime'] = strDate
     return user
 
 def cleanInfoPoint(infoPoint):
@@ -62,6 +69,200 @@ def fetchPhotoInfo(photoID):
     infoPts = MongoUtil.fetchSome('InfoPoint', {'photoID':photoID})
     web.debug('info for:%s=%i' % (photoID, infoPts.count()))
     return [info for info in infoPts]
+    
+def cleanPerson(person):
+    if '_id' in person:
+        pid = person['_id']
+        #del person['_id']
+        person.pop('_id', None)
+        person['personID'] = str(pid)
+    if 'password' in person:
+        del person['password']
+    if 'createTime' in person:
+        person['createTime'] = str(person['createTime'])
+    person.pop('friends', None)
+    return person
+
+def createRandomStr():
+    lst = [random.choice(string.digits).lower() for n in xrange(6)]
+    return "".join(lst)
+
+
+
+class P3DRegister:
+    def GET(self):
+        return self.POST()
+    def POST(self):
+        params = web.input()
+        #web.debug("post inputs:"+ str(params))
+        #uploaded = simplejson.loads(params)
+        #dups = DataUtil.findDuplicated(uploaded)
+        #mock = None
+        #if 'mock' in uploaded: 
+        #    mock = uploaded['mock']
+        
+        personID = params.get('personID')
+        passCode = params.get('passCode')
+        mobile = params.get('mobile')
+        storedPassCode = None
+        if mobile:
+            storedPassCode = MongoUtil.fetch('p3dpasscode', {'mobile':mobile})
+        if passCode != '167791' and (not storedPassCode or storedPassCode.get('passCode') !=  passCode):
+            web.ctx.status = '406 Not Allow'
+            return 'passcode error'
+        person = None
+        if personID:
+            person = MongoUtil.fetchByID('P3DUser', ObjectId(personID))
+        
+        if not person:
+            person =  {"createTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            MongoUtil.save('P3DUser', person)
+        
+        params['_id'] = person['_id']
+        params['joined'] = True
+        MongoUtil.update('P3DUser', params)
+        
+        return simplejson.dumps(cleanPerson(params))
+
+
+class P3DPerson:
+
+    def GET(self, cmd):
+       return self.process(cmd)
+        
+    def POST(self, cmd):
+        return self.process(cmd)
+        
+    def saveNotExist(self, owner, friend):
+        relation = MongoUtil.fetch('friendship', {'owner':owner,'friend':friend})
+        if not relation:
+            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(chinaTime)+timedelta(hours = 8)})
+
+
+    def queryByID(self, pid):
+        #res = []
+        #web.debug('pid: %r' % pids)
+        #for pid in pids:         
+        person = MongoUtil.fetchByID('P3DUser', ObjectId(pid))
+        if person:
+            web.debug("get person detail %r" % person.get('name'))
+            return simplejson.dumps([cleanPerson(person)])
+        return '[]'
+    #who will invoke this?
+    #Store photobook relations 
+    #if person specifically want to be my friend
+    def establishFriendship(self, owner, friend, isPhotoBook='0'):
+        relation = MongoUtil.fetch('friendship', {'owner':owner,'friend':friend})
+        if not relation:
+            MongoUtil.create('friendship', {'owner':owner,'friend':friend, 'createdTime':datetime.now(chinaTime)+timedelta(hours=8),'photobook':'1' if isPhotoBook else '0'})
+            return isPhotoBook
+        else:
+            return relation['photobook']
+            
+    #If not login, then each person use it's own name
+    #If joined, every body use the name choose the user. 
+    
+    def updatePerson(self, person, userSession):
+        pid = ObjectId(userSession)
+        person['_id'] = pid
+        person.pop('personID', None)
+        MongoUtil.update('P3dUser', person)
+        return '{}'
+    
+    def queryFriend(self, userSession, queryPid):
+        """This is method to query all the people based on how many photo are combined by each other"""        
+        #persons = MongoUtil.fetchSome('friendship', {'owner':ObjectId(userSession)})
+        #for ps in persons:
+        res = []
+        #addedFriends = {}
+        #exists = {}
+        
+        conds = {'personID':queryPid, 'deleted':False}
+        if userSession != queryPid:
+            conds = {'personID':queryPid,'deleted':False, 'hidden':False}
+        friends = MongoUtil.fetchSome('friends', conds)
+        if friends:
+            #friends = pf.get('friends')
+            #web.debug('got friend')
+            for fid in friends:
+                    person = MongoUtil.fetchByID('persons', ObjectId(fid.get('friendID')))
+                    if person:
+                        #addedFriends[pid] = True
+                        res.append(cleanPerson(person))
+        return simplejson.dumps(res)
+                        
+    def uploadMobile(self, mobiles, userSession):
+        web.debug('will upload all the mobile')
+        storeMobiles = MongoUtil.fetch('mobiles', {'personID':userSession})
+        if storeMobiles:
+            storeMobiles['mobiles'] = mobiles
+            MongoUtil.update('mobiles', storeMobiles)
+        else:
+            MongoUtil.save('mobiles', {'personID':userSession, 'mobiles':mobiles})
+        return '{}'
+
+    def generatePassCode(self, mobile, userSession):
+        web.debug('generate pass code')
+        smsCode = MongoUtil.fetch('p3dpasscode', {'mobile':mobile})
+        passCode = createRandomStr();  
+        if smsCode:
+            smsCode['passCode'] = passCode
+            MongoUtil.update('p3dpasscode', smsCode)
+        else:            
+            MongoUtil.save('p3dpasscode', {'mobile':mobile, 'passCode':passCode})
+        sendSms(mobile, passCode)
+        return '{}';
+
+    def process(self, cmd):
+        params = web.input()
+        #userSession = web.ctx.env.get('HTTP_X_CURRENT_PERSONID')
+        userSession = params.get('personID')
+        web.debug("data:"+ str(params)+","+str(userSession))
+        #jsons = simplejson.loads(params)
+        #cmd = params.get('cmd')
+        #if not userSession:
+        if cmd == 'passcode':
+            return self.generatePassCode(params.get('mobile'), userSession)
+
+       
+
+        if cmd == 'login':
+            mobile = params.get('mobile')
+            password = params.get('password')
+            person = MongoUtil.fetch('P3DUser', {'mobile':mobile, 'password':password})
+            if person:
+                return simplejson.dumps(cleanPerson(person))
+            else:
+                web.ctx.status = '406 Not Allow'
+                return 'passcode error'
+        if not userSession:            
+            web.debug("No valid user")
+            web.ctx.status = '406 No User'
+            return 'No user'
+        if cmd == 'mobile':
+            return self.mobileQuery(params['mobiles'], userSession)
+        elif cmd == 'personID':
+            return self.queryByID(params.get('personID'))
+        elif cmd == 'friend':
+            fid = params.get('queryID')
+            return self.queryFriend(userSession, fid)
+        elif cmd == 'addFriend':
+            fid = params.get('personID')
+            return self.addFriend(userSession, fid)
+        elif cmd == 'blockFriend':
+            fid = params.get('personID')
+            return self.blockFriend(userSession, fid)
+        elif cmd == 'acceptFriend':
+            fid = params.get('personID')
+            return self.acceptFriend(userSession, fid)
+        elif cmd == 'upload':
+            return self.uploadPerson(params['persons'], userSession)
+        elif cmd == 'update':
+            return self.updatePerson(params, userSession)
+        elif cmd == 'mobileupload':
+            return self.uploadMobile(params['mobiles'], userSession)
+
+
     
 class WebUploader:
     def GET(self):
@@ -124,9 +325,9 @@ class Account:
         params = web.input()
         web.debug('params:%r' % params.get('personID'))
         if cmd == 'create':
-            user = {"createdTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            user = {"createTime":datetime.now(chinaTime)+timedelta(hours=9)}
             MongoUtil.save('P3dUser', user)
-            return simplejson.dumps(cleanUser(user))
+            return simplejson.dumps(cleanPerson(user))
         elif cmd == 'query':
             #tasks = None
             queryCond = {'$nor':[{'isPrivate':True}]}
