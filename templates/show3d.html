@@ -77,13 +77,17 @@ var ImageRoot = {};
 ImageRoot.imagelist = $:simplejson.dumps(params.get('imagelist'));
 ImageRoot.zoomlist = $:simplejson.dumps(params.get('zoomlist'));
 ImageRoot.taskID = "$params.get('taskID')";
-
+ImageRoot.timeoutHandle = "";
  function openDownloadLink() {
     window.location='http://itunes.com/';
  }
 
 function tryOpenApp() {
-    timeout = setTimeout('openDownloadLink()', 300);
+    ImageRoot.timeoutHandle = setTimeout('openDownloadLink()', 300);
+}
+
+function cancelTimeout() {
+    clearTimeout(ImageRoot.timeoutHandle);
 }
 //--insert--
 ImageRoot.maximumPin = 20;
