@@ -4,13 +4,13 @@ $def with (params)
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0 user-scalable=no">
-    <title>Pleasantuser - Pin3D</title>
+    <title>$params.get('name')</title>
     <meta name="author" content="Pleasantuser.com">
     <meta name="description" content="360rotate Pleasantuser.com">
     
     <script type="text/javascript" src="/static/p3d/js/jquery-1.10.2.min.js"></script>
-	<script type="text/javascript" src="/static/p3d/js/rotate.js?22"></script>
-	<script type="text/javascript" src="/static/p3d/dopelessRotate/scripts/dopelessRotate.js?22"></script>
+	<script type="text/javascript" src="/static/p3d/js/rotate.js?25"></script>
+	<script type="text/javascript" src="/static/p3d/dopelessRotate/scripts/dopelessRotate.js?25"></script>
     <link rel="stylesheet" href="/static/p3d/dopelessRotate/css/style.css?22" type="text/css" media="screen" />
 	<link rel="stylesheet" href="/static/p3d/style.css?22" type="text/css" media="screen" />
 </head>
@@ -76,6 +76,15 @@ function changeImages(imgs)
 var ImageRoot = {};
 ImageRoot.imagelist = $:simplejson.dumps(params.get('imagelist'));
 ImageRoot.zoomlist = $:simplejson.dumps(params.get('zoomlist'));
+ImageRoot.taskID = "$params.get('taskID')";
+
+ function openDownloadLink() {
+    window.location='http://itunes.com/';
+ }
+
+function tryOpenApp() {
+    timeout = setTimeout('openDownloadLink()', 300);
+}
 //--insert--
 ImageRoot.maximumPin = 20;
 $$(document).ready(function() {

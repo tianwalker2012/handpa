@@ -43,6 +43,7 @@ from p3d import WebUpload
 from p3d import P3DShowQuery
 from p3d import P3DRegister
 from p3d import P3DPerson
+from p3d import PhotoOperation
 from columbia import ScoreSupporter
 from columbia import BirdData
 from columbia import RawUploader
@@ -92,6 +93,7 @@ urls = (
  '/p3d/account/(.+)', 'Account',
  '/p3d/register', 'P3DRegister',
  '/p3d/person/(.+)', 'P3DPerson',
+ '/p3d/photoops/(.+)', 'PhotoOperation',
  '/columbia/(.+)', 'ScoreSupporter',
  '/photo', 'Helmet',
  '/bird', 'BirdData'

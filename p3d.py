@@ -23,6 +23,7 @@ import random
 from random import randint
 from pytz import timezone
 import pytz
+import urlparse
 
 chinaTime = timezone('Asia/Shanghai')
 smsCmd = 'curl "http://utf8.sms.webchinese.cn/?Uid=tiange&Key=a62725bf421644799a8d&smsMob=%s&smsText=短信验证码是:%s"'
@@ -50,7 +51,16 @@ def cleanInfoPoint(infoPoint):
     infoPoint.pop('_id', None)
     return infoPoint
 
-def fillTask(photoTask):
+def fillTask(photoTask, personID):
+    tk = photoTask
+    likedList = tk.get('likedList') if tk.get('likedList') else [] 
+    favorList = tk.get('favorite') if tk.get('favorite') else []
+    tk['liked'] = personID in likedList
+    tk['isFavor'] = personID in favorList
+    tk.pop('likedList', None)
+    tk.pop('favorite', None)
+    tk['likedCount'] = len(likedList)
+    tk['favorCount'] = len(favorList)
     photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':str(photoTask['_id'])},[('sequence', 1)])
     phs = []
     for ph in photos:
@@ -88,7 +98,41 @@ def createRandomStr():
     return "".join(lst)
 
 
-
+class PhotoOperation:
+    def GET(self, optType):
+        return self.POST(optType)
+    def POST(self, optType):
+        params = web.input()
+        isDelete = params.get("isDelete")
+        taskID = params.get("taskID")
+        personID = params.get("personID")
+        #isFavor = param.get('isFavor')
+       
+        task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
+        web.debug("isDelete:%r, taskID:%r, personID:%r, likedList:%r, favorList:%r, optType:%s" % (isDelete, taskID, personID,task.get('likedList'), task.get('favorite'), optType))
+        returnedList = []    
+        if optType == "like":            
+            taskList = [] if not task.get('likedList') else task.get('likedList')
+            if isDelete=="1":
+                taskList = [x for x in taskList if x != personID]
+            else:
+                taskList.append(personID)
+            web.debug("before stored like taskList %r" % taskList)
+            task['likedList'] = taskList
+            MongoUtil.update('PhotoTask', task)
+            returnedList = taskList
+        elif optType == 'favorite':
+            favorList = [] if not task.get('favorite') else task.get('favorite')
+            if isDelete=="1":
+                favorList = [x for x in favorList if x != personID]
+            else:
+                favorList.append(personID)
+            web.debug("before stored favor taskList %r" % favorList)
+            task['favorite'] = favorList
+            MongoUtil.update('PhotoTask', task)
+            returnedList = favorList
+        return simplejson.dumps(returnedList)
+                
 class P3DRegister:
     def GET(self):
         return self.POST()
@@ -115,7 +159,7 @@ class P3DRegister:
             person = MongoUtil.fetchByID('P3DUser', ObjectId(personID))
         
         if not person:
-            person =  {"createTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            person =  {"createTime":datetime.now(chinaTime)+timedelta(hours=8)}
             MongoUtil.save('P3DUser', person)
         
         params['_id'] = person['_id']
@@ -273,7 +317,7 @@ class WebUploader:
         personID = web.cookies(personID=None).personID
         web.debug('exist personID:%s' % personID)
         if not personID:
-            user = {"createdTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            user = {"createdTime":datetime.now(chinaTime)+timedelta(hours=8)}
             MongoUtil.save('P3dUser', user)
             web.setcookie('personID',str(user.get('_id')), 360000,path='/')
             personID = str(user.get('_id'))
@@ -325,7 +369,7 @@ class Account:
         params = web.input()
         web.debug('params:%r' % params.get('personID'))
         if cmd == 'create':
-            user = {"createTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            user = {"createTime":datetime.now(chinaTime)+timedelta(hours=8)}
             MongoUtil.save('P3dUser', user)
             return simplejson.dumps(cleanPerson(user))
         elif cmd == 'query':
@@ -333,15 +377,17 @@ class Account:
             queryCond = {'$nor':[{'isPrivate':True}]}
             start = int(params.start) if params.get('start') else 0
             limit = int(params.limit) if params.get('limit') else 1000
-            if params.get('personID'):
-                queryCond = {'personID':params.personID}
+            personID = params.get('personID')
+            personal = params.get('personal')
+            if personal:
+                queryCond = {'personID':personID}
                 start = 0
                 limit = 200
             web.debug('cond:%r,start:%i,limit:%i' % (queryCond, start, limit)) 
             tasks = MongoUtil.fetchWithLimit('PhotoTask', queryCond, start, limit, [('createdTime', -1)])
             res = []            
             for tk in tasks:
-                res.append(fillTask(tk))
+                res.append(fillTask(tk, personID))
             return simplejson.dumps(res)
         elif cmd == 'clean':
             tasks = MongoUtil.fetchAll('PhotoTask')
@@ -387,12 +433,21 @@ class P3DShow:
     def POST(self):
         params = web.input()
         photos = [] 
+        taskID = ""
+        taskName = "未命名作品" 
+        web.debug('query taskID:%s' % params.get('taskID'))
+        task = {}
         if params.get('taskID'):
+            taskID = params.get('taskID')
             photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.taskID},[('sequence', 1)])
+            task = MongoUtil.fetchByID('PhotoTask',ObjectId(taskID))
+            if task.get('name'):
+                taskName = task.get('name')
         pts = []
         def process(pht):
             pts.append(pht)
-            return pht.get('remoteURL')
+            imagePath = urlparse.urlparse(pht.get('remoteURL')).path
+            return imagePath
         imgUrls = [process(pt) for pt in photos];        
         #for pt in photos:
         infos = []
@@ -405,7 +460,7 @@ class P3DShow:
                 infos.append(info)
             i += 1
         render = web.template.render('templates', globals={'simplejson':simplejson})
-        return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls,'infos':infos})
+        return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls,'infos':infos, "taskID":taskID, "name":taskName})
 
 class IDCreator:
     def GET(self, cmd):
@@ -413,7 +468,7 @@ class IDCreator:
     def POST(self, cmd):
         if cmd == 'create':
             params = web.input()
-            store = {"personID":params.personID, "createdTime":datetime.now(chinaTime)+timedelta(hours=9)}
+            store = {"personID":params.personID,"isPrivate":params.get("isPrivate"),     "createdTime":datetime.now(chinaTime)+timedelta(hours=8)}
             name = params.get('name')
             if name:
                 store['name'] = name
@@ -423,12 +478,11 @@ class IDCreator:
         elif cmd == 'query':
             params = web.input()
             web.debug("query data:%r" % params)
-            if params.id:
-                photoTask = MongoUtil.fetchByID('PhotoTask', ObjectId(params.id))
+            if params.get('taskID'):
+                photoTask = MongoUtil.fetchByID('PhotoTask', ObjectId(params.taskID))
                 if photoTask:
-                    fillTask(photoTask)
-                return simplejson.dumps(photoTask)
-
+                    return simplejson.dumps(fillTask(photoTask, params.get("personID")))
+            return '{}'
         elif cmd == 'update':
             params = web.input()
             if params.get('taskID'):
