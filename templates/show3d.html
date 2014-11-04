@@ -9,10 +9,10 @@ $def with (params)
     <meta name="description" content="360rotate Pleasantuser.com">
     
     <script type="text/javascript" src="/static/p3d/js/jquery-1.10.2.min.js"></script>
-	<script type="text/javascript" src="/static/p3d/js/rotate.js?25"></script>
-	<script type="text/javascript" src="/static/p3d/dopelessRotate/scripts/dopelessRotate.js?25"></script>
-    <link rel="stylesheet" href="/static/p3d/dopelessRotate/css/style.css?22" type="text/css" media="screen" />
-	<link rel="stylesheet" href="/static/p3d/style.css?22" type="text/css" media="screen" />
+	<script type="text/javascript" src="/static/p3d/js/rotate.js?26"></script>
+	<script type="text/javascript" src="/static/p3d/dopelessRotate/scripts/dopelessRotate.js?27"></script>
+    <link rel="stylesheet" href="/static/p3d/dopelessRotate/css/style.css?23" type="text/css" media="screen" />
+	<link rel="stylesheet" href="/static/p3d/style.css?23" type="text/css" media="screen" />
 </head>
 <body>
 
@@ -59,17 +59,14 @@ function changeImages(imgs)
     $$('#rotateimage').tsRotate({
         //'zoom':true,
         //'zoomfolder':'zoomimages',
-        'hotspots':true,
-        'autorotate':true,
-        'autorotatespeed':30,
-        'rotateloop':false,
-        'wheelRotate':true,
-        'nophp' : true,
-        'nophpimglist' : imgJsons.imagelist,
-        'nophpzoomlist' : imgJsons.zoomlist,
-        'hotspotadd':true,
-        'hotspotmanage':true,
-        'disablelogo':true
+         'autorotate':true,
+         'autorotatespeed':30,
+         'rotateloop':false,
+         'wheelRotate':true,
+         'nophp':true,
+         'nophpimglist':imgJsons.imagelist,
+         'nophpzoomlist':imgJsons.zoomlist,
+         'imgJSON':''
     });
 }
 
@@ -98,17 +95,14 @@ if(ImageRoot.imagelist.length > 0){
 	$$('#rotateimage').tsRotate({
 		//'zoom':true,
 		//'zoomfolder':'zoomimages',
-		'hotspots':true,
 		'autorotate':true,
-		'autorotatespeed':30,
-		'rotateloop':false,
-		'wheelRotate':true,
-		'nophp' : true,
-        'nophpimglist' : ImageRoot.imagelist,
-        'nophpzoomlist' : ImageRoot.zoomlist,
-		'hotspotadd':true,
-        'hotspotmanage':true,
-		'disablelogo':true
+        'autorotatespeed':30,
+        'rotateloop':false,
+        'wheelRotate':true,
+        'nophp':true,
+        'nophpimglist':ImageRoot.imagelist,
+        'nophpzoomlist':ImageRoot.zoomlist,
+        'imgJSON':''
 	});
 }
 });
