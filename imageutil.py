@@ -4,8 +4,13 @@ Created on Mon Mar 10 13:58:00 2014
 
 @author: apple
 """
-import PIL
-from PIL import Image
+
+try:
+    import PIL
+    from PIL import Image
+except ImportError:
+    import Image
+
 import os
 import sys
 import web
