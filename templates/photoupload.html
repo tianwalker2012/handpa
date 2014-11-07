@@ -599,7 +599,7 @@ $def with (params)
           context.scale(ratio, ratio);
           update = true;
      } 
-  $$(window).resize(function() {
+  $$(window).resize(function(){
         enhanceContext(Config.ctx, window.innerHeight, window.innerWidth);
         console.log('resize inner height:'+window.innerHeight+", Q height:"+window.innerWidth);
       });
@@ -792,7 +792,7 @@ $def with (params)
       }, "rgb(252,73,73)");
     }
     }else{
-      showScene("拼3D网页端，选择图片上传","选择图片", function(evt){
+      showScene("拼3D网页端，选择长宽比为1:1的图片上传","选择图片", function(evt){
         generateTaskID(function(taskID){
           console.log('taskID:'+taskID);
         });

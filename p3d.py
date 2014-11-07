@@ -376,13 +376,13 @@ class Account:
             #tasks = None
             queryCond = {'$nor':[{'isPrivate':True}]}
             start = int(params.start) if params.get('start') else 0
-            limit = int(params.limit) if params.get('limit') else 1000
+            limit = int(params.limit) if params.get('limit') else 18
             personID = params.get('personID')
             personal = params.get('personal')
             if personal:
                 queryCond = {'personID':personID}
-                start = 0
-                limit = 200
+                #start = 0
+                #limit = 200
             web.debug('cond:%r,start:%i,limit:%i' % (queryCond, start, limit)) 
             tasks = MongoUtil.fetchWithLimit('PhotoTask', queryCond, start, limit, [('createdTime', -1)])
             res = []            
