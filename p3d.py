@@ -374,13 +374,13 @@ class Account:
             return simplejson.dumps(cleanPerson(user))
         elif cmd == 'query':
             #tasks = None
-            queryCond = {'$nor':[{'isPrivate':True}]}
+            queryCond = {'$nor':[{'isPrivate':True}],'$or':[{'completed':True}, {'completed':'1'}]}
             start = int(params.start) if params.get('start') else 0
             limit = int(params.limit) if params.get('limit') else 18
             personID = params.get('personID')
             personal = params.get('personal')
             if personal:
-                queryCond = {'personID':personID}
+                queryCond = {'personID':personID, '$or':[{'completed':True}, {'completed':'1'}]}
                 #start = 0
                 #limit = 200
             web.debug('cond:%r,start:%i,limit:%i' % (queryCond, start, limit)) 
@@ -468,8 +468,9 @@ class IDCreator:
     def POST(self, cmd):
         if cmd == 'create':
             params = web.input()
-            store = {"personID":params.personID,"isPrivate":params.get("isPrivate"),     "createdTime":datetime.now(chinaTime)+timedelta(hours=8)}
+            store = {"personID":params.personID,"completed":False,"isPrivate":params.get("isPrivate"),     "createdTime":datetime.now(chinaTime)+timedelta(hours=8)}
             name = params.get('name')
+            #count = params.get('count')
             if name:
                 store['name'] = name
             MongoUtil.save('PhotoTask', store)
@@ -485,9 +486,15 @@ class IDCreator:
             return '{}'
         elif cmd == 'update':
             params = web.input()
+            completed = params.get('completed')
+            if not completed:
+                completed = False
+            elif completed == '1':
+                completed = True
             if params.get('taskID'):
                 web.debug('params:%r' % params)
-                MongoUtil.update('PhotoTask',{'_id':ObjectId(params.get('taskID')), "name":params['name'], "isPrivate":params['isPrivate']})
+                storedParams = {'_id':ObjectId(params.get('taskID')),"completed":completed, "name":params['name'], "isPrivate":params['isPrivate']}
+                MongoUtil.update('PhotoTask',storedParams)
             return '{}'
         elif cmd == 'delete':
             params = web.input()
