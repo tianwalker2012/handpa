@@ -445,12 +445,24 @@ $def with (params)
   }
 
   function generateTaskID(funct){
+     var oldTaskID = currentTaskID;
+     if(currentTaskID){
+       $$.getJSON("/p3d/id/update?taskID="+currentTaskID,{"completed":true},function(result){
+            //currentTaskID = result['id'];  
+            //if(funct){
+            //  funct(currentTaskID)
+            //}
+            console.log('accomplished the task:'+oldTaskID);
+        });
+    }
      $$.getJSON("/p3d/id/create?personID="+personID,{},function(result){
             currentTaskID = result['id'];  
             if(funct){
               funct(currentTaskID)
             }
         });
+
+
   }
   function getCurrentURL(){
     var qPos = window.location.href.indexOf("?");
