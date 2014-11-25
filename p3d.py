@@ -629,7 +629,9 @@ class PhotoUploader:
         fout = open(imageFileName, 'w')
         fout.write(x.myfile.file.read())
         fout.close()
-        ImageUtil.resize(imageFileName, 60, 'tb')
+        ImageUtil.resize(imageFileName, 80, 'tb')
+        ImageUtil.resize(imageFileName, 180, 'cv')
+        ImageUtil.resize(imageFileName, 640, 'nm')
         #storedPhoto['screenURL'] = baseURL+hashedName
         remoteURL = baseURL + hashedName
         storedPhoto = None
