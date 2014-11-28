@@ -585,7 +585,49 @@ class WebUpload:
         
         return simplejson.dumps(cleanStoredPhoto(storedPhoto))        
 
+class AvatarHandler:
+    def GET(self, cmd):
+        web.debug('avatar command:%s' % cmd)
+        return '{}'
 
+    def POST(self, cmd):
+        x = web.input(myfile={})
+        personID = x.get('personID')
+        isOriginal = x.get("isOriginal")
+        #storedDir = '/home/ec2-user/root/www/static/'+userSession+'/'
+        #storedDir = '/home/ec2-user/root/www/static/'+taskID+'/'
+        if not personID:
+            web.debug('quit for no personID')
+            return '{}'
+        storedDir = '/home/ec2-user/root/www/static/avatar/'
+        if not os.path.exists(storedDir):
+            storedDir = '%s/static/avatar/' % os.getcwd()  
+        else:
+            storedDir = '/home/ec2-user/root/www/static/avatar/'
+
+        makeIfNone(storedDir)
+        web.debug('final stored dir:%s, %s' % (storedDir,isOriginal))
+        #baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'
+        #filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
+        #postFix = filePath.split('.')[-1]
+        #hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
+        imageFileName = "%s%s.jpg" % (storedDir, personID)
+        fout = open(imageFileName, 'w')
+        fout.write(x.myfile.file.read())
+        fout.close()
+        
+        #remoteURL = "%s%s.jpg" % (baseURL, personID)
+        #storedPhoto = None
+        storedPerson = MongoUtil.fetchByID('P3DUser', ObjectId(personID))
+        fullPath = '/static/avatar/%s.jpg' % personID
+        if storedPerson:
+            #oldRemoteURL = storedPhoto['remoteURL']
+            storedPerson['avatar'] = fullPath
+            MongoUtil.update('P3DUser',storedPerson)
+
+        #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
+        
+        return simplejson.dumps({"fullURL":fullPath})
 
 class PhotoUploader:
     def GET(self):

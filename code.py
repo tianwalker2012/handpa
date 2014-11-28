@@ -44,6 +44,7 @@ from p3d import P3DShowQuery
 from p3d import P3DRegister
 from p3d import P3DPerson
 from p3d import PhotoOperation
+from p3d import AvatarHandler
 from columbia import ScoreSupporter
 from columbia import BirdData
 from columbia import RawUploader
@@ -84,6 +85,7 @@ urls = (
  '/p3d/id/(.+)','IDCreator',
  '/p3d/info/(.+)', 'InfoPoint',
  '/p3d/upload', 'PhotoUploader',
+ '/p3d/avatar/(.+)', 'AvatarHandler',
  '/p3d/show3d', 'P3DShow',
  '/p3d/showquery', 'P3DShowQuery',
  '/p3d/photoupload', 'WebUploader',
