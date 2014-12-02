@@ -24,6 +24,8 @@ from random import randint
 from pytz import timezone
 import pytz
 import urlparse
+from replace import insertPadding
+import ziphandler
 
 chinaTime = timezone('Asia/Shanghai')
 smsCmd = 'curl "http://utf8.sms.webchinese.cn/?Uid=tiange&Key=a62725bf421644799a8d&smsMob=%s&smsText=短信验证码是:%s"'
@@ -72,6 +74,19 @@ def fillTask(photoTask, personID):
     photoTask.pop('_id', None)
     photoTask['createdTime'] = str(photoTask['createdTime'])
     photoTask['photos'] = phs;
+    photoTask['taskID'] = taskID
+    return photoTask
+
+def cleanTask(photoTask):
+    tk = photoTask
+    likedList = tk.get('likedList') if tk.get('likedList') else [] 
+    favorList = tk.get('favorite') if tk.get('favorite') else []
+    tk['likedCount'] = len(likedList)
+    tk['favorCount'] = len(favorList)
+    taskID = str(photoTask.get('_id'))
+    photoTask.pop('_id', None)
+    photoTask['createdTime'] = str(photoTask.get('createdTime'))
+    #sphotoTask['photos'] = phs;
     photoTask['taskID'] = taskID
     return photoTask
 
@@ -426,6 +441,9 @@ class P3DShowQuery:
         #render = web.template.render('templates', globals={'simplejson':simplejson})
         #return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls,'infos':infos})
         return simplejson.dumps({"imagelist":imgUrls, "infos":infos})
+def paddingList(urls, padding):
+    return [insertPadding(url, padding) for url in urls]
+
 class P3DShow:
     def GET(self):
         return self.POST()
@@ -437,6 +455,7 @@ class P3DShow:
         taskName = "未命名作品" 
         web.debug('query taskID:%s' % params.get('taskID'))
         task = {}
+        owner = {}
         if params.get('taskID'):
             taskID = params.get('taskID')
             photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.taskID},[('sequence', 1)])
@@ -451,16 +470,17 @@ class P3DShow:
         imgUrls = [process(pt) for pt in photos];        
         #for pt in photos:
         infos = []
-        i = 0
-        for pt in pts:
-            pinfos = fetchPhotoInfo(str(pt.get('_id')))
-            for info in pinfos:
-                web.debug('get info out')
-                info['pos'] = i
-                infos.append(info)
-            i += 1
+        pinList = []
         render = web.template.render('templates', globals={'simplejson':simplejson})
-        return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls,'infos':infos, "taskID":taskID, "name":taskName})
+        return render.show3d({
+            "thumbnail":simplejson.dumps(paddingList(imgUrls, "tb")), 
+            "imageList":simplejson.dumps(paddingList(imgUrls, "nm")), 
+            "zoomList":simplejson.dumps(imgUrls),
+            "pinList":simplejson.dumps(pinList),
+            "taskID":simplejson.dumps(taskID),
+            "task":simplejson.dumps(cleanTask(task)),
+            "owner":simplejson.dumps(owner), 
+            "name":simplejson.dumps(taskName)})
 
 class IDCreator:
     def GET(self, cmd):
@@ -532,6 +552,41 @@ class RawPhotoUpload:
         #task = MongoUtil.fetchByID('PhotoTask', ObjectId(taskID))
         result = {"url":remoteURL}
         return simplejson.dumps(result)
+
+
+class BatchUploader:
+    def GET(self, cmd):
+        render = web.template.render('templates', globals={'simplejson':simplejson})
+        person = MongoUtil.fetch('P3DUser', {'uploader':True})
+        if not person:
+            person =  {"uploader":True,"name":"上传客","joined":True, "mobile":"16888","password":"16888","createTime":datetime.now(chinaTime)+timedelta(hours=8)}
+            MongoUtil.save("P3DUser", person)
+        if cmd == "page":
+            return render.batchupload({"personID":str(person.get('_id'))})
+        else:
+            return str(person.get('_id'))
+    def POST(self, cmd):
+        x = web.input(myfile={})
+        personID = x.get('personID')
+        web.debug('uploaded person:%s' % personID)
+        if not personID:
+            web.debug('quit for no personID')
+            return '{}'
+        storedDir = '/home/ec2-user/root/www/static/'
+        if not os.path.exists(storedDir):
+            storedDir = '%s/static/rawupload/' % os.getcwd()  
+        else:
+            storedDir = '/home/ec2-user/root/www/static/rawupload/'
+        tmpFile = hashlib.md5(str(datetime.now(chinaTime))).hexdigest()
+        storedFile = storedDir + tmpFile + ".zip"
+        storedTmp = os.path.join(storedDir, tmpFile)
+        makeIfNone(storedDir)
+        fout = open(storedFile, 'w')
+        fout.write(x.myfile.file.read())
+        fout.close()
+        web.debug('final stored File:%s' % storedFile)
+        ziphandler.uploadAllZip(storedFile, storedTmp, personID)
+        return storedFile
 
 class WebUpload:
     def GET(self):
