@@ -25,6 +25,25 @@ class ImageUtil:
         return fullPath
 
     @classmethod
+    def squareCrop(self, img_path, dest_path):
+        img = Image.open(img_path)
+        width = img.size[0]
+        height = img.size[1]
+        print "image width:%i, height:%i" % (width, height)
+        #maxEdge = max(width, height)
+        minEdge = min(width, height)
+        #xPos = (maxEdge - width)/2
+        #yPos = (maxEdge - height)/2
+        left = (width - minEdge)/2
+        top = (height - minEdge)/2
+        right = (width + minEdge)/2
+        bottom = (height + minEdge)/2
+        cropBox = (left, top, right, bottom)
+        print "left:%i, top:%i, right:%i, bottom:%i" % cropBox
+        croppedImg = img.crop(cropBox)
+        croppedImg.save(dest_path)
+
+    @classmethod
     def resizeAndCrop(self, img_path, size, affix, crop_type='middle'):
         # If height is higher we resize vertically, if not we resize horizontally
         img = Image.open(img_path)

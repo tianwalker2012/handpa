@@ -105,7 +105,7 @@ class MongoUtil:
     @classmethod
     def updateByConds(self,colName,conds,values):
         cols = db[colName]
-        cols.update(conds,{"$set":values})
+        cols.update(conds,{"$set":values},multi=True)
 
     @classmethod
     def save(self, colName, values):
