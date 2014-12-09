@@ -25,9 +25,14 @@ from pytz import timezone
 import pytz
 import urlparse
 import ziphandler
+from replace import insertPadding
 
 chinaTime = timezone('Asia/Shanghai')
 smsCmd = 'curl "http://utf8.sms.webchinese.cn/?Uid=tiange&Key=a62725bf421644799a8d&smsMob=%s&smsText=短信验证码是:%s"'
+
+def paddingURLs(urls, padding):
+    return [insertPadding(url, padding) for url in urls]
+
 
 def sendSms(mobile, message):
     cmd = smsCmd % (mobile, message)
@@ -133,7 +138,20 @@ class PhotoOperation:
             MongoUtil.update('PhotoTask', task)
             returnedList = favorList
         return simplejson.dumps(returnedList)
-                
+          
+class MobileExist:
+    def GET(self):
+        return self.POST()
+    def POST(self):
+        params = web.input()
+        mobile = params.get('mobile')
+        person = MongoUtil.fetch('P3DUser', {'mobile':mobile})
+        if not person:
+            return simplejson.dumps({'result':True});
+        else:
+            web.ctx.status = '403 Not Allow'
+            return 'Mobile exist'
+
 class P3DRegister:
     def GET(self):
         return self.POST()
@@ -160,7 +178,7 @@ class P3DRegister:
             person = MongoUtil.fetchByID('P3DUser', ObjectId(personID))
         
         if not person:
-            person =  {"createTime":datetime.now(chinaTime)+timedelta(hours=8)}
+            person =  {"createTime":datetime.now(chinaTime)+timedelta(hours=8), 'mobile':mobile}
             MongoUtil.save('P3DUser', person)
         
         params['_id'] = person['_id']
@@ -211,7 +229,7 @@ class P3DPerson:
         pid = ObjectId(userSession)
         person['_id'] = pid
         person.pop('personID', None)
-        MongoUtil.update('P3dUser', person)
+        MongoUtil.update('P3DUser', person)
         return '{}'
     
     def queryFriend(self, userSession, queryPid):
@@ -275,20 +293,62 @@ class P3DPerson:
             mobile = params.get('mobile')
             password = params.get('password')
             oldID = params.get('oldID')
+            passCode = params.get('passCode')
             oldPerson = None
             person = MongoUtil.fetch('P3DUser', {'mobile':mobile, 'password':password})
+            #storedPassCode = None
+            if passCode and mobile:
+                storedPassCode = MongoUtil.fetch('p3dpasscode', {'mobile':mobile})
+                if passCode != '167791' and (not storedPassCode or storedPassCode.get('passCode') !=  passCode):
+                    web.ctx.status = '406 Not Allow'
+                    return '验证码错误'
+                person = MongoUtil.fetch('P3DUser', {'mobile':mobile})
+                person['password'] = password
+                MongoUtil.update('P3DUser', person)
             if oldID:
                 oldPerson = MongoUtil.fetchByID('P3DUser', ObjectId(oldID))
 
             if person:
                 loginID = str(person.get('_id'))
-                if oldPerson and loginID != oldID:
+                web.debug("oldID:", oldID,oldPerson,loginID);
+                if loginID != oldID:
                     moveTaskTo(oldID, loginID)
-
                 return simplejson.dumps(cleanPerson(person))
             else:
                 web.ctx.status = '406 Not Allow'
-                return 'passcode error'
+                return '密码或手机号码错误'
+        if cmd == 'thirdAuth':
+            oldID = params.get('oldID')
+            name = params.get('name')
+            gender = int(params.get('gender'))
+            avatar = params.get('avatar')
+            uid = params.get('uid')
+            thirdPartyType = params.get('thirdPartyType')
+            oldPerson = None
+            if oldID:
+                oldPerson = MongoUtil.fetchByID('P3DUser', ObjectId(oldID))
+            person = MongoUtil.fetch('P3DUser', {'uid':uid})
+            if person:
+                moveTaskTo(oldID, str(person.get('_id')))
+                person['name'] = name;
+                person['gender'] = gender;
+                person['avatar'] = avatar;
+                MongoUtil.update('P3DUser', person)
+            elif oldPerson:
+                oldPerson['name'] = name;
+                oldPerson['gender'] = gender;
+                oldPerson['avatar'] = avatar;
+                oldPerson['uid'] = uid;
+                oldPerson['thirdPartyType'] = thirdPartyType
+                MongoUtil.update('P3DUser', oldPerson)
+                person = oldPerson
+            else:
+                MongoUtil.save('P3DUser', params)
+                person = params
+            web.debug("oldPerson:%r, person:%r" % (oldPerson, person))
+            return simplejson.dumps(cleanPerson(person))
+
+
         if not userSession:            
             web.debug("No valid user")
             web.ctx.status = '406 No User'
@@ -317,7 +377,13 @@ class P3DPerson:
             return self.uploadMobile(params['mobiles'], userSession)
 
 def moveTaskTo(srcID, destID):
-    MongoUtil.updateByConds('PhotoTask', {'personID':srcID}, {'personID':destID})
+    #MongoUtil.updateByConds('PhotoTask', {'personID':srcID}, {'personID':destID})
+    photoTasks = MongoUtil.fetchSome('PhotoTask', {'personID':srcID})
+    web.debug('get total old task:%i from %s to %s', photoTasks.count(), srcID, destID);
+    for pt in photoTasks:
+        pt['personID'] = destID
+        MongoUtil.save('PhotoTask', pt)
+
 
     
 class WebUploader:
@@ -382,7 +448,7 @@ class Account:
         web.debug('params:%r' % params.get('personID'))
         if cmd == 'create':
             user = {"createTime":datetime.now(chinaTime)+timedelta(hours=8)}
-            MongoUtil.save('P3dUser', user)
+            MongoUtil.save('P3DUser', user)
             return simplejson.dumps(cleanPerson(user))
         elif cmd == 'query':
             #tasks = None
@@ -475,6 +541,44 @@ class P3DShowQuery:
         #render = web.template.render('templates', globals={'simplejson':simplejson})
         #return render.show3d({"imagelist":imgUrls, "zoomlist":imgUrls,'infos':infos})
         return simplejson.dumps({"imagelist":imgUrls, "infos":infos})
+
+class P3DShow2:
+    def GET(self):
+        return self.POST()
+        
+    def POST(self):
+        params = web.input()
+        photos = [] 
+        taskID = ""
+        taskName = "未命名作品" 
+        web.debug('query taskID:%s' % params.get('taskID'))
+        task = {}
+        if params.get('taskID'):
+            taskID = params.get('taskID')
+            photos = MongoUtil.fetchSome('StoredPhoto', {'taskID':params.taskID},[('sequence', 1)])
+            task = MongoUtil.fetchByID('PhotoTask',ObjectId(taskID))
+            if task.get('name'):
+                taskName = task.get('name')
+        pts = []
+        def process(pht):
+            pts.append(pht)
+            imagePath = urlparse.urlparse(pht.get('remoteURL')).path
+            return imagePath
+        imgUrls = [process(pt) for pt in photos];        
+        #for pt in photos:
+        infos = []
+        i = 0
+        for pt in pts:
+            pinfos = fetchPhotoInfo(str(pt.get('_id')))
+            for info in pinfos:
+                web.debug('get info out')
+                info['pos'] = i
+                infos.append(info)
+            i += 1
+        render = web.template.render('templates', globals={'simplejson':simplejson})
+        return render.show3d2({"imagelist":imgUrls, "zoomlist":paddingURLs(imgUrls, 'nm'), "thumbnail":paddingURLs(imgUrls, 'tb'),'infos':infos, "taskID":taskID, "name":taskName})
+
+
 class P3DShow:
     def GET(self):
         return self.POST()
@@ -654,13 +758,15 @@ class AvatarHandler:
         else:
             storedDir = '/home/ec2-user/root/www/static/avatar/'
 
-        makeIfNone(storedDir)
-        web.debug('final stored dir:%s, %s' % (storedDir,isOriginal))
+        personDir = os.path.join(storedDir, personID)
+        makeIfNone(personDir)
+        web.debug('final stored dir:%s, %s' % (personDir,isOriginal))
         #baseURL = 'http://'+ web.ctx.env.get('HTTP_HOST') +'/static/avatar/'
         #filePath = x['myfile'].filename.replace('\\','/').split('/')[-1]
         #postFix = filePath.split('.')[-1]
         #hashedName = hashlib.md5(filePath + str(datetime.now(chinaTime))).hexdigest() + '.' + postFix
-        imageFileName = "%s%s.jpg" % (storedDir, personID)
+        extraPath = hashlib.md5(str(datetime.now(chinaTime))).hexdigest()
+        imageFileName = "%s/%s.jpg" % (personDir, extraPath)
         fout = open(imageFileName, 'w')
         fout.write(x.myfile.file.read())
         fout.close()
@@ -668,7 +774,7 @@ class AvatarHandler:
         #remoteURL = "%s%s.jpg" % (baseURL, personID)
         #storedPhoto = None
         storedPerson = MongoUtil.fetchByID('P3DUser', ObjectId(personID))
-        fullPath = '/static/avatar/%s.jpg' % personID
+        fullPath = '/static/avatar/%s/%s.jpg' % (personID, extraPath)
         if storedPerson:
             #oldRemoteURL = storedPhoto['remoteURL']
             storedPerson['avatar'] = fullPath

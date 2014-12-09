@@ -1,0 +1,45 @@
+$def with (params)
+	$ iconurl = params.get('icon') if params.get('icon') else '/static/games/ch17/images/icon.jpg'
+<!DOCTYPE HTML>
+<!--
+/*
+ * Feather technology flip page.
+ */
+-->
+<html lang="en">
+<head>
+<!--[if IE]>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<![endif]-->
+
+	<script type="text/javascript" src="/static/games/jquery.min.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name=apple-mobile-web-app-capable content=yes>
+	<meta name=apple-mobile-web-app-status-bar-style content=black>
+	<link rel="icon" type="image/png" href="/static/games/ch17/images/icon.png" />
+	<link rel="shortcut icon" href="/static/games/images/ch17/icon.png">
+	<link rel="apple-touch-icon image_src" href="/static/games/ch17/images/icon.png">
+	<div id='wx_pic' style='margin:0 auto;display:none;'>
+   		<img src='$iconurl' />
+	</div>
+  	<script>
+    	$$(document).ready(function(){
+	   		console.log("document is ready");
+		//var myInput = document.getElementById('myfile');
+		});   
+  	</script>
+</head>
+
+<body>
+   
+   <form method="POST" enctype="multipart/form-data" action="/p3d/batchupload/page">
+         <!-- <input type="file" name="myfile" /> -->
+         <input id="personID" name="personID" type="hidden" value="$params.get('personID')">
+         <input id="myfile" name="myfile" type="file">
+         <br/>
+         <input type="submit" />
+   </form>
+
+
+</body>
+</html>

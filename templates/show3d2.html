@@ -1,0 +1,77 @@
+$def with (params)
+<!DOCTYPE html>
+<html lang="utf-8">
+<head>
+    <title>$params.get('name')</title>
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="author" content="Pin3D.cn">
+    <meta name="description" content="Pin3D.cn">
+    
+    <script type="text/javascript" src="/static/pin3d/pin3d/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/pin3d/pin3d/scripts/pin3d.js"></script>
+    <link rel="stylesheet" href="/static/pin3d/pin3d/css/style.css" type="text/css" media="screen" />
+</head>
+<body>
+
+<div class="pin3d">
+  <img id="rotateimage" src="images/d5/d5_0001.png" width="500" height="500" />
+</div>
+
+<script type='text/javascript'>
+var Pin3D = {task:{}, links:[], comments:[], pins:[], thumbnail:[], imagelist:[], zoomlist:[]};
+/**/
+Pin3D.task = {
+  taskID:'0001',                //作品ID
+  ownerID:'0001',               //用户ID
+  ownerAvatar:'http://121.40.209.191:8080/static/pin3d/pin3d/css/avatar_owner.jpg', //头像地址
+  createdTime:'2014-11-12, 10:22',      //创建时间
+  location:'上海 卢湾区',            //位置
+  viewCount:12515,              //浏览数
+  likeCount:2111,               //点赞数
+  commentCount:54,              //评论数
+  linkCount:5,                //连接数
+  tags:['生活','美食','小资','旅行','上海'] //标签
+};
+         //changeImages 
+function changeImages(imgs)
+{
+    //alert("alerts sizes:"+alerts);
+    //alert('chnage images get called'+ imgs);
+    //alert("before parse");
+    var imgJsons = JSON.parse(imgs);
+    //alert("after parse:"+ imgJsons.imagelist);
+    Pin3D.imagelist = imgJsons.imagelist;
+    Pin3D.zoomlist = imgJsons.zoomlist;
+    Pin3D.thumbnail = imgJsons.thumbnail;
+    $$.fn.pin3D.refreshImage();
+
+}
+
+//Pin3D.links = [{taskID:'0011', taskIcon:'http://121.40.209.191:8080/static/pin3d/pin3d/css/avatar_task01.png'}];
+Pin3D.imagelist = $:simplejson.dumps(params.get('imagelist'));
+Pin3D.zoomlist = $:simplejson.dumps(params.get('zoomlist'));
+Pin3D.thumbnail = $:simplejson.dumps(params.get('thumbnail'));
+Pin3D.task.taskID = "$params.get('taskID')";
+//ImageRoot.timeoutHandle = "";
+
+$$(document).ready(function() {
+  $$('#rotateimage').pin3D({
+    'pinEditable':false, //是否可以编辑pin，默认为false
+    'showLikeAndFav':true, //是否显示收藏点赞，默认为true
+    'autorotate' : true
+  });
+});
+
+/**
+   * Use these function to refresh Pin3D.
+   * $$.fn.pin3D.refreshTask();
+   * $$.fn.pin3D.refreshList();
+   * $$.fn.pin3D.refreshPin();
+   * $$.fn.pin3D.refreshImage();
+   */
+</script>
+
+</body>
+</html>

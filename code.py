@@ -46,6 +46,8 @@ from p3d import P3DPerson
 from p3d import PhotoOperation
 from p3d import AvatarHandler
 from p3d import BatchUploader
+from p3d import P3DShow2
+from p3d import MobileExist
 from columbia import ScoreSupporter
 from columbia import BirdData
 from columbia import RawUploader
@@ -87,6 +89,7 @@ urls = (
  '/p3d/info/(.+)', 'InfoPoint',
  '/p3d/upload', 'PhotoUploader',
  '/p3d/avatar/(.+)', 'AvatarHandler',
+ '/p3d/show3d2', 'P3DShow2',
  '/p3d/show3d', 'P3DShow',
  '/p3d/showquery', 'P3DShowQuery',
  '/p3d/photoupload', 'WebUploader',
@@ -98,6 +101,7 @@ urls = (
  '/p3d/register', 'P3DRegister',
  '/p3d/person/(.+)', 'P3DPerson',
  '/p3d/photoops/(.+)', 'PhotoOperation',
+ '/p3d/existMobile','MobileExist',
  '/columbia/(.+)', 'ScoreSupporter',
  '/photo', 'Helmet',
  '/bird', 'BirdData'
